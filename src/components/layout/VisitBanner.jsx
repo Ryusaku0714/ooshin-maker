@@ -79,7 +79,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       {/* 猶予日数 */}
       <Field label="猶予日数" style={{ width: 70 }}>
         <input
-          type="number" value={graceDays} min={0} max={7}
+          type="number" value={graceDays} min={0} max={14}
           onChange={e => setGraceDays(e.target.value)}
           style={bannerInputStyle}
         />

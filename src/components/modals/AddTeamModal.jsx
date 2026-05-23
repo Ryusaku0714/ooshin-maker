@@ -35,7 +35,7 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label className="field-label">クリニック名 *</label>
-            <input className="field-input" value={form.clinic_name} onChange={up('clinic_name')} placeholder="例：天王町CL" autoFocus />
+            <input className="field-input" value={form.clinic_name} onChange={up('clinic_name')} placeholder="例：さくらCL" autoFocus />
           </div>
           <div>
             <label className="field-label">チーム名 *</label>
@@ -53,11 +53,11 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
           </div>
           <div>
             <label className="field-label">猶予日数（薬局設定）</label>
-            <input type="number" className="field-input" value={form.grace_days} onChange={up('grace_days')} min={0} max={7} />
+            <input type="number" className="field-input" value={form.grace_days} onChange={up('grace_days')} min={0} max={14} />
           </div>
           <div style={{ gridColumn: '1/-1' }}>
             <label className="field-label">担当薬剤師</label>
-            <input className="field-input" value={form.pharmacist_name} onChange={up('pharmacist_name')} placeholder="例：SS（隆索）" />
+            <input className="field-input" value={form.pharmacist_name} onChange={up('pharmacist_name')} placeholder="例：山田T" />
           </div>
         </div>
         <div className="modal-footer">

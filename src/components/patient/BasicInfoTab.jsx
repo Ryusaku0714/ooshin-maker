@@ -54,7 +54,7 @@ export default function BasicInfoTab({ patient, onSaved }) {
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="field-label">入院歴（任意）</label>
-          <textarea className="field-input" rows={2} value={form.hospitalization_history} onChange={up('hospitalization_history')} placeholder="例：2024/5月 保土中 心不全増悪入院" />
+          <textarea className="field-input" rows={2} value={form.hospitalization_history} onChange={up('hospitalization_history')} placeholder="例：2024/5月 ○○病院 心不全増悪入院" />
         </div>
       </div>
     </div>
