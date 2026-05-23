@@ -71,9 +71,9 @@ export default function Sidebar({
                 🏠 {facility.name}
               </div>
 
-              {(facility.teams ?? []).map(team => {
+              {(facility.om_teams ?? []).map(team => {
                 const isOpen = openTeams[team.id] !== false // default open
-                const patients = sortPatients(team.patients, sort)
+                const patients = sortPatients(team.om_patients, sort)
                 return (
                   <div key={team.id} style={{ marginBottom: 6 }}>
                     <div

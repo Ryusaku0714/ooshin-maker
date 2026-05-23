@@ -93,7 +93,7 @@ const calcInputStyle = {
 
 export default function DrugsTab({ patient, visitCalc, onRefetch }) {
   const [showAdd, setShowAdd] = useState(false)
-  const drugs = patient?.drugs ?? []
+  const drugs = patient?.om_drugs ?? []
 
   const del = async (id) => {
     if (!confirm('この薬を削除しますか？')) return

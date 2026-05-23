@@ -7,7 +7,7 @@ export default function ChangeLogTab({ patient, onRefetch }) {
   const [adding, setAdding] = useState(false)
   const [showForm, setShowForm] = useState(false)
 
-  const logs = [...(patient?.change_logs ?? [])].sort((a, b) =>
+  const logs = [...(patient?.om_change_logs ?? [])].sort((a, b) =>
     new Date(b.changed_at) - new Date(a.changed_at)
   )
 
