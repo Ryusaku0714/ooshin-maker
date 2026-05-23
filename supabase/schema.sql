@@ -13,12 +13,12 @@ CREATE TABLE IF NOT EXISTS facilities (
 );
 
 -- ② チーム (Teams) ― 往診設定を保持
+-- visit_schedule の値例: 第1・3週水曜, 第2・4週水曜, 毎週水曜, custom
 CREATE TABLE IF NOT EXISTS teams (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   facility_id           UUID NOT NULL REFERENCES facilities(id) ON DELETE CASCADE,
   clinic_name           TEXT NOT NULL,
   team_name             TEXT NOT NULL,
-  -- 往診スケジュール: '第1・3週水曜' など, または 'custom'
   visit_schedule        TEXT,
   visit_schedule_custom TEXT,
   default_rx_days       INTEGER NOT NULL DEFAULT 14,
