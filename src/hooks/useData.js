@@ -54,8 +54,10 @@ export function usePatient(patientId) {
 // ── 汎用 CRUD ────────────────────────────────────────────
 export const db = {
   // 施設
-  addFacility: (name) =>
-    supabase.from('om_facilities').insert({ name }).select().single(),
+  addFacility: async (name) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    return supabase.from('om_facilities').insert({ name, user_id: user.id }).select().single()
+  },
   updateFacility: (id, data) =>
     supabase.from('om_facilities').update(data).eq('id', id),
   deleteFacility: (id) =>
