@@ -1,0 +1,95 @@
+import { useCallback, useEffect, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
+
+// ── 施設一覧（チーム・患者含む） ───────────────────────────
+export function useFacilities() {
+  const [facilities, setFacilities] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('facilities')
+      .select(`
+        *,
+        teams (
+          *,
+          patients ( id, room_number, initial, sort_order, updated_at )
+        )
+      `)
+      .order('sort_order')
+      .order('sort_order', { referencedTable: 'teams' })
+      .order('sort_order', { referencedTable: 'teams.patients' })
+    if (!error) setFacilities(data ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { facilities, loading, refetch: fetch }
+}
+
+// ── 患者詳細（薬・ログ含む） ──────────────────────────────
+export function usePatient(patientId) {
+  const [patient, setPatient] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const fetch = useCallback(async () => {
+    if (!patientId) { setPatient(null); return }
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('patients')
+      .select(`*, drugs(*), change_logs(*)`)
+      .eq('id', patientId)
+      .order('sort_order', { referencedTable: 'drugs' })
+      .order('changed_at', { referencedTable: 'change_logs', ascending: false })
+      .single()
+    if (!error) setPatient(data)
+    setLoading(false)
+  }, [patientId])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { patient, loading, refetch: fetch }
+}
+
+// ── 汎用 CRUD ────────────────────────────────────────────
+export const db = {
+  // 施設
+  addFacility: (name) =>
+    supabase.from('facilities').insert({ name }).select().single(),
+  updateFacility: (id, data) =>
+    supabase.from('facilities').update(data).eq('id', id),
+  deleteFacility: (id) =>
+    supabase.from('facilities').delete().eq('id', id),
+
+  // チーム
+  addTeam: (facilityId, payload) =>
+    supabase.from('teams').insert({ facility_id: facilityId, ...payload }).select().single(),
+  updateTeam: (id, data) =>
+    supabase.from('teams').update(data).eq('id', id),
+  deleteTeam: (id) =>
+    supabase.from('teams').delete().eq('id', id),
+
+  // 患者
+  addPatient: (teamId, payload) =>
+    supabase.from('patients').insert({ team_id: teamId, ...payload }).select().single(),
+  updatePatient: (id, data) =>
+    supabase.from('patients').update(data).eq('id', id),
+  deletePatient: (id) =>
+    supabase.from('patients').delete().eq('id', id),
+
+  // 薬
+  addDrug: (patientId, payload) =>
+    supabase.from('drugs').insert({ patient_id: patientId, ...payload }).select().single(),
+  updateDrug: (id, data) =>
+    supabase.from('drugs').update(data).eq('id', id),
+  deleteDrug: (id) =>
+    supabase.from('drugs').delete().eq('id', id),
+
+  // 変更ログ
+  addLog: (patientId, payload) =>
+    supabase.from('change_logs').insert({ patient_id: patientId, ...payload }).select().single(),
+  updateLog: (id, data) =>
+    supabase.from('change_logs').update(data).eq('id', id),
+  deleteLog: (id) =>
+    supabase.from('change_logs').delete().eq('id', id),
+}

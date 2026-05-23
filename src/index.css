@@ -1,0 +1,157 @@
+/* ── CSS Variables ── */
+:root {
+  --sky-50: #f0f9ff;
+  --sky-100: #e0f2fe;
+  --sky-200: #bae6fd;
+  --sky-300: #7dd3fc;
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+  --sky-600: #0284c7;
+  --sky-700: #0369a1;
+  --sky-800: #075985;
+  --sky-900: #0c4a6e;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-700: #334155;
+  --gray-900: #0f172a;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+  background: var(--sky-50);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='80' cy='60' r='35' fill='none' stroke='%2393c5fd' stroke-width='1.5' opacity='0.4'/%3E%3Ccircle cx='400' cy='120' r='22' fill='none' stroke='%2393c5fd' stroke-width='1.5' opacity='0.3'/%3E%3Ccircle cx='200' cy='300' r='28' fill='none' stroke='%2393c5fd' stroke-width='1.5' opacity='0.35'/%3E%3Ccircle cx='450' cy='350' r='15' fill='none' stroke='%2393c5fd' stroke-width='1' opacity='0.3'/%3E%3Ccircle cx='100' cy='400' r='18' fill='none' stroke='%2393c5fd' stroke-width='1' opacity='0.3'/%3E%3C/svg%3E");
+  color: var(--gray-900);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-primary  { background: var(--sky-600); color: white; }
+.btn-primary:hover  { background: var(--sky-800); }
+.btn-outline  { background: white; color: var(--sky-600); border: 1.5px solid var(--sky-200); }
+.btn-outline:hover  { border-color: var(--sky-400); }
+.btn-danger   { background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; }
+.btn-danger:hover   { background: #fecaca; }
+.btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
+
+.icon-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  background: white;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--sky-400); background: var(--sky-50); }
+
+/* ── Cards ── */
+.card {
+  background: white;
+  border-radius: 12px;
+  border: 1.5px solid var(--sky-100);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sky-600);
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* ── Form fields ── */
+.field-label {
+  font-size: 10px;
+  color: var(--gray-500);
+  display: block;
+  margin-bottom: 3px;
+  font-weight: 500;
+}
+.field-input {
+  width: 100%;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--gray-900);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+  background: white;
+}
+.field-input:focus { border-color: var(--sky-400); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--sky-200); border-radius: 2px; }
+
+/* ── Modal overlay ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal-box {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sky-800);
+  margin-bottom: 14px;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ── Print ── */
+@media print {
+  nav, .sidebar, .patient-actions, .add-link,
+  .drug-actions, .icon-btn, .calc-tool, .tabs,
+  .visit-banner, .mobile-tabs { display: none !important; }
+  .layout { grid-template-columns: 1fr !important; }
+  .tab-content { display: block !important; }
+  body { background: white; height: auto; overflow: visible; }
+  .main, .main-scroll { overflow: visible; }
+}
