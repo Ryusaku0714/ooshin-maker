@@ -7,7 +7,7 @@
 -- ① 施設 (om_facilities)
 CREATE TABLE IF NOT EXISTS om_facilities (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
   sort_order  INTEGER NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -129,3 +129,18 @@ CREATE POLICY "om_change_logs_owner" ON om_change_logs
     JOIN om_facilities f ON t.facility_id = f.id
     WHERE f.user_id = auth.uid()
   ));
+
+-- ============================================================
+-- ★ ホワイトリスト不要・オープン登録の設計方針
+-- ============================================================
+-- ・Googleログインしたユーザーは全員即時アカウント作成される
+-- ・事前メール登録・管理者承認は一切不要
+-- ・各ユーザーは自分のデータのみアクセス可能 (user_id = auth.uid())
+-- ・facility-note のようなメールアドレス制限は導入しない
+
+-- ============================================================
+-- 既存 DB へのマイグレーション
+-- ※ テーブルが既に存在する場合に user_id デフォルトを追加する
+-- ============================================================
+ALTER TABLE om_facilities
+  ALTER COLUMN user_id SET DEFAULT auth.uid();
