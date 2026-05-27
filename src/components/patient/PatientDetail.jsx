@@ -137,7 +137,11 @@ export default function PatientDetail({ patientId, visitCalc }) {
         if (from && to)  line += `　調剤：${from}〜${to}`
         else if (from)   line += `　調剤：${from}〜`
         else if (to)     line += `　調剤：〜${to}`
-        if (v.medication_timing) line += `　服用：${v.medication_timing}`
+        if (v.medication_timing) {
+          const PREV = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
+          const endT = v.medication_timing_end || (PREV[v.medication_timing] ?? '')
+          line += `　服用：${v.medication_timing}〜${endT}`
+        }
         if (v.next_visit_date)   line += `　次回：${v.next_visit_date}`
         return line
       }).join('\n')

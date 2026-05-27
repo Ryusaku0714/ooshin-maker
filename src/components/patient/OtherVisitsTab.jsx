@@ -2,29 +2,32 @@ import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
 const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
+const PREV_TIMING = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
 
 const EMPTY_VISIT = {
   hospital: '', department: '',
   dispensing_from: '', dispensing_to: '',
-  medication_timing: '', next_visit_date: '',
+  medication_timing: '', medication_timing_end: '',
+  next_visit_date: '',
 }
 
 function toFormData(v) {
+  const startT = v.medication_timing ?? ''
   return {
-    hospital:          v.hospital          ?? '',
-    department:        v.department        ?? '',
-    // 旧フィールド dispensing_date を dispensing_from として読み込む
-    dispensing_from:   v.dispensing_from   ?? v.dispensing_date ?? '',
-    dispensing_to:     v.dispensing_to     ?? '',
-    medication_timing: v.medication_timing ?? '',
-    next_visit_date:   v.next_visit_date   ?? '',
+    hospital:              v.hospital              ?? '',
+    department:            v.department            ?? '',
+    dispensing_from:       v.dispensing_from       ?? v.dispensing_date ?? '',
+    dispensing_to:         v.dispensing_to         ?? '',
+    medication_timing:     startT,
+    medication_timing_end: v.medication_timing_end ?? (startT ? (PREV_TIMING[startT] ?? '') : ''),
+    next_visit_date:       v.next_visit_date       ?? '',
   }
 }
 
 function fmtPeriod(from, to) {
-  if (from && to)  return `${from} 〜 ${to}`
-  if (from)        return `${from} 〜`
-  if (to)          return `〜 ${to}`
+  if (from && to) return `${from} 〜 ${to}`
+  if (from)       return `${from} 〜`
+  if (to)         return `〜 ${to}`
   return ''
 }
 
@@ -36,6 +39,16 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
   const [savingVisit, setSavingVisit]     = useState(false)
 
   const upV = k => e => setVisitForm(f => ({ ...f, [k]: e.target.value }))
+
+  // 開始タイミング変更時に終了タイミングを自動セット
+  const handleTimingChange = (e) => {
+    const t = e.target.value
+    setVisitForm(f => ({
+      ...f,
+      medication_timing:     t,
+      medication_timing_end: t ? (PREV_TIMING[t] ?? '') : '',
+    }))
+  }
 
   const openAddVisit = () => {
     setEditingId(null)
@@ -124,22 +137,38 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 value={visitForm.dispensing_to} onChange={upV('dispensing_to')}
               />
             </div>
-            {/* 服用タイミング（プルダウン） */}
-            <div>
-              <label className="field-label">服用タイミング</label>
-              <select
-                className="field-input"
-                value={visitForm.medication_timing}
-                onChange={upV('medication_timing')}
-              >
-                <option value="">-- 選択 --</option>
-                {TIMING_OPTIONS.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+            {/* 服用タイミング（開始〜終了） */}
+            <div style={{ gridColumn: '1/-1' }}>
+              <label className="field-label">服用タイミング（開始〜終了）</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <select
+                  className="field-input"
+                  value={visitForm.medication_timing}
+                  onChange={handleTimingChange}
+                  style={{ flex: '0 0 90px' }}
+                >
+                  <option value="">-- 選択 --</option>
+                  {TIMING_OPTIONS.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                {visitForm.medication_timing && (
+                  <>
+                    <span style={{ fontSize: 12, color: 'var(--gray-400)', flexShrink: 0 }}>〜</span>
+                    <div style={{
+                      fontSize: 12, fontWeight: 600, color: 'var(--sky-700)',
+                      background: 'var(--sky-50)', border: '1.5px solid var(--sky-200)',
+                      borderRadius: 6, padding: '6px 12px', flexShrink: 0,
+                    }}>
+                      {visitForm.medication_timing_end}
+                      <span style={{ fontSize: 10, color: 'var(--gray-400)', marginLeft: 4 }}>（自動）</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             {/* 次回受診日 */}
-            <div>
+            <div style={{ gridColumn: '1/-1' }}>
               <label className="field-label">次回受診日</label>
               <input
                 type="date" className="field-input"
@@ -170,6 +199,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
         const from    = v.dispensing_from ?? v.dispensing_date ?? ''
         const to      = v.dispensing_to ?? ''
         const period  = fmtPeriod(from, to)
+        const endT    = v.medication_timing_end || (v.medication_timing ? (PREV_TIMING[v.medication_timing] ?? '') : '')
         return (
           <div key={v.id} style={{
             background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
@@ -181,9 +211,9 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 {v.hospital}{v.department ? ` / ${v.department}` : ''}
               </div>
               <div style={{ fontSize: 10, color: 'var(--gray-500)', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
-                {period             && <span>📅 調剤：{period}</span>}
-                {v.medication_timing && <span>💊 服用：{v.medication_timing}</span>}
-                {v.next_visit_date  && <span>🔄 次回：{v.next_visit_date}</span>}
+                {period              && <span>📅 調剤：{period}</span>}
+                {v.medication_timing && <span>💊 服用：{v.medication_timing}〜{endT}</span>}
+                {v.next_visit_date   && <span>🔄 次回：{v.next_visit_date}</span>}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
