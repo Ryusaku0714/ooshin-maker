@@ -13,32 +13,54 @@ function fmtFull(d) {
 }
 
 // ── 追加薬 日数計算ツール（変更ログタブ上部） ──────────────
+const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
+const PREV_TIMING = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
+
+/** yyyy-MM-dd → "5/28（木）" */
+function fmtWithDay(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T00:00:00')
+  return `${d.getMonth()+1}/${d.getDate()}（${DAY_LABELS[d.getDay()]}）`
+}
+
+/** dateStr に days 日加算した yyyy-MM-dd を返す */
+function addDaysToStr(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + days)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
 function CalcTool({ visitCalc }) {
-  const [addStart, setAddStart] = useState(visitCalc?.visitDate ?? '')
-  const [timing, setTiming] = useState('morning')
+  const [addStart,   setAddStart]   = useState(visitCalc?.visitDate ?? '')
+  const [startTiming, setStartTiming] = useState('朝')
+  const [manualDays, setManualDays] = useState('')
   const rxEnd = visitCalc?.rxEnd ?? ''
 
   useEffect(() => {
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  let addDays = null
-  let periodText = ''
-  let alertText = ''
+  const endTiming = PREV_TIMING[startTiming]
+  const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
 
-  if (addStart && rxEnd) {
-    const start = new Date(addStart)
-    const end   = new Date(rxEnd)
-    const offset = timing === 'morning' ? 1 : timing === 'day2morning' ? 2 : 0
-    const actualStart = new Date(start)
-    actualStart.setDate(actualStart.getDate() + offset)
-    const diff = Math.ceil((end - actualStart) / (1000*60*60*24)) + 1
-    if (diff > 0) {
-      addDays = diff
-      const label = timing === 'morning' ? '翌朝' : timing === 'evening' ? '当日夕' : timing === 'noon' ? '当日昼' : '翌々朝'
-      periodText = `${fmtDisp(actualStart)} ${label} 〜 ${fmtDisp(end)} 朝`
-      if (timing === 'evening' || timing === 'noon') {
-        alertText = `${fmtDisp(end)}分（朝）は定期処方と重複します。確認してください。`
+  let addDays   = null
+  let periodText = ''
+  let daysText   = ''
+
+  if (addStart) {
+    if (isManual) {
+      addDays = parseInt(manualDays)
+      const endStr = addDaysToStr(addStart, addDays - 1)
+      periodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
+      daysText   = `${addDays}日分`
+    } else if (rxEnd) {
+      const start = new Date(addStart + 'T00:00:00')
+      const end   = new Date(rxEnd   + 'T00:00:00')
+      const diff  = Math.ceil((end - start) / (1000*60*60*24)) + 1
+      if (diff > 0) {
+        addDays    = diff
+        periodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}${endTiming}`
+        daysText   = `定期に日数を合わせた場合${addDays}日分`
       }
     }
   }
@@ -51,36 +73,48 @@ function CalcTool({ visitCalc }) {
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em', marginBottom: 12 }}>
         ⚡ 追加薬 日数計算
       </div>
-      <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 10, alignItems: 'flex-end' }}>
-        <CalcField label="追加薬の開始日">
+
+      {/* 入力グリッド：4列→タブレット2列→スマホ1列 */}
+      <div className="calc-grid">
+        <CalcField label="開始日">
           <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
         </CalcField>
         <CalcField label="開始タイミング">
-          <select value={timing} onChange={e => setTiming(e.target.value)} style={calcInputStyle}>
-            <option value="morning">翌朝から</option>
-            <option value="evening">当日夕から</option>
-            <option value="noon">当日昼から</option>
-            <option value="day2morning">翌々朝から</option>
+          <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcInputStyle}>
+            <option value="朝">朝</option>
+            <option value="昼">昼</option>
+            <option value="夕">夕</option>
+            <option value="眠前">眠前</option>
           </select>
         </CalcField>
         <CalcField label="処方のお尻（定期処方最終日）">
           <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
         </CalcField>
-        <div style={{
-          background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-          borderRadius: 8, padding: '8px 14px', textAlign: 'center', minWidth: 80,
-        }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'white', lineHeight: 1 }}>{addDays ?? '—'}</div>
-          <div style={{ fontSize: 9, color: 'var(--sky-200)', marginTop: 2 }}>日分</div>
-        </div>
+        <CalcField label="日数（任意）">
+          <input
+            type="number" value={manualDays}
+            onChange={e => setManualDays(e.target.value)}
+            placeholder="未入力=自動" min="1"
+            style={calcInputStyle}
+          />
+        </CalcField>
       </div>
-      {alertText && (
-        <div style={{ marginTop: 8, background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.4)', borderRadius: 6, padding: '6px 10px', fontSize: 10, color: '#fef08a', display: 'flex', alignItems: 'center', gap: 6 }}>
-          ⚠️ {alertText}
-        </div>
-      )}
+
+      {/* 結果表示：期間テキスト + 日数テキスト（縦並び） */}
       {periodText && (
-        <div style={{ marginTop: 8, fontSize: 10, color: 'var(--sky-200)' }}>{periodText}</div>
+        <div style={{
+          marginTop: 10,
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: 8, padding: '10px 14px',
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'white', wordBreak: 'break-all', lineHeight: 1.6 }}>
+            {periodText}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--sky-200)', marginTop: 4 }}>
+            {daysText}
+          </div>
+        </div>
       )}
     </div>
   )

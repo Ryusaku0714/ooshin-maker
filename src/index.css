@@ -148,6 +148,14 @@ body {
   margin-top: 16px;
 }
 
+/* ── 追加薬計算グリッド（ベース：4列） ── */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: flex-end;
+}
+
 /* ④ ── Responsive ── */
 @media (max-width: 768px) {
   body { height: auto; overflow: visible; }
@@ -169,12 +177,10 @@ body {
     overflow-y: visible !important;
   }
 
-  /* 追加薬計算グリッド */
+  /* 追加薬計算グリッド：タブレットは2列×2行 */
   .calc-grid {
     grid-template-columns: 1fr 1fr !important;
   }
-  .calc-grid > :nth-child(3) { grid-column: 1 / -1; }
-  .calc-grid > :nth-child(4) { grid-column: 1 / -1; }
 
   /* 変更ログフォームグリッド */
   .log-form-grid {
@@ -198,10 +204,10 @@ body {
 }
 
 @media (max-width: 480px) {
+  /* 追加薬計算グリッド：スマホは1列（375pxでも崩れない） */
   .calc-grid {
     grid-template-columns: 1fr !important;
   }
-  .calc-grid > * { grid-column: 1 / -1; }
 
   .patient-header {
     flex-direction: column;
