@@ -144,3 +144,14 @@ CREATE POLICY "om_change_logs_owner" ON om_change_logs
 -- ============================================================
 ALTER TABLE om_facilities
   ALTER COLUMN user_id SET DEFAULT auth.uid();
+
+-- ============================================================
+-- v2 マイグレーション：変更ログ拡張 & 他科受診スケジュール
+-- ============================================================
+
+-- om_change_logs: 変更指示日(changed_at 流用), 理由, 開始日を追加
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS reason     TEXT;
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS start_date DATE;
+
+-- om_patients: 他科受診スケジュール（JSONB配列）を追加
+ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS other_visits JSONB NOT NULL DEFAULT '[]'::jsonb;

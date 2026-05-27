@@ -45,7 +45,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   }
 
   return (
-    <div style={{ background: 'var(--sky-800)', padding: '12px 20px', display: 'flex', gap: 14, alignItems: 'flex-end', flexShrink: 0, flexWrap: 'wrap' }}>
+    <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '12px 16px', flexShrink: 0 }}>
+    <div className="visit-banner-inner" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
       {/* Team tag */}
       <div
         onClick={() => setShowSettings(s => !s)}
@@ -102,6 +103,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{rxPeriod}</div>
         <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 1 }}>{nextVisit}</div>
       </div>
+    </div>
     </div>
   )
 }

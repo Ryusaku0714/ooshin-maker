@@ -86,6 +86,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 /* ── Form fields ── */
@@ -131,6 +132,8 @@ body {
   width: 100%;
   max-width: 480px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .modal-title {
   font-size: 14px;
@@ -145,13 +148,143 @@ body {
   margin-top: 16px;
 }
 
-/* ── Print ── */
+/* ④ ── Responsive ── */
+@media (max-width: 768px) {
+  body { height: auto; overflow: visible; }
+
+  .layout {
+    grid-template-columns: 1fr !important;
+    overflow: visible;
+  }
+
+  /* 往診バナー */
+  .visit-banner-inner {
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+
+  /* 患者詳細エリア */
+  .main-scroll {
+    padding: 10px 12px !important;
+    overflow-y: visible !important;
+  }
+
+  /* 追加薬計算グリッド */
+  .calc-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .calc-grid > :nth-child(3) { grid-column: 1 / -1; }
+  .calc-grid > :nth-child(4) { grid-column: 1 / -1; }
+
+  /* 変更ログフォームグリッド */
+  .log-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 他科受診フォームグリッド */
+  .visit-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* タブ */
+  .tabs {
+    width: 100% !important;
+  }
+
+  /* カードのpadding調整 */
+  .card {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .calc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .calc-grid > * { grid-column: 1 / -1; }
+
+  .patient-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+/* ⑥ ── Print ── */
 @media print {
-  nav, .sidebar, .patient-actions, .add-link,
-  .drug-actions, .icon-btn, .calc-tool, .tabs,
-  .visit-banner, .mobile-tabs { display: none !important; }
-  .layout { grid-template-columns: 1fr !important; }
-  .tab-content { display: block !important; }
-  body { background: white; height: auto; overflow: visible; }
-  .main, .main-scroll { overflow: visible; }
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  /* 非表示にする要素 */
+  nav,
+  .sidebar,
+  .patient-actions,
+  .add-link,
+  .drug-actions,
+  .calc-tool,
+  .tabs,
+  .visit-banner,
+  .mobile-tabs-bar,
+  button:not(.print-show),
+  .icon-btn {
+    display: none !important;
+  }
+
+  /* ページ設定 */
+  body {
+    background: white !important;
+    height: auto !important;
+    overflow: visible !important;
+    font-size: 11px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+  }
+
+  .main,
+  .main-scroll {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* 通常のタブコンテンツを非表示 */
+  .tab-content {
+    display: none !important;
+  }
+
+  /* 印刷専用コンテンツを表示 */
+  .print-all-tabs {
+    display: block !important;
+  }
+
+  .print-section {
+    margin-bottom: 14px;
+  }
+
+  /* カードのスタイル調整 */
+  .card {
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-size: 10px !important;
+  }
+
+  /* テキストサイズ調整 */
+  .field-input {
+    border: none !important;
+    padding: 2px 0 !important;
+    font-size: 11px !important;
+  }
+
+  /* 患者ヘッダー */
+  .patient-header {
+    margin-bottom: 10px;
+  }
 }

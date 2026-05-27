@@ -46,16 +46,13 @@ export default function App() {
     <>
       <Navbar user={user} onSignOut={signOut} />
 
-      {/* モバイルタブ */}
+      {/* ④ モバイルタブバー */}
       <div
-        style={{
-          display: 'none', background: 'var(--sky-800)',
-          padding: '8px 12px', gap: 6, flexShrink: 0,
-        }}
+        style={{ display: 'none', background: 'var(--sky-800)', padding: '8px 12px', gap: 6, flexShrink: 0 }}
         className="mobile-tabs-bar"
       >
         {[
-          { v: 'list', l: '👥 患者一覧' },
+          { v: 'list',   l: '👥 患者一覧' },
           { v: 'detail', l: '📋 詳細' },
         ].map(o => (
           <button
@@ -71,12 +68,15 @@ export default function App() {
         ))}
       </div>
 
-      <div className="layout" style={{ display: 'grid', gridTemplateColumns: '240px 1fr', flex: 1, overflow: 'hidden' }}>
+      <div
+        className="layout"
+        style={{ display: 'grid', gridTemplateColumns: '240px 1fr', flex: 1, overflow: 'hidden', minHeight: 0 }}
+      >
 
         {/* サイドバー */}
         <div
           id="mobileSidebar"
-          className="sidebar"
+          className="sidebar-wrap"
           style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--sky-100)', borderRight: '1px solid var(--sky-200)' }}
         >
           {facLoading ? (
@@ -94,8 +94,11 @@ export default function App() {
         </div>
 
         {/* メインエリア */}
-        <div id="mobileMain" className="main" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
+        <div
+          id="mobileMain"
+          className="main"
+          style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
+        >
           {/* 往診設定バナー */}
           <VisitBanner team={selectedTeam} onVisitCalcChange={setVisitCalc} />
 
@@ -104,17 +107,31 @@ export default function App() {
         </div>
       </div>
 
-      {/* モバイル対応スタイル */}
+      {/* ④ モバイル対応スタイル */}
       <style>{`
         @media (max-width: 768px) {
-          .layout { grid-template-columns: 1fr !important; }
+          body { overflow: auto !important; height: auto !important; }
+          .layout {
+            grid-template-columns: 1fr !important;
+            overflow: visible !important;
+            flex: none !important;
+          }
           .mobile-tabs-bar { display: flex !important; }
           #mobileSidebar {
             display: ${mobileView === 'list' ? 'flex' : 'none'} !important;
-            min-height: 0; max-height: 100%;
+            min-height: 300px;
+            max-height: 60vh;
           }
           #mobileMain {
             display: ${mobileView === 'detail' ? 'flex' : 'none'} !important;
+            overflow: visible !important;
+            min-height: 0;
+          }
+          .main {
+            overflow: visible !important;
+          }
+          .main-scroll {
+            overflow: visible !important;
           }
         }
       `}</style>
