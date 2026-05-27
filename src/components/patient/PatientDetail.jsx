@@ -131,10 +131,14 @@ export default function PatientDetail({ patientId, visitCalc }) {
       text += `\n【他科受診スケジュール】\n`
       text += otherVisits.map(v => {
         let line = `・${v.hospital}`
-        if (v.department)       line += ` / ${v.department}`
-        if (v.dispensing_date)  line += `　調剤：${v.dispensing_date}`
+        if (v.department) line += ` / ${v.department}`
+        const from = v.dispensing_from ?? v.dispensing_date ?? ''
+        const to   = v.dispensing_to ?? ''
+        if (from && to)  line += `　調剤：${from}〜${to}`
+        else if (from)   line += `　調剤：${from}〜`
+        else if (to)     line += `　調剤：〜${to}`
         if (v.medication_timing) line += `　服用：${v.medication_timing}`
-        if (v.next_visit_date)  line += `　次回：${v.next_visit_date}`
+        if (v.next_visit_date)   line += `　次回：${v.next_visit_date}`
         return line
       }).join('\n')
       text += '\n'

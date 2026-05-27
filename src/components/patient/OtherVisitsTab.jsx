@@ -1,9 +1,31 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
+const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
+
 const EMPTY_VISIT = {
-  hospital: '', department: '', dispensing_date: '',
+  hospital: '', department: '',
+  dispensing_from: '', dispensing_to: '',
   medication_timing: '', next_visit_date: '',
+}
+
+function toFormData(v) {
+  return {
+    hospital:          v.hospital          ?? '',
+    department:        v.department        ?? '',
+    // 旧フィールド dispensing_date を dispensing_from として読み込む
+    dispensing_from:   v.dispensing_from   ?? v.dispensing_date ?? '',
+    dispensing_to:     v.dispensing_to     ?? '',
+    medication_timing: v.medication_timing ?? '',
+    next_visit_date:   v.next_visit_date   ?? '',
+  }
+}
+
+function fmtPeriod(from, to) {
+  if (from && to)  return `${from} 〜 ${to}`
+  if (from)        return `${from} 〜`
+  if (to)          return `〜 ${to}`
+  return ''
 }
 
 export default function OtherVisitsTab({ patient, onRefetch }) {
@@ -23,7 +45,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
   const openEditVisit = (v) => {
     setEditingId(v.id)
-    setVisitForm({ ...v })
+    setVisitForm(toFormData(v))
     setShowVisitForm(true)
   }
 
@@ -70,6 +92,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
           borderRadius: 8, padding: 12, marginBottom: 12,
         }}>
           <div className="visit-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            {/* 受診先 */}
             <div>
               <label className="field-label">受診先 *</label>
               <input
@@ -77,6 +100,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 onChange={upV('hospital')} placeholder="例：○○病院" autoFocus
               />
             </div>
+            {/* 診療科 */}
             <div>
               <label className="field-label">診療科</label>
               <input
@@ -84,21 +108,38 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 onChange={upV('department')} placeholder="例：循環器科"
               />
             </div>
+            {/* 調剤期間 from */}
             <div>
-              <label className="field-label">調剤日</label>
+              <label className="field-label">調剤期間（開始）</label>
               <input
                 type="date" className="field-input"
-                value={visitForm.dispensing_date} onChange={upV('dispensing_date')}
+                value={visitForm.dispensing_from} onChange={upV('dispensing_from')}
               />
             </div>
+            {/* 調剤期間 to */}
+            <div>
+              <label className="field-label">調剤期間（終了）</label>
+              <input
+                type="date" className="field-input"
+                value={visitForm.dispensing_to} onChange={upV('dispensing_to')}
+              />
+            </div>
+            {/* 服用タイミング（プルダウン） */}
             <div>
               <label className="field-label">服用タイミング</label>
-              <input
-                className="field-input" value={visitForm.medication_timing}
-                onChange={upV('medication_timing')} placeholder="例：朝食後"
-              />
+              <select
+                className="field-input"
+                value={visitForm.medication_timing}
+                onChange={upV('medication_timing')}
+              >
+                <option value="">-- 選択 --</option>
+                {TIMING_OPTIONS.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
-            <div style={{ gridColumn: '1/-1' }}>
+            {/* 次回受診日 */}
+            <div>
               <label className="field-label">次回受診日</label>
               <input
                 type="date" className="field-input"
@@ -125,28 +166,33 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
         </p>
       )}
 
-      {visits.map(v => (
-        <div key={v.id} style={{
-          background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
-          borderRadius: 8, padding: '10px 12px', marginBottom: 6,
-          display: 'flex', gap: 10, alignItems: 'flex-start',
-        }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-900)' }}>
-              {v.hospital}{v.department ? ` / ${v.department}` : ''}
+      {visits.map(v => {
+        const from    = v.dispensing_from ?? v.dispensing_date ?? ''
+        const to      = v.dispensing_to ?? ''
+        const period  = fmtPeriod(from, to)
+        return (
+          <div key={v.id} style={{
+            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+            borderRadius: 8, padding: '10px 12px', marginBottom: 6,
+            display: 'flex', gap: 10, alignItems: 'flex-start',
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-900)' }}>
+                {v.hospital}{v.department ? ` / ${v.department}` : ''}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--gray-500)', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+                {period             && <span>📅 調剤：{period}</span>}
+                {v.medication_timing && <span>💊 服用：{v.medication_timing}</span>}
+                {v.next_visit_date  && <span>🔄 次回：{v.next_visit_date}</span>}
+              </div>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--gray-500)', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
-              {v.dispensing_date   && <span>📅 調剤：{v.dispensing_date}</span>}
-              {v.medication_timing && <span>💊 服用：{v.medication_timing}</span>}
-              {v.next_visit_date   && <span>🔄 次回：{v.next_visit_date}</span>}
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <button className="icon-btn" title="編集" onClick={() => openEditVisit(v)}>✏️</button>
+              <button className="icon-btn" title="削除" onClick={() => deleteVisit(v.id)}>🗑️</button>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-            <button className="icon-btn" title="編集" onClick={() => openEditVisit(v)}>✏️</button>
-            <button className="icon-btn" title="削除" onClick={() => deleteVisit(v.id)}>🗑️</button>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
