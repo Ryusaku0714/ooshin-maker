@@ -4,6 +4,66 @@ import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
 import { db } from '../../hooks/useData'
 
+function fmtMMDD(dateStr) {
+  if (!dateStr) return ''
+  const [, mm, dd] = dateStr.split('-')
+  return `${mm}/${dd}`
+}
+
+async function printFacilityLogs(facility) {
+  const allPatients = (facility.om_teams ?? []).flatMap(t => t.om_patients ?? [])
+  const patientIds  = allPatients.map(p => p.id)
+  if (patientIds.length === 0) { alert('患者が登録されていません'); return }
+
+  const logs = await db.getFacilityLogs(patientIds)
+
+  const logsByPatient = {}
+  logs.forEach(log => {
+    if (!logsByPatient[log.patient_id]) logsByPatient[log.patient_id] = []
+    logsByPatient[log.patient_id].push(log)
+  })
+
+  const patientsHTML = allPatients.map(p => {
+    const pLogs = logsByPatient[p.id] ?? []
+    if (pLogs.length === 0) return ''
+    const logsHTML = pLogs.map(log => {
+      const reason   = log.reason?.trim() || '指示受け'
+      const instrD   = fmtMMDD(log.changed_at)
+      const startD   = log.start_date ? fmtMMDD(log.start_date) : null
+      return `<div class="le">
+        <div class="ld">${instrD}　${reason}</div>
+        ${startD ? `<div><b>${startD}〜</b>　${log.content}</div>` : `<div>${log.content}</div>`}
+      </div>`
+    }).join('')
+    return `<div class="ps">
+      <h2>${p.room_number}${p.initial ? '　' + p.initial : ''}</h2>
+      ${logsHTML}
+    </div>`
+  }).filter(Boolean).join('')
+
+  const today = new Date().toLocaleDateString('ja-JP')
+  const html = `<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>変更ログ一括印刷 - ${facility.name}</title>
+<style>
+  body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:11px;padding:20px;color:#0f172a}
+  h1{font-size:14px;font-weight:700;border-bottom:2px solid #075985;padding-bottom:8px;margin-bottom:16px;color:#075985}
+  h2{font-size:12px;font-weight:700;margin:14px 0 6px;padding:4px 8px;background:#e0f2fe;color:#0369a1;border-radius:4px}
+  .ps{margin-bottom:16px;page-break-inside:avoid}
+  .le{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0f2fe}
+  .ld{font-weight:700;color:#0284c7;margin-bottom:2px}
+  @media print{body{padding:0}.ps{page-break-inside:avoid}}
+</style></head><body>
+<h1>📝 変更ログ一括印刷 - ${facility.name}　（${today}）</h1>
+${patientsHTML || '<p>変更ログはありません</p>'}
+</body></html>`
+
+  const w = window.open('', '_blank', 'width=800,height=600')
+  w.document.write(html)
+  w.document.close()
+  setTimeout(() => { w.focus(); w.print() }, 300)
+}
+
 const SORT_OPTIONS = [
   { key: 'room',   label: '部屋順' },
   { key: 'kana',   label: '五十音' },
@@ -124,6 +184,11 @@ export default function Sidebar({
                   padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4,
                 }}>
                   <span style={{ flex: 1 }}>🏠 {facility.name}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); printFacilityLogs(facility) }}
+                    title="変更ログ一括印刷"
+                    style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                  >🖨️</button>
                   <button
                     onClick={e => startEditFacility(e, facility)}
                     title="施設名を編集"

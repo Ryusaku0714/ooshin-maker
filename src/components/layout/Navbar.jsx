@@ -11,8 +11,8 @@ export default function Navbar({ user, onSignOut }) {
       flexShrink: 0,
       zIndex: 100,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: 15, color: 'var(--sky-800)' }}>
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 15, color: 'var(--sky-800)', minWidth: 0 }}>
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" style={{ flexShrink: 0 }}>
           <rect x="4" y="4" width="24" height="28" rx="4" fill="#e0f2fe" stroke="#38bdf8" strokeWidth="1.5"/>
           <rect x="4" y="4" width="7" height="28" rx="3" fill="#38bdf8"/>
           <line x1="14" y1="12" x2="24" y2="12" stroke="#bae6fd" strokeWidth="1.5"/>
@@ -26,15 +26,11 @@ export default function Navbar({ user, onSignOut }) {
             <ellipse cx="0" cy="0" rx="7" ry="3.5" fill="none" stroke="white" strokeWidth="0.8"/>
           </g>
         </svg>
-        往診資料メーカー
-        <span style={{
-          fontSize: 10, background: 'var(--sky-100)', color: 'var(--sky-600)',
-          borderRadius: 10, padding: '2px 8px', fontWeight: 500,
-        }}>β版</span>
+        <span className="nav-title">往診資料メーカー</span>
       </div>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
         {user && (
-          <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>
+          <span className="nav-username" style={{ fontSize: 11, color: 'var(--gray-500)' }}>
             {user.user_metadata?.name ?? user.email}
           </span>
         )}

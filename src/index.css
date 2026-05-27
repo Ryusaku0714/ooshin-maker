@@ -148,15 +148,13 @@ body {
   margin-top: 16px;
 }
 
-/* ── 追加薬計算グリッド（ベース：4列） ── */
-.calc-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 10px;
-  align-items: flex-end;
+/* ── 追加薬計算：selectドロップダウンの文字色修正 ── */
+.calc-tool select option {
+  background: #0c4a6e;
+  color: #bae6fd;
 }
 
-/* ④ ── Responsive ── */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   body { height: auto; overflow: visible; }
 
@@ -175,11 +173,6 @@ body {
   .main-scroll {
     padding: 10px 12px !important;
     overflow-y: visible !important;
-  }
-
-  /* 追加薬計算グリッド：タブレットは2列×2行 */
-  .calc-grid {
-    grid-template-columns: 1fr 1fr !important;
   }
 
   /* 変更ログフォームグリッド */
@@ -204,14 +197,60 @@ body {
 }
 
 @media (max-width: 480px) {
-  /* 追加薬計算グリッド：スマホは1列（375pxでも崩れない） */
-  .calc-grid {
-    grid-template-columns: 1fr !important;
-  }
-
   .patient-header {
     flex-direction: column;
     align-items: flex-start !important;
+  }
+}
+
+/* ── 375px以下：スマホ最小幅対応 ── */
+@media (max-width: 375px) {
+  /* ナビゲーションバー */
+  nav {
+    padding: 8px 10px !important;
+  }
+  .nav-title {
+    font-size: 13px !important;
+  }
+  .nav-username {
+    display: none !important;
+  }
+
+  /* 往診設定バナー */
+  .visit-banner {
+    padding: 8px 10px !important;
+  }
+  .visit-banner-inner {
+    gap: 6px !important;
+  }
+  .visit-banner-inner input,
+  .visit-banner-inner select {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+
+  /* 追加薬日数計算 */
+  .calc-tool {
+    padding: 8px 10px !important;
+  }
+  .calc-tool > div:last-child {
+    gap: 6px !important;
+  }
+  .calc-tool input,
+  .calc-tool select {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+
+  /* 患者詳細 */
+  .main-scroll {
+    padding: 10px 10px !important;
+  }
+
+  /* タブボタン */
+  .tabs button {
+    padding: 5px 6px !important;
+    font-size: 10px !important;
   }
 }
 

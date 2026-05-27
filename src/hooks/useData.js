@@ -94,4 +94,15 @@ export const db = {
     supabase.from('om_change_logs').update(data).eq('id', id),
   deleteLog: (id) =>
     supabase.from('om_change_logs').delete().eq('id', id),
+
+  // 施設一括印刷用：患者IDリストの変更ログを取得
+  getFacilityLogs: async (patientIds) => {
+    if (!patientIds?.length) return []
+    const { data } = await supabase
+      .from('om_change_logs')
+      .select('*')
+      .in('patient_id', patientIds)
+      .order('changed_at', { ascending: false })
+    return data ?? []
+  },
 }
