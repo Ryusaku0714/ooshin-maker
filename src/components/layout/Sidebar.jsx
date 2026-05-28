@@ -44,7 +44,7 @@ async function printFacilityLogs(facility) {
   const today = new Date().toLocaleDateString('ja-JP')
   const html = `<!DOCTYPE html>
 <html lang="ja"><head><meta charset="utf-8">
-<title>変更ログ一括印刷 - ${facility.name}</title>
+<title>変更記録一括印刷 - ${facility.name}</title>
 <style>
   body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:11px;padding:20px;color:#0f172a}
   h1{font-size:14px;font-weight:700;border-bottom:2px solid #075985;padding-bottom:8px;margin-bottom:16px;color:#075985}
@@ -54,8 +54,8 @@ async function printFacilityLogs(facility) {
   .ld{font-weight:700;color:#0284c7;margin-bottom:2px}
   @media print{body{padding:0}.ps{page-break-inside:avoid}}
 </style></head><body>
-<h1>📝 変更ログ一括印刷 - ${facility.name}　（${today}）</h1>
-${patientsHTML || '<p>変更ログはありません</p>'}
+<h1>📝 変更記録一括印刷 - ${facility.name}　（${today}）</h1>
+${patientsHTML || '<p>変更記録はありません</p>'}
 </body></html>`
 
   const w = window.open('', '_blank', 'width=800,height=600')
@@ -89,12 +89,15 @@ export default function Sidebar({
   const [addTeamFacilityId, setAddTeamFacilityId] = useState(null)
   const [addPatientTeamId, setAddPatientTeamId] = useState(null)
 
-  // ⑤ 施設名・チーム名 インライン編集
+  // 施設名インライン編集
   const [editFacId,   setEditFacId]   = useState(null)
   const [editFacName, setEditFacName] = useState('')
-  const [editTeamId,  setEditTeamId]  = useState(null)
-  const [editTeamClinic, setEditTeamClinic] = useState('')
-  const [editTeamName,   setEditTeamName]   = useState('')
+
+  // チーム名インライン編集
+  const [editTeamId,         setEditTeamId]         = useState(null)
+  const [editTeamClinic,     setEditTeamClinic]     = useState('')
+  const [editTeamName,       setEditTeamName]       = useState('')
+  const [editTeamVisitNotes, setEditTeamVisitNotes] = useState('')
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -113,11 +116,34 @@ export default function Sidebar({
     setEditTeamId(team.id)
     setEditTeamClinic(team.clinic_name)
     setEditTeamName(team.team_name)
+    setEditTeamVisitNotes(team.visit_schedule_custom ?? '')
   }
   const saveTeamName = async (id) => {
     if (!editTeamClinic.trim() || !editTeamName.trim()) { setEditTeamId(null); return }
-    await db.updateTeam(id, { clinic_name: editTeamClinic.trim(), team_name: editTeamName.trim() })
+    await db.updateTeam(id, {
+      clinic_name: editTeamClinic.trim(),
+      team_name: editTeamName.trim(),
+      visit_schedule_custom: editTeamVisitNotes.trim(),
+    })
     setEditTeamId(null)
+    onRefetch()
+  }
+
+  // ③ チーム削除
+  const deleteTeam = async (e, team) => {
+    e.stopPropagation()
+    if (!confirm(`「${team.clinic_name} ${team.team_name}」を削除しますか？\n患者データ・変更記録・外用頓用薬もすべて削除されます。`)) return
+    await db.deleteTeam(team.id)
+    if (selectedTeamId === team.id) onSelectTeam(null)
+    onRefetch()
+  }
+
+  // ③ 患者削除
+  const deletePatient = async (e, patient) => {
+    e.stopPropagation()
+    if (!confirm(`「${patient.room_number}${patient.initial ? ' ' + patient.initial : ''}」を削除しますか？\n変更記録・外用頓用薬もすべて削除されます。`)) return
+    await db.deletePatient(patient.id)
+    if (selectedPatientId === patient.id) onSelectPatient(null)
     onRefetch()
   }
 
@@ -155,6 +181,12 @@ export default function Sidebar({
         <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
           {facilities.map(facility => (
             <div key={facility.id} style={{ marginBottom: 12 }}>
+
+              {/* ② 施設ラベル */}
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-400)', paddingLeft: 8, paddingTop: 2, letterSpacing: '0.05em' }}>
+                🏠 施設
+              </div>
+
               {/* 施設名 */}
               {editFacId === facility.id ? (
                 <div style={{ display: 'flex', gap: 4, padding: '4px 8px', alignItems: 'center' }}>
@@ -163,6 +195,7 @@ export default function Sidebar({
                     onChange={e => setEditFacName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') saveFacilityName(facility.id); if (e.key === 'Escape') setEditFacId(null) }}
                     autoFocus
+                    placeholder="施設名 / 個人在宅"
                     style={{
                       flex: 1, fontSize: 11, fontWeight: 700, color: 'var(--sky-700)',
                       border: '1.5px solid var(--sky-400)', borderRadius: 4,
@@ -186,7 +219,7 @@ export default function Sidebar({
                   <span style={{ flex: 1 }}>🏠 {facility.name}</span>
                   <button
                     onClick={e => { e.stopPropagation(); printFacilityLogs(facility) }}
-                    title="変更ログ一括印刷"
+                    title="変更記録一括印刷"
                     style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                   >🖨️</button>
                   <button
@@ -202,6 +235,12 @@ export default function Sidebar({
                 const patients = sortPatients(team.om_patients, sort)
                 return (
                   <div key={team.id} style={{ marginBottom: 6 }}>
+
+                    {/* ② 往診チームラベル */}
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-500)', paddingLeft: 14, letterSpacing: '0.05em' }}>
+                      往診チーム
+                    </div>
+
                     {/* チーム名 */}
                     {editTeamId === team.id ? (
                       <div style={{ padding: '4px 8px' }}>
@@ -216,9 +255,17 @@ export default function Sidebar({
                           <input
                             value={editTeamName}
                             onChange={e => setEditTeamName(e.target.value)}
-                            placeholder="チーム名"
-                            onKeyDown={e => { if (e.key === 'Enter') saveTeamName(team.id); if (e.key === 'Escape') setEditTeamId(null) }}
+                            placeholder="往診名称"
                             style={{ flex: 1, fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none' }}
+                          />
+                        </div>
+                        <div style={{ marginBottom: 4 }}>
+                          <input
+                            value={editTeamVisitNotes}
+                            onChange={e => setEditTeamVisitNotes(e.target.value)}
+                            placeholder="往診間隔（自由記載）"
+                            onKeyDown={e => { if (e.key === 'Enter') saveTeamName(team.id); if (e.key === 'Escape') setEditTeamId(null) }}
+                            style={{ width: '100%', fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                           />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
@@ -244,16 +291,26 @@ export default function Sidebar({
                           cursor: 'pointer', border: '1px solid var(--sky-200)',
                         }}
                       >
-                        <span>🏥 {team.clinic_name} {team.team_name}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span style={{ fontSize: 9, color: 'var(--sky-500)', fontWeight: 400 }}>
-                            {team.visit_schedule}
-                          </span>
+                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          🏥 {team.clinic_name} {team.team_name}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                          {team.visit_schedule_custom && (
+                            <span style={{ fontSize: 9, color: 'var(--sky-500)', fontWeight: 400 }}>
+                              {team.visit_schedule_custom}
+                            </span>
+                          )}
                           <button
                             onClick={e => startEditTeam(e, team)}
-                            title="チーム名を編集"
+                            title="チームを編集"
                             style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                           >✏️</button>
+                          {/* ③ チーム削除 */}
+                          <button
+                            onClick={e => deleteTeam(e, team)}
+                            title="チームを削除"
+                            style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                          >🗑️</button>
                         </div>
                       </div>
                     )}
@@ -263,20 +320,33 @@ export default function Sidebar({
                         {patients.map(p => (
                           <div
                             key={p.id}
-                            onClick={() => {
-                              onSelectPatient(p.id)
-                              onSelectTeam(team.id)
-                            }}
                             style={{
                               fontSize: 11, color: selectedPatientId === p.id ? 'white' : 'var(--sky-700)',
-                              padding: '5px 10px', borderRadius: 6, cursor: 'pointer',
+                              padding: '4px 8px', borderRadius: 6,
                               background: selectedPatientId === p.id ? 'var(--sky-600)' : 'transparent',
                               fontWeight: selectedPatientId === p.id ? 600 : 400,
-                              display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1,
+                              display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1,
                               transition: 'background 0.1s',
                             }}
                           >
-                            👤 {p.room_number}{p.initial ? ` ${p.initial}` : ''}
+                            <div
+                              onClick={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
+                              style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                            >
+                              👤 {p.room_number}{p.initial ? `　${p.initial}` : ''}
+                            </div>
+                            {/* ③ 患者削除 */}
+                            <button
+                              onClick={e => deletePatient(e, p)}
+                              title="患者を削除"
+                              style={{
+                                fontSize: 10, padding: '1px 3px', borderRadius: 3,
+                                border: selectedPatientId === p.id ? '1px solid rgba(255,255,255,0.4)' : '1px solid #fca5a5',
+                                background: 'transparent',
+                                color: selectedPatientId === p.id ? 'rgba(255,255,255,0.7)' : '#ef4444',
+                                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, lineHeight: 1,
+                              }}
+                            >🗑️</button>
                           </div>
                         ))}
                         <div

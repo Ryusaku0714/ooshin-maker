@@ -10,6 +10,7 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
   const [form, setForm] = useState({
     clinic_name: '', team_name: '',
     visit_schedule: SCHEDULES[0],
+    visit_schedule_custom: '',
     default_rx_days: 14, grace_days: 1, pharmacist_name: '',
   })
   const [saving, setSaving] = useState(false)
@@ -38,8 +39,8 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
             <input className="field-input" value={form.clinic_name} onChange={up('clinic_name')} placeholder="例：さくらCL" autoFocus />
           </div>
           <div>
-            <label className="field-label">チーム名 *</label>
-            <input className="field-input" value={form.team_name} onChange={up('team_name')} placeholder="例：チーム①" />
+            <label className="field-label">往診名称 *</label>
+            <input className="field-input" value={form.team_name} onChange={up('team_name')} placeholder="例：Aチーム" />
           </div>
           <div style={{ gridColumn: '1/-1' }}>
             <label className="field-label">往診スケジュール</label>
@@ -47,12 +48,16 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
               {SCHEDULES.map(s => <option key={s}>{s}</option>)}
             </select>
           </div>
+          <div style={{ gridColumn: '1/-1' }}>
+            <label className="field-label">往診間隔（自由記載）</label>
+            <input className="field-input" value={form.visit_schedule_custom} onChange={up('visit_schedule_custom')} placeholder="例：月2回・第1第3水曜など" />
+          </div>
           <div>
             <label className="field-label">通常処方日数</label>
             <input type="number" className="field-input" value={form.default_rx_days} onChange={up('default_rx_days')} min={1} max={90} />
           </div>
           <div>
-            <label className="field-label">猶予日数（薬局設定）</label>
+            <label className="field-label">処方ズレ日数（薬局設定）</label>
             <input type="number" className="field-input" value={form.grace_days} onChange={up('grace_days')} min={0} max={14} />
           </div>
           <div style={{ gridColumn: '1/-1' }}>

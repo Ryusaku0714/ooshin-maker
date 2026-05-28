@@ -206,7 +206,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
       <div className="card">
         <div className="card-title">
-          📝 薬剤変更ログ
+          📝 薬剤変更記録
           <div style={{ display: 'flex', gap: 6 }}>
             {logs.length > 0 && (
               <button className="btn btn-outline btn-sm" onClick={copyAll}>
@@ -270,7 +270,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
         {logs.length === 0 && (
           <p style={{ fontSize: 12, color: 'var(--gray-400)', textAlign: 'center', padding: '20px 0' }}>
-            変更ログがまだありません
+            変更記録がまだありません
           </p>
         )}
 

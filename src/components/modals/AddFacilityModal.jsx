@@ -23,7 +23,7 @@ export default function AddFacilityModal({ onClose, onSaved }) {
           className="field-input"
           value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="例：ひまわり苑"
+          placeholder="施設名 / 個人在宅"
           onKeyDown={e => e.key === 'Enter' && save()}
           autoFocus
         />

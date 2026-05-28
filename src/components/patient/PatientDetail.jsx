@@ -9,7 +9,7 @@ import { usePatient }  from '../../hooks/useData'
 // タブ順序：基本情報 → 変更ログ → 外用・頓用薬 → 他科受診 → フリーメモ
 const TABS = [
   { key: 'basic',  label: '📋 基本情報' },
-  { key: 'log',    label: '📝 変更ログ' },
+  { key: 'log',    label: '📝 日数計算・変更記録' },
   { key: 'drugs',  label: '💊 外用・頓用薬' },
   { key: 'visit',  label: '🏥 他科受診' },
   { key: 'free',   label: '📄 フリーメモ' },
@@ -34,7 +34,7 @@ function generatePatientMonthHTML(patient, logs) {
     </div>`
   }).join('')
 
-  const title = `変更ログ（直近1ヶ月）- ${patient.room_number}${patient.initial ? '　' + patient.initial : ''}`
+  const title = `変更記録（直近1ヶ月）- ${patient.room_number}${patient.initial ? '　' + patient.initial : ''}`
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -50,7 +50,7 @@ function generatePatientMonthHTML(patient, logs) {
 </head>
 <body>
   <h1>${title}</h1>
-  ${logsHTML || '<p style="color:#94a3b8;">直近1ヶ月の変更ログはありません</p>'}
+  ${logsHTML || '<p style="color:#94a3b8;">直近1ヶ月の変更記録はありません</p>'}
 </body>
 </html>`
 }
@@ -107,7 +107,7 @@ export default function PatientDetail({ patientId, visitCalc }) {
       text += `\n【入院歴】\n${patient.hospitalization_history}\n`
 
     if (logs.length > 0) {
-      text += `\n【変更ログ】\n`
+      text += `\n【変更記録】\n`
       text += logs.map(formatLog).join('\n\n')
       text += '\n'
     }
