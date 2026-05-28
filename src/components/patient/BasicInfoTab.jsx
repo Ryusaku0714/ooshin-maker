@@ -12,7 +12,11 @@ export default function BasicInfoTab({ patient, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const up = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+  const up = (k) => (e) => {
+    const val = k === 'room_number' ? toHalf(e.target.value) : e.target.value
+    setForm(f => ({ ...f, [k]: val }))
+  }
 
   const save = async () => {
     setSaving(true)

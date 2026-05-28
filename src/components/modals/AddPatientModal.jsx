@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
+const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+
 export default function AddPatientModal({ teamId, onClose, onSaved }) {
   const [form, setForm] = useState({ room_number: '', initial: '' })
   const [saving, setSaving] = useState(false)
-  const up = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+  const up = k => e => {
+    const val = k === 'room_number' ? toHalf(e.target.value) : e.target.value
+    setForm(f => ({ ...f, [k]: val }))
+  }
 
   const save = async () => {
     if (!form.room_number.trim()) return

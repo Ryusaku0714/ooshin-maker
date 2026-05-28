@@ -70,10 +70,19 @@ const SORT_OPTIONS = [
   { key: 'recent', label: '最近' },
 ]
 
+const toHalfNum = s => (s ?? '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+
 function sortPatients(patients, sort) {
   if (!patients) return []
   const arr = [...patients]
-  if (sort === 'room')   return arr.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  if (sort === 'room') {
+    return arr.sort((a, b) => {
+      const an = parseInt(toHalfNum(a.room_number), 10)
+      const bn = parseInt(toHalfNum(b.room_number), 10)
+      if (!isNaN(an) && !isNaN(bn)) return an - bn
+      return toHalfNum(a.room_number).localeCompare(toHalfNum(b.room_number), 'ja')
+    })
+  }
   if (sort === 'kana')   return arr.sort((a, b) => (a.initial ?? '').localeCompare(b.initial ?? '', 'ja'))
   if (sort === 'recent') return arr.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
   return arr
