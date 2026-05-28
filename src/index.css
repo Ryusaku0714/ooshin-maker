@@ -332,4 +332,41 @@ body {
   .patient-header {
     margin-bottom: 10px;
   }
+
+  /* 外用・頓用薬セクション：コンパクト1行表示 */
+  .drug-card {
+    display: flex !important;
+    padding: 2px 4px !important;
+    margin-bottom: 1px !important;
+    background: white !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    gap: 6px !important;
+    align-items: baseline !important;
+  }
+  .drug-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    column-gap: 6px !important;
+    row-gap: 0 !important;
+  }
+  .drug-content > div {
+    display: inline !important;
+    margin-top: 0 !important;
+  }
+  .drug-content > div > span {
+    margin-right: 4px !important;
+  }
+  .drug-detail {
+    font-size: 9px !important;
+    color: #64748b !important;
+    margin-top: 0 !important;
+  }
+  .drug-badge {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+  }
 }

@@ -117,8 +117,10 @@ export default function PatientDetail({ patientId, visitCalc }) {
       text += drugs.map(d => {
         const type = d.drug_type === 'gaiyou' ? '外用' : '頓用'
         let line = `・${d.drug_name}（${type}）`
-        if (d.description) line += `　${d.description}`
-        if (d.last_confirmed_at) line += `　✅確認：${d.last_confirmed_at}`
+        if (d.prescribed_quantity) line += `　${d.prescribed_quantity}`
+        if (d.remaining_quantity)  line += `　残：${d.remaining_quantity}`
+        if (d.description)         line += `　${d.description}`
+        if (d.last_confirmed_at)   line += `　✅確認：${d.last_confirmed_at}`
         return line
       }).join('\n')
       text += '\n'

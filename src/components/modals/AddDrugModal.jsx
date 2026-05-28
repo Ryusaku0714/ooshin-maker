@@ -8,6 +8,8 @@ export default function AddDrugModal({ patientId, onClose, onSaved }) {
     drug_name: '',
     description: '',
     prescribed_at: today,
+    prescribed_quantity: '',
+    remaining_quantity: '',
   })
   const [saving, setSaving] = useState(false)
   const up = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -48,6 +50,16 @@ export default function AddDrugModal({ patientId, onClose, onSaved }) {
           <div>
             <label className="field-label">薬剤名 *</label>
             <input className="field-input" value={form.drug_name} onChange={up('drug_name')} placeholder="例：アズノール軟膏 40g" autoFocus />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label className="field-label">処方量（任意）</label>
+              <input className="field-input" value={form.prescribed_quantity} onChange={up('prescribed_quantity')} placeholder="例：40g / 1本" />
+            </div>
+            <div>
+              <label className="field-label">残数（任意）</label>
+              <input className="field-input" value={form.remaining_quantity} onChange={up('remaining_quantity')} placeholder="例：半分 / 2本" />
+            </div>
           </div>
           <div>
             <label className="field-label">説明・用途</label>

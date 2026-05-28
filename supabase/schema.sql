@@ -162,3 +162,11 @@ ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS other_visits JSONB NOT NULL DEF
 
 -- om_teams: 最後に設定した往診日を保持
 ALTER TABLE om_teams ADD COLUMN IF NOT EXISTS last_visit_date DATE;
+
+-- ============================================================
+-- v4 マイグレーション：外用・頓用薬に処方量・残数を追加
+-- ============================================================
+
+-- om_drugs: 処方量・残数を追加
+ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS prescribed_quantity TEXT;
+ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS remaining_quantity  TEXT;
