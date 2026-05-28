@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
-export default function AddDrugModal({ patientId, onClose, onSaved }) {
+export default function AddDrugModal({ patientId, drug, onClose, onSaved }) {
   const today = new Date().toISOString().slice(0, 10)
+  const isEdit = !!drug
   const [form, setForm] = useState({
-    drug_type: 'gaiyou',
-    drug_name: '',
-    description: '',
-    prescribed_at: today,
-    prescribed_quantity: '',
-    remaining_quantity: '',
+    drug_type:           drug?.drug_type           ?? 'gaiyou',
+    drug_name:           drug?.drug_name           ?? '',
+    description:         drug?.description         ?? '',
+    prescribed_at:       drug?.prescribed_at       ?? today,
+    prescribed_quantity: drug?.prescribed_quantity ?? '',
+    remaining_quantity:  drug?.remaining_quantity  ?? '',
   })
   const [saving, setSaving] = useState(false)
   const up = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -17,7 +18,18 @@ export default function AddDrugModal({ patientId, onClose, onSaved }) {
   const save = async () => {
     if (!form.drug_name.trim()) return
     setSaving(true)
-    await db.addDrug(patientId, form)
+    if (isEdit) {
+      await db.updateDrug(drug.id, {
+        drug_type:           form.drug_type,
+        drug_name:           form.drug_name,
+        description:         form.description,
+        prescribed_at:       form.prescribed_at,
+        prescribed_quantity: form.prescribed_quantity,
+        remaining_quantity:  form.remaining_quantity,
+      })
+    } else {
+      await db.addDrug(patientId, form)
+    }
     setSaving(false)
     onSaved?.()
     onClose()
@@ -26,7 +38,7 @@ export default function AddDrugModal({ patientId, onClose, onSaved }) {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        <div className="modal-title">💊 外用・頓用薬を追加</div>
+        <div className="modal-title">{isEdit ? '💊 外用・頓用薬を編集' : '💊 外用・頓用薬を追加'}</div>
         <div style={{ display: 'grid', gap: 10 }}>
           <div>
             <label className="field-label">種別 *</label>
@@ -73,7 +85,7 @@ export default function AddDrugModal({ patientId, onClose, onSaved }) {
         <div className="modal-footer">
           <button className="btn btn-outline" onClick={onClose}>キャンセル</button>
           <button className="btn btn-primary" onClick={save} disabled={saving || !form.drug_name.trim()}>
-            {saving ? '追加中…' : '追加'}
+            {saving ? (isEdit ? '保存中…' : '追加中…') : (isEdit ? '保存' : '追加')}
           </button>
         </div>
       </div>

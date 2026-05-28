@@ -153,9 +153,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const [reason,    setReason]      = useState('')
   const [startDate, setStartDate]   = useState('')
   const [content,   setContent]     = useState('')
-  const [adding,    setAdding]      = useState(false)
-  const [showForm,  setShowForm]    = useState(false)
-  const [copied,    setCopied]      = useState(false)
+  const [adding,      setAdding]      = useState(false)
+  const [showForm,    setShowForm]    = useState(false)
+  const [copied,      setCopied]      = useState(false)
+  const [editingId,   setEditingId]   = useState(null)
+  const [editForm,    setEditForm]    = useState({ changed_at: '', reason: '', start_date: '', content: '' })
+  const [editSaving,  setEditSaving]  = useState(false)
 
   // 往診日が変わったらデフォルト日付を同期
   useEffect(() => {
@@ -192,6 +195,37 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     await db.deleteLog(id)
     onRefetch?.()
   }
+
+  const startEdit = (log) => {
+    setEditingId(log.id)
+    setEditForm({
+      changed_at: log.changed_at ?? '',
+      reason:     log.reason     ?? '',
+      start_date: log.start_date ?? '',
+      content:    log.content    ?? '',
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditForm({ changed_at: '', reason: '', start_date: '', content: '' })
+  }
+
+  const saveEdit = async () => {
+    if (!editForm.content.trim()) return
+    setEditSaving(true)
+    await db.updateLog(editingId, {
+      changed_at: editForm.changed_at,
+      reason:     editForm.reason.trim(),
+      start_date: editForm.start_date || editForm.changed_at,
+      content:    editForm.content.trim(),
+    })
+    setEditSaving(false)
+    cancelEdit()
+    onRefetch?.()
+  }
+
+  const upEdit = k => e => setEditForm(f => ({ ...f, [k]: e.target.value }))
 
   const copyAll = async () => {
     const text = logs.map(formatLogText).join('\n\n')
@@ -276,38 +310,79 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
         {/* ログ一覧 */}
         {logs.map((log, i) => {
-          const reason = log.reason?.trim() || '指示受け'
-          const instrD = fmtMMDD(log.changed_at)
+          const isEditing    = editingId === log.id
+          const displayReason = log.reason?.trim() || '指示受け'
+          const instrD       = fmtMMDD(log.changed_at)
           const hasStartDate = !!log.start_date
-          const startD = hasStartDate ? fmtMMDD(log.start_date) : null
+          const startD       = hasStartDate ? fmtMMDD(log.start_date) : null
 
           return (
             <div key={log.id} style={{
-              padding: '8px 0',
-              borderBottom: i < logs.length - 1 ? '1px solid var(--sky-50)' : 'none',
-              display: 'flex', gap: 8, alignItems: 'flex-start',
+              padding: isEditing ? 0 : '8px 0',
+              borderBottom: (!isEditing && i < logs.length - 1) ? '1px solid var(--sky-50)' : 'none',
+              marginBottom: isEditing ? 8 : 0,
             }}>
-              <div style={{ flex: 1, fontSize: 12 }}>
-                {hasStartDate ? (
-                  <>
-                    <div style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
-                      　{reason}
+              {isEditing ? (
+                <div style={{
+                  background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+                  borderRadius: 8, padding: 12,
+                }}>
+                  <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                    <div>
+                      <label className="field-label">変更指示日</label>
+                      <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
                     </div>
-                    <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
-                      　{log.content}
+                    <div>
+                      <label className="field-label">理由（空欄→「指示受け」）</label>
+                      <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
                     </div>
-                  </>
-                ) : (
-                  // 旧形式バックワード互換
-                  <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
-                    　{log.content}
+                    <div>
+                      <label className="field-label">開始日</label>
+                      <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
+                    </div>
+                    <div>
+                      <label className="field-label">内容</label>
+                      <input
+                        type="text" className="field-input"
+                        value={editForm.content} onChange={upEdit('content')}
+                        onKeyDown={e => e.key === 'Enter' && saveEdit()}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-              <button className="icon-btn" style={{ flexShrink: 0, marginTop: 2 }} onClick={() => del(log.id)}>🗑️</button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                    <button className="btn btn-outline btn-sm" onClick={cancelEdit}>キャンセル</button>
+                    <button className="btn btn-primary btn-sm" onClick={saveEdit} disabled={editSaving || !editForm.content.trim()}>
+                      {editSaving ? '…' : '保存'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1, fontSize: 12 }}>
+                    {hasStartDate ? (
+                      <>
+                        <div style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
+                          <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                          　{displayReason}
+                        </div>
+                        <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                          <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
+                          　{log.content}
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                        　{log.content}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2 }}>
+                    <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>✏️</button>
+                    <button className="icon-btn" title="削除" onClick={() => del(log.id)}>🗑️</button>
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}

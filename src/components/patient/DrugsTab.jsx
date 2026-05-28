@@ -4,10 +4,11 @@ import AddDrugModal from '../modals/AddDrugModal'
 
 export default function DrugsTab({ patient, onRefetch }) {
   const [showAdd,      setShowAdd]      = useState(false)
+  const [editDrug,     setEditDrug]     = useState(null)
   const [showArchived, setShowArchived] = useState(false)
 
-  const allDrugs     = patient?.om_drugs ?? []
-  const activeDrugs  = allDrugs.filter(d => !d.is_archived)
+  const allDrugs      = patient?.om_drugs ?? []
+  const activeDrugs   = allDrugs.filter(d => !d.is_archived)
   const archivedDrugs = allDrugs.filter(d => d.is_archived)
 
   const del = async (id) => {
@@ -65,6 +66,7 @@ export default function DrugsTab({ patient, onRefetch }) {
             key={drug.id}
             drug={drug}
             archived={false}
+            onEdit={() => setEditDrug(drug)}
             onConfirm={() => confirmDate(drug)}
             onArchive={() => archive(drug.id)}
             onRestore={() => restore(drug.id)}
@@ -88,6 +90,7 @@ export default function DrugsTab({ patient, onRefetch }) {
                 key={drug.id}
                 drug={drug}
                 archived={true}
+                onEdit={() => setEditDrug(drug)}
                 onConfirm={() => confirmDate(drug)}
                 onArchive={() => archive(drug.id)}
                 onRestore={() => restore(drug.id)}
@@ -105,11 +108,20 @@ export default function DrugsTab({ patient, onRefetch }) {
           onSaved={onRefetch}
         />
       )}
+
+      {editDrug && (
+        <AddDrugModal
+          patientId={patient.id}
+          drug={editDrug}
+          onClose={() => setEditDrug(null)}
+          onSaved={onRefetch}
+        />
+      )}
     </>
   )
 }
 
-function DrugRow({ drug, archived, onConfirm, onArchive, onRestore, onDelete }) {
+function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDelete }) {
   const detailParts = [
     drug.description,
     drug.prescribed_at     && `処方：${drug.prescribed_at}`,
@@ -171,6 +183,7 @@ function DrugRow({ drug, archived, onConfirm, onArchive, onRestore, onDelete }) 
       <div className="drug-actions" style={{ display: 'flex', gap: 4 }}>
         {archived ? (
           <>
+            <button className="icon-btn" title="編集" onClick={onEdit}>✏️</button>
             <button
               className="icon-btn"
               title="復元（使用中に戻す）"
@@ -181,6 +194,7 @@ function DrugRow({ drug, archived, onConfirm, onArchive, onRestore, onDelete }) 
           </>
         ) : (
           <>
+            <button className="icon-btn" title="編集" onClick={onEdit}>✏️</button>
             <button className="icon-btn" title="残量確認" onClick={onConfirm}>✅</button>
             <button
               className="icon-btn"
