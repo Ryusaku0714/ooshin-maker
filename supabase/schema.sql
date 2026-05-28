@@ -170,3 +170,10 @@ ALTER TABLE om_teams ADD COLUMN IF NOT EXISTS last_visit_date DATE;
 -- om_drugs: 処方量・残数を追加
 ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS prescribed_quantity TEXT;
 ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS remaining_quantity  TEXT;
+
+-- ============================================================
+-- v5 マイグレーション：外用・頓用薬にアーカイブフラグを追加
+-- ============================================================
+
+-- om_drugs: アーカイブフラグ（終了薬として保存）
+ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;
