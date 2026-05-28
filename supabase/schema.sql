@@ -177,3 +177,10 @@ ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS remaining_quantity  TEXT;
 
 -- om_drugs: アーカイブフラグ（終了薬として保存）
 ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============================================================
+-- v6 メモ：他科受診アーカイブ
+-- ============================================================
+-- other_visits は om_patients.other_visits (JSONB配列) に格納されているため
+-- テーブルへの ALTER は不要。各要素オブジェクトに is_archived: boolean を追加する。
+-- SQL マイグレーションなし。
