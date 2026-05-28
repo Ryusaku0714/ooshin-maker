@@ -30,7 +30,7 @@ export default function App() {
 
   // 選択中チームを特定
   const selectedTeam = facilities
-    .flatMap(f => f.teams ?? [])
+    .flatMap(f => f.om_teams ?? [])
     .find(t => t.id === selectedTeamId) ?? null
 
   const handleSelectPatient = (id) => {

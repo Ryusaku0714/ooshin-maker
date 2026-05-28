@@ -155,3 +155,10 @@ ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS start_date DATE;
 
 -- om_patients: 他科受診スケジュール（JSONB配列）を追加
 ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS other_visits JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+-- ============================================================
+-- v3 マイグレーション：チームごとの往診日を保存
+-- ============================================================
+
+-- om_teams: 最後に設定した往診日を保持
+ALTER TABLE om_teams ADD COLUMN IF NOT EXISTS last_visit_date DATE;

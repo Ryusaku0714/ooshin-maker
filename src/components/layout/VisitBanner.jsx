@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { db } from '../../hooks/useData'
 
 function fmt(d) { return `${d.getMonth() + 1}/${d.getDate()}` }
 function fmtFull(d) {
@@ -8,25 +9,47 @@ function fmtFull(d) {
 export default function VisitBanner({ team, onVisitCalcChange }) {
   const today = fmtFull(new Date())
   const [visitDate, setVisitDate] = useState(today)
-  const [rxDays, setRxDays] = useState(team?.default_rx_days ?? 14)
+  const [rxDays,    setRxDays]    = useState(team?.default_rx_days ?? 14)
   const [graceDays, setGraceDays] = useState(team?.grace_days ?? 1)
-  const [rxStart, setRxStart] = useState('')
-  const [rxPeriod, setRxPeriod] = useState('—')
+  const [rxStart,   setRxStart]   = useState('')
+  const [rxPeriod,  setRxPeriod]  = useState('—')
   const [nextVisit, setNextVisit] = useState('次回往診：—')
-  const [rxEnd, setRxEnd] = useState('')
+  const [rxEnd,     setRxEnd]     = useState('')
+  const [saving,    setSaving]    = useState(false)
 
-  // ⑤ チーム切替時に自動反映
+  // チーム切替時：保存済み設定を自動反映
   useEffect(() => {
     if (team) {
+      setVisitDate(team.last_visit_date ?? fmtFull(new Date()))
       setRxDays(team.default_rx_days ?? 14)
       setGraceDays(team.grace_days ?? 1)
-      setVisitDate(fmtFull(new Date()))
     }
   }, [team?.id])
 
+  // 計算
   useEffect(() => {
     calc()
   }, [visitDate, rxDays, graceDays])
+
+  // 変更をチームにリアルタイム保存（デバウンス800ms）
+  useEffect(() => {
+    const teamId = team?.id
+    if (!teamId) return
+    const rxD = Number(rxDays)
+    const grD = Number(graceDays)
+    if (!visitDate || rxD < 1 || grD < 0) return
+
+    const timer = setTimeout(async () => {
+      setSaving(true)
+      await db.updateTeam(teamId, {
+        last_visit_date: visitDate,
+        default_rx_days: rxD,
+        grace_days:      grD,
+      })
+      setSaving(false)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [visitDate, rxDays, graceDays, team?.id])
 
   function calc() {
     if (!visitDate) return
@@ -94,10 +117,18 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{rxPeriod}</div>
           <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 1 }}>{nextVisit}</div>
         </div>
+
+        {/* 保存インジケーター */}
+        {team && (
+          <div style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
+            {saving ? '💾 保存中…' : '✓ 保存済'}
+          </div>
+        )}
       </div>
 
       <style>{`
         @media (max-width: 375px) {
+          .visit-banner { padding: 7px 10px !important; }
           .visit-banner-fields {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
