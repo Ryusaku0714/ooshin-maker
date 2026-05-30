@@ -187,7 +187,7 @@ export default function Sidebar({
         </div>
 
         {/* Scroll area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 52px' }}>
           {facilities.map(facility => (
             <div key={facility.id} style={{ marginBottom: 12 }}>
 

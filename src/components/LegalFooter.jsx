@@ -29,17 +29,19 @@ export default function LegalFooter() {
           onClick={() => setLegal('privacy')}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 10, color: '#94a3b8', fontFamily: 'inherit',
+            fontSize: 11, color: '#64748b', fontFamily: 'inherit',
+            padding: '8px 4px',
           }}
         >
           プライバシーポリシー
         </button>
-        <span style={{ fontSize: 10, color: '#cbd5e1' }}>|</span>
+        <span style={{ fontSize: 11, color: '#94a3b8' }}>|</span>
         <button
           onClick={() => setLegal('terms')}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 10, color: '#94a3b8', fontFamily: 'inherit',
+            fontSize: 11, color: '#64748b', fontFamily: 'inherit',
+            padding: '8px 4px',
           }}
         >
           利用規約

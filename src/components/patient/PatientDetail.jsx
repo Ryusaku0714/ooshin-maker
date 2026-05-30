@@ -184,7 +184,7 @@ export default function PatientDetail({ patientId, visitCalc }) {
   }
 
   return (
-    <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+    <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 52px' }}>
       {/* 患者ヘッダー */}
       <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--sky-900)', display: 'flex', alignItems: 'center', gap: 10 }}>
