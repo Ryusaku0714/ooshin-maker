@@ -110,13 +110,14 @@ export default function App() {
         </div>
       </div>
 
-      {/* フッター（固定・最下部） */}
+      {/* フッター（通常フロー・#root flex の最後尾に固定） */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 150,
-        height: 34, background: 'rgba(255,255,255,0.92)',
-        backdropFilter: 'blur(8px)',
+        flexShrink: 0,
+        height: 34,
+        background: 'rgba(255,255,255,0.95)',
         borderTop: '1px solid var(--sky-100)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
+        zIndex: 50,
       }}>
         <button
           onClick={() => setLegal('privacy')}
@@ -135,7 +136,7 @@ export default function App() {
         >利用規約</button>
       </div>
 
-      {/* ヘルプボタン（固定・フッター分上げ） */}
+      {/* ヘルプボタン（固定） */}
       <button
         onClick={() => setShowHelp(true)}
         style={{
