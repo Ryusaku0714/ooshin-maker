@@ -37,6 +37,14 @@ body {
   overflow: hidden;
 }
 
+/* サイドバー内部を flex コラムにして患者リストのスクロールを有効化 */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 /* ── Buttons ── */
 .btn {
   padding: 7px 14px;
@@ -160,12 +168,8 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  body { height: auto; overflow: visible; }
-  #root { height: auto; overflow: visible; }
-
   .layout {
     grid-template-columns: 1fr !important;
-    overflow: visible;
   }
 
   /* 往診バナー */
@@ -177,7 +181,8 @@ body {
   /* 患者詳細エリア */
   .main-scroll {
     padding: 10px 12px !important;
-    overflow-y: visible !important;
+    overflow-y: auto !important;
+    min-height: 0;
   }
 
   /* 変更ログフォームグリッド */

@@ -206,28 +206,35 @@ export default function App() {
       {/* ④ モバイル対応スタイル */}
       <style>{`
         @media (max-width: 768px) {
-          body { overflow: auto !important; height: auto !important; }
           .layout {
-            grid-template-columns: 1fr !important;
-            overflow: visible !important;
-            flex: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+            overflow: hidden !important;
+            min-height: 0 !important;
           }
           .mobile-tabs-bar { display: flex !important; }
           #mobileSidebar {
             display: ${mobileView === 'list' ? 'flex' : 'none'} !important;
-            min-height: 300px;
-            max-height: 60vh;
+            overflow: hidden !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
           #mobileMain {
             display: ${mobileView === 'detail' ? 'flex' : 'none'} !important;
-            overflow: visible !important;
-            min-height: 0;
+            overflow: hidden !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
           .main {
-            overflow: visible !important;
+            overflow: hidden !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
           .main-scroll {
-            overflow: visible !important;
+            overflow-y: auto !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
         }
       `}</style>
