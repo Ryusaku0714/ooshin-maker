@@ -1,9 +1,6 @@
-import { useState } from 'react'
-import LegalModal from '../LegalModal'
+import LegalFooter from '../LegalFooter'
 
 export default function Login({ onLogin }) {
-  const [legal, setLegal] = useState(null)
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -11,6 +8,7 @@ export default function Login({ onLogin }) {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'var(--sky-50)',
+      paddingBottom: 34,
     }}>
       <div style={{
         background: 'white',
@@ -51,26 +49,8 @@ export default function Login({ onLogin }) {
         <p style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 20 }}>
           個人情報は保護され、第三者に共有されません
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 14 }}>
-          <button
-            onClick={() => setLegal('privacy')}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
-              textDecoration: 'underline',
-            }}
-          >プライバシーポリシー</button>
-          <button
-            onClick={() => setLegal('terms')}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
-              textDecoration: 'underline',
-            }}
-          >利用規約</button>
-        </div>
       </div>
-      {legal && <LegalModal type={legal} onClose={() => setLegal(null)} />}
+      <LegalFooter />
     </div>
   )
 }

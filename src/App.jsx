@@ -6,7 +6,7 @@ import Navbar from './components/layout/Navbar'
 import Sidebar from './components/layout/Sidebar'
 import VisitBanner from './components/layout/VisitBanner'
 import PatientDetail from './components/patient/PatientDetail'
-import LegalModal from './components/LegalModal'
+import LegalFooter from './components/LegalFooter'
 
 export default function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
@@ -17,7 +17,6 @@ export default function App() {
   const [visitCalc, setVisitCalc] = useState(null)
   const [mobileView, setMobileView] = useState('list') // 'list' | 'detail'
   const [showHelp,   setShowHelp]   = useState(false)
-  const [legal,      setLegal]      = useState(null)  // 'privacy' | 'terms' | null
 
   if (loading) {
     return (
@@ -110,33 +109,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* フッター（通常フロー・#root flex の最後尾に固定） */}
-      <div style={{
-        flexShrink: 0,
-        height: 34,
-        background: 'rgba(255,255,255,0.95)',
-        borderTop: '1px solid var(--sky-100)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
-        zIndex: 50,
-      }}>
-        <button
-          onClick={() => setLegal('privacy')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
-          }}
-        >プライバシーポリシー</button>
-        <span style={{ fontSize: 10, color: 'var(--gray-200)' }}>|</span>
-        <button
-          onClick={() => setLegal('terms')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
-          }}
-        >利用規約</button>
-      </div>
-
-      {/* ヘルプボタン（固定） */}
+      {/* ヘルプボタン（固定・フッター 34px 分上げ） */}
       <button
         onClick={() => setShowHelp(true)}
         style={{
@@ -227,8 +200,8 @@ export default function App() {
         </div>
       )}
 
-      {/* リーガルモーダル */}
-      {legal && <LegalModal type={legal} onClose={() => setLegal(null)} />}
+      {/* フッター（portal 経由で document.body に直接描画） */}
+      <LegalFooter />
 
       {/* ④ モバイル対応スタイル */}
       <style>{`
