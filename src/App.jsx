@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useFacilities } from './hooks/useData'
 import Login from './components/auth/Login'
@@ -6,7 +6,6 @@ import Navbar from './components/layout/Navbar'
 import Sidebar from './components/layout/Sidebar'
 import VisitBanner from './components/layout/VisitBanner'
 import PatientDetail from './components/patient/PatientDetail'
-import LegalFooter from './components/LegalFooter'
 
 export default function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
@@ -109,11 +108,11 @@ export default function App() {
         </div>
       </div>
 
-      {/* ヘルプボタン（固定・フッター 34px 分上げ） */}
+      {/* ヘルプボタン（固定） */}
       <button
         onClick={() => setShowHelp(true)}
         style={{
-          position: 'fixed', bottom: 54, right: 20, zIndex: 200,
+          position: 'fixed', bottom: 20, right: 20, zIndex: 200,
           width: 44, height: 44, borderRadius: '50%',
           background: 'var(--sky-600)', color: 'white',
           border: 'none', fontSize: 20, fontWeight: 700,
@@ -199,9 +198,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      {/* フッター（portal 経由で document.body に直接描画） */}
-      <LegalFooter />
 
       {/* ④ モバイル対応スタイル */}
       <style>{`

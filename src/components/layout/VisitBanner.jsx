@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 
 function fmt(d) { return `${d.getMonth() + 1}/${d.getDate()}` }
@@ -73,7 +73,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       <div className="visit-banner-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
 
         {/* 往診日 */}
-        <Field label="往診日" style={{ flex: '2 1 120px', minWidth: 110 }}>
+        <Field label="往診日" className="visit-date-field" style={{ flex: '2 1 120px', minWidth: 110 }}>
           <input
             type="date" value={visitDate}
             onChange={e => setVisitDate(e.target.value)}
@@ -82,7 +82,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         {/* 処方日数 */}
-        <Field label="処方日数" style={{ flex: '1 1 56px', minWidth: 52 }}>
+        <Field label="処方日数" className="rx-days-field" style={{ flex: '1 1 56px', minWidth: 52 }}>
           <input
             type="number" value={rxDays} min={1} max={90}
             onChange={e => setRxDays(e.target.value)}
@@ -91,7 +91,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         {/* 処方ズレ日数 */}
-        <Field label="処方ズレ日数" style={{ flex: '1 1 68px', minWidth: 64 }}>
+        <Field label="処方ズレ日数" className="grace-days-field" style={{ flex: '1 1 68px', minWidth: 64 }}>
           <input
             type="number" value={graceDays} min={0} max={14}
             onChange={e => setGraceDays(e.target.value)}
@@ -100,7 +100,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         {/* 処方開始（読み取り専用） */}
-        <Field label="処方開始" style={{ flex: '1 1 60px', minWidth: 56 }}>
+        <Field label="処方開始" className="rx-start-field" style={{ flex: '1 1 60px', minWidth: 56 }}>
           <input
             type="text" value={rxStart} readOnly
             style={{ ...bannerInputStyle, cursor: 'default', opacity: 0.8 }}
@@ -120,7 +120,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
 
         {/* 保存インジケーター */}
         {team && (
-          <div style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
+          <div className="save-indicator" style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
             {saving ? '💾 保存中…' : '✓ 保存済'}
           </div>
         )}
@@ -131,11 +131,32 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           .visit-banner { padding: 7px 10px !important; }
           .visit-banner-fields {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 6px !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            gap: 5px !important;
+            align-items: end !important;
+          }
+          .visit-date-field {
+            grid-column: 1 / 2 !important;
+            grid-row: 1 !important;
+          }
+          .rx-days-field {
+            grid-column: 1 !important;
+            grid-row: 2 !important;
+          }
+          .grace-days-field {
+            grid-column: 2 !important;
+            grid-row: 2 !important;
+          }
+          .rx-start-field {
+            grid-column: 3 !important;
+            grid-row: 2 !important;
           }
           .visit-banner-period {
             grid-column: 1 / -1 !important;
+            grid-row: 3 !important;
+          }
+          .save-indicator {
+            display: none !important;
           }
         }
       `}</style>
@@ -143,9 +164,9 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   )
 }
 
-function Field({ label, children, style }) {
+function Field({ label, children, style, className }) {
   return (
-    <div style={style}>
+    <div style={style} className={className}>
       <label style={{ fontSize: 9, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em', display: 'block', marginBottom: 3 }}>
         {label}
       </label>

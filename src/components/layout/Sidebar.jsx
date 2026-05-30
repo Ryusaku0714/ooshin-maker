@@ -1,8 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
 import { db } from '../../hooks/useData'
+import LegalFooter from '../LegalFooter'
 
 function fmtMMDD(dateStr) {
   if (!dateStr) return ''
@@ -187,7 +188,7 @@ export default function Sidebar({
         </div>
 
         {/* Scroll area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 52px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 8px' }}>
           {facilities.map(facility => (
             <div key={facility.id} style={{ marginBottom: 12 }}>
 
@@ -388,6 +389,8 @@ export default function Sidebar({
           >
             🏠 ＋ 施設を追加
           </div>
+
+          <LegalFooter />
         </div>
       </div>
 
