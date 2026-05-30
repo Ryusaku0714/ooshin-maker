@@ -157,6 +157,7 @@ export default function PatientDetail({ patientId, visitCalc }) {
           line += `　服用：${v.medication_timing}〜${endT}`
         }
         if (v.next_visit_date)   line += `　次回：${v.next_visit_date}`
+        if (v.notes)             line += `　備考：${v.notes}`
         return line
       }).join('\n')
       text += '\n'

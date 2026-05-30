@@ -9,6 +9,7 @@ const EMPTY_VISIT = {
   dispensing_from: '', dispensing_to: '',
   medication_timing: '', medication_timing_end: '',
   next_visit_date: '',
+  notes: '',
   is_archived: false,
 }
 
@@ -22,6 +23,7 @@ function toFormData(v) {
     medication_timing:     startT,
     medication_timing_end: v.medication_timing_end ?? (startT ? (PREV_TIMING[startT] ?? '') : ''),
     next_visit_date:       v.next_visit_date       ?? '',
+    notes:                 v.notes                 ?? '',
     is_archived:           v.is_archived           ?? false,
   }
 }
@@ -213,6 +215,13 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 value={visitForm.next_visit_date} onChange={upV('next_visit_date')}
               />
             </div>
+            <div style={{ gridColumn: '1/-1' }}>
+              <label className="field-label">備考</label>
+              <input
+                className="field-input" value={visitForm.notes}
+                onChange={upV('notes')} placeholder="メモなど"
+              />
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
             <button className="btn btn-outline btn-sm" onClick={cancelVisitForm}>キャンセル</button>
@@ -299,6 +308,7 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
           {period              && <span>📅 調剤：{period}</span>}
           {v.medication_timing && <span>💊 服用：{v.medication_timing}〜{endT}</span>}
           {v.next_visit_date   && <span>🔄 次回：{v.next_visit_date}</span>}
+          {v.notes             && <span>📝 備考：{v.notes}</span>}
         </div>
       </div>
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
