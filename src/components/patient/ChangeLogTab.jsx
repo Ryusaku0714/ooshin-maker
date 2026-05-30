@@ -73,7 +73,7 @@ function CalcTool({ visitCalc }) {
       </div>
 
       {/* 入力行＋結果を横並びでラップ */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <div className="calc-tool-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 110px', minWidth: 100 }}>
           <label style={calcLabelStyle}>開始日</label>
           <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
@@ -88,7 +88,7 @@ function CalcTool({ visitCalc }) {
           </select>
         </div>
         <div style={{ flex: '1 1 80px', minWidth: 70 }}>
-          <label style={calcLabelStyle}>処方お尻</label>
+          <label style={calcLabelStyle}>定期処方末日</label>
           <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
         </div>
         <div style={{ flex: '1 1 65px', minWidth: 60 }}>
@@ -261,14 +261,14 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
           }}>
             <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
               <div>
-                <label className="field-label">変更指示日</label>
+                <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
                 <input
                   type="date" className="field-input"
                   value={instrDate} onChange={e => setInstrDate(e.target.value)}
                 />
               </div>
               <div>
-                <label className="field-label">理由（空欄→「指示受け」）</label>
+                <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
                 <input
                   type="text" className="field-input"
                   value={reason} onChange={e => setReason(e.target.value)}
@@ -329,11 +329,11 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 }}>
                   <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                     <div>
-                      <label className="field-label">変更指示日</label>
+                      <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
                       <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
                     </div>
                     <div>
-                      <label className="field-label">理由（空欄→「指示受け」）</label>
+                      <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
                       <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
                     </div>
                     <div>

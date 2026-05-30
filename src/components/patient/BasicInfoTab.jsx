@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { db } from '../../hooks/useData'
 
 export default function BasicInfoTab({ patient, onSaved }) {
@@ -12,10 +12,27 @@ export default function BasicInfoTab({ patient, onSaved }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const medicalRef      = useRef(null)
+  const allergyRef      = useRef(null)
+  const hospitalizationRef = useRef(null)
+
+  const doResize = (el) => {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = el.scrollHeight + 'px'
+  }
+
+  useEffect(() => {
+    doResize(medicalRef.current)
+    doResize(allergyRef.current)
+    doResize(hospitalizationRef.current)
+  }, [patient?.id])
+
   const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
   const up = (k) => (e) => {
     const val = k === 'room_number' ? toHalf(e.target.value) : e.target.value
     setForm(f => ({ ...f, [k]: val }))
+    if (e.target.tagName === 'TEXTAREA') doResize(e.target)
   }
 
   const save = async () => {
@@ -50,15 +67,39 @@ export default function BasicInfoTab({ patient, onSaved }) {
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="field-label">病歴・既往歴（任意）</label>
-          <textarea className="field-input" rows={2} value={form.medical_history} onChange={up('medical_history')} placeholder="例：心不全 / 高血圧 / 骨粗鬆症" />
+          <textarea
+            ref={medicalRef}
+            className="field-input"
+            rows={2}
+            style={{ resize: 'none', overflowY: 'hidden', minHeight: '2.5em' }}
+            value={form.medical_history}
+            onChange={up('medical_history')}
+            placeholder="例：心不全 / 高血圧 / 骨粗鬆症"
+          />
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="field-label">アレルギー歴（任意）</label>
-          <textarea className="field-input" rows={2} value={form.allergy_history} onChange={up('allergy_history')} placeholder="例：セレコックス（発疹）/ エビ" />
+          <textarea
+            ref={allergyRef}
+            className="field-input"
+            rows={2}
+            style={{ resize: 'none', overflowY: 'hidden', minHeight: '2.5em' }}
+            value={form.allergy_history}
+            onChange={up('allergy_history')}
+            placeholder="例：セレコックス（発疹）/ エビ"
+          />
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="field-label">入院歴（任意）</label>
-          <textarea className="field-input" rows={2} value={form.hospitalization_history} onChange={up('hospitalization_history')} placeholder="例：2024/5月 ○○病院 心不全増悪入院" />
+          <textarea
+            ref={hospitalizationRef}
+            className="field-input"
+            rows={2}
+            style={{ resize: 'none', overflowY: 'hidden', minHeight: '2.5em' }}
+            value={form.hospitalization_history}
+            onChange={up('hospitalization_history')}
+            placeholder="例：2024/5月 ○○病院 心不全増悪入院"
+          />
         </div>
       </div>
     </div>
