@@ -346,6 +346,15 @@ body {
     font-size: 11px !important;
   }
 
+  /* 長文テキストフィールド：JS固定高さ・overflow隠蔽を解除して全文表示 */
+  textarea.field-input {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+    resize: none !important;
+  }
+
   /* 患者ヘッダー */
   .patient-header {
     margin-bottom: 10px;
