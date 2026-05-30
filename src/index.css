@@ -355,6 +355,24 @@ body {
     resize: none !important;
   }
 
+  /* 3ヶ月未確認薬剤：黄色ハイライトを印刷でも維持 */
+  .drug-card.drug-unconfirmed {
+    background: #fffbeb !important;
+    border-bottom-color: #fde68a !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* 確認ボタンエリアは印刷不要 */
+  .drug-confirm-area {
+    display: none !important;
+  }
+
+  /* 印刷時のみ表示する未確認ラベル */
+  .drug-alert-print {
+    display: block !important;
+  }
+
   /* 患者ヘッダー */
   .patient-header {
     margin-bottom: 10px;

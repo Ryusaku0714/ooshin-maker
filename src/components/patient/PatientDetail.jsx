@@ -21,6 +21,15 @@ function fmtMMDD(dateStr) {
   return `${mm}/${dd}`
 }
 
+function sliceDate(val) { return val ? String(val).slice(0, 10) : '' }
+function isUnconfirmedDrug(d) {
+  const ninety = new Date()
+  ninety.setDate(ninety.getDate() - 90)
+  const ref = d.last_confirmed_at || d.prescribed_at
+  if (!ref) return true
+  return new Date(sliceDate(ref)) < ninety
+}
+
 function generatePatientMonthHTML(patient, logs) {
   const logsHTML = logs.map(log => {
     const reason = log.reason?.trim() || '指示受け'
@@ -112,15 +121,18 @@ export default function PatientDetail({ patientId, visitCalc }) {
       text += '\n'
     }
 
-    if (drugs.length > 0) {
+    const activeDrugs = drugs.filter(d => !d.is_archived)
+    if (activeDrugs.length > 0) {
       text += `\n【外用・頓用薬】\n`
-      text += drugs.map(d => {
+      text += activeDrugs.map(d => {
         const type = d.drug_type === 'gaiyou' ? '外用' : '頓用'
         let line = `・${d.drug_name}（${type}）`
         if (d.prescribed_quantity) line += `　${d.prescribed_quantity}`
         if (d.remaining_quantity)  line += `　残：${d.remaining_quantity}`
         if (d.description)         line += `　${d.description}`
-        if (d.last_confirmed_at)   line += `　✅確認：${d.last_confirmed_at}`
+        const cd = sliceDate(d.last_confirmed_at)
+        if (cd) line += `　✅確認：${cd}`
+        if (isUnconfirmedDrug(d)) line += `　⚠️未確認`
         return line
       }).join('\n')
       text += '\n'
