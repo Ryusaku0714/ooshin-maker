@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar'
 import Sidebar from './components/layout/Sidebar'
 import VisitBanner from './components/layout/VisitBanner'
 import PatientDetail from './components/patient/PatientDetail'
+import LegalModal from './components/LegalModal'
 
 export default function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
@@ -16,6 +17,7 @@ export default function App() {
   const [visitCalc, setVisitCalc] = useState(null)
   const [mobileView, setMobileView] = useState('list') // 'list' | 'detail'
   const [showHelp,   setShowHelp]   = useState(false)
+  const [legal,      setLegal]      = useState(null)  // 'privacy' | 'terms' | null
 
   if (loading) {
     return (
@@ -108,11 +110,36 @@ export default function App() {
         </div>
       </div>
 
-      {/* ヘルプボタン（固定） */}
+      {/* フッター（固定・最下部） */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 150,
+        height: 34, background: 'rgba(255,255,255,0.92)',
+        backdropFilter: 'blur(8px)',
+        borderTop: '1px solid var(--sky-100)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
+      }}>
+        <button
+          onClick={() => setLegal('privacy')}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
+          }}
+        >プライバシーポリシー</button>
+        <span style={{ fontSize: 10, color: 'var(--gray-200)' }}>|</span>
+        <button
+          onClick={() => setLegal('terms')}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 10, color: 'var(--gray-400)', fontFamily: 'inherit',
+          }}
+        >利用規約</button>
+      </div>
+
+      {/* ヘルプボタン（固定・フッター分上げ） */}
       <button
         onClick={() => setShowHelp(true)}
         style={{
-          position: 'fixed', bottom: 20, right: 20, zIndex: 200,
+          position: 'fixed', bottom: 54, right: 20, zIndex: 200,
           width: 44, height: 44, borderRadius: '50%',
           background: 'var(--sky-600)', color: 'white',
           border: 'none', fontSize: 20, fontWeight: 700,
@@ -198,6 +225,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* リーガルモーダル */}
+      {legal && <LegalModal type={legal} onClose={() => setLegal(null)} />}
 
       {/* ④ モバイル対応スタイル */}
       <style>{`
