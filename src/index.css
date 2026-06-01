@@ -282,6 +282,11 @@ body {
   }
 }
 
+/* 往診情報行：スクリーンでは非表示、印刷時のみ表示 */
+.visit-info-print {
+  display: none;
+}
+
 /* ⑥ ── Print ── */
 @media print {
   @page {
@@ -385,6 +390,14 @@ body {
 
   /* 患者ヘッダー */
   .patient-header {
+    margin-bottom: 4px;
+  }
+
+  /* 往診情報行（印刷時のみ表示） */
+  .visit-info-print {
+    display: block !important;
+    font-size: 11px;
+    color: #475569;
     margin-bottom: 10px;
   }
 

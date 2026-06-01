@@ -15,10 +15,30 @@ const TABS = [
   { key: 'free',   label: '📄 フリーメモ' },
 ]
 
+const DOW_JP = ['日', '月', '火', '水', '木', '金', '土']
+
 function fmtMMDD(dateStr) {
   if (!dateStr) return ''
   const [, mm, dd] = dateStr.split('-')
   return `${mm}/${dd}`
+}
+
+function parseLocalDate(str) {
+  if (!str) return null
+  const [y, m, d] = str.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function fmtVisitCalcInfo(visitCalc) {
+  if (!visitCalc?.visitDate) return ''
+  const vDate = parseLocalDate(visitCalc.visitDate)
+  const visitStr = `${vDate.getFullYear()}/${vDate.getMonth() + 1}/${vDate.getDate()}（${DOW_JP[vDate.getDay()]}）`
+  const start = new Date(vDate)
+  start.setDate(start.getDate() + (visitCalc.graceDays ?? 0))
+  const startStr = `${start.getMonth() + 1}/${start.getDate()}（${DOW_JP[start.getDay()]}）`
+  const end = parseLocalDate(visitCalc.rxEnd)
+  const endStr = `${end.getMonth() + 1}/${end.getDate()}（${DOW_JP[end.getDay()]}）`
+  return `往診日：${visitStr}｜処方日数：${visitCalc.rxDays}日｜処方期間：${startStr}〜${endStr}`
 }
 
 function sliceDate(val) { return val ? String(val).slice(0, 10) : '' }
@@ -30,7 +50,7 @@ function isUnconfirmedDrug(d) {
   return new Date(sliceDate(ref)) < ninety
 }
 
-function generatePatientMonthHTML(patient, logs) {
+function generatePatientMonthHTML(patient, logs, visitCalc) {
   const logsHTML = logs.map(log => {
     const reason = log.reason?.trim() || '指示受け'
     const instrDate = fmtMMDD(log.changed_at)
@@ -44,6 +64,7 @@ function generatePatientMonthHTML(patient, logs) {
   }).join('')
 
   const title = `変更記録（直近1ヶ月）- ${patient.room_number}${patient.initial ? '　' + patient.initial : ''}`
+  const visitInfo = fmtVisitCalcInfo(visitCalc)
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -51,7 +72,8 @@ function generatePatientMonthHTML(patient, logs) {
   <title>${title}</title>
   <style>
     body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; font-size: 12px; padding: 20px; color: #0f172a; }
-    h1 { font-size: 15px; font-weight: 700; border-bottom: 2px solid #075985; padding-bottom: 8px; margin-bottom: 16px; color: #075985; }
+    h1 { font-size: 15px; font-weight: 700; border-bottom: 2px solid #075985; padding-bottom: 8px; margin-bottom: 6px; color: #075985; }
+    .vi { font-size: 10px; color: #475569; margin: 0 0 14px; }
     .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e0f2fe; }
     .log-date { font-weight: 700; color: #0284c7; margin-bottom: 3px; }
     @media print { body { padding: 0; } }
@@ -59,6 +81,7 @@ function generatePatientMonthHTML(patient, logs) {
 </head>
 <body>
   <h1>${title}</h1>
+  ${visitInfo ? `<p class="vi">${visitInfo}</p>` : ''}
   ${logsHTML || '<p style="color:#94a3b8;">直近1ヶ月の変更記録はありません</p>'}
 </body>
 </html>`
@@ -191,7 +214,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
       new Date(b.changed_at) - new Date(a.changed_at)
     )
     const recentLogs = allLogs.filter(l => new Date(l.changed_at) >= oneMonthAgo)
-    const html = generatePatientMonthHTML(patient, recentLogs)
+    const html = generatePatientMonthHTML(patient, recentLogs, visitCalc)
     const w = window.open('', '_blank', 'width=800,height=600')
     w.document.write(html)
     w.document.close()
@@ -217,6 +240,13 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
           <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ 全体印刷</button>
         </div>
       </div>
+
+      {/* 往診情報（印刷専用） */}
+      {visitCalc && (
+        <div className="visit-info-print">
+          {fmtVisitCalcInfo(visitCalc)}
+        </div>
+      )}
 
       {/* タブ */}
       <div className="tabs" style={{
