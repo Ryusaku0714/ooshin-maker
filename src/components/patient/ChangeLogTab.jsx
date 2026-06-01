@@ -159,15 +159,21 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const [editingId,   setEditingId]   = useState(null)
   const [editForm,    setEditForm]    = useState({ changed_at: '', reason: '', start_date: '', content: '' })
   const [editSaving,  setEditSaving]  = useState(false)
+  const [sortMode,    setSortMode]    = useState('date')
 
   // 往診日が変わったらデフォルト日付を同期
   useEffect(() => {
     if (visitCalc?.visitDate) setInstrDate(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  const logs = [...(patient?.om_change_logs ?? [])].sort((a, b) =>
-    new Date(b.changed_at) - new Date(a.changed_at)
-  )
+  const logs = [...(patient?.om_change_logs ?? [])].sort((a, b) => {
+    if (sortMode === 'date') {
+      const diff = new Date(a.changed_at) - new Date(b.changed_at)
+      if (diff !== 0) return diff
+      return new Date(a.created_at) - new Date(b.created_at)
+    }
+    return new Date(a.created_at) - new Date(b.created_at)
+  })
 
   const resetForm = () => {
     setReason('')
@@ -241,7 +247,17 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
       <div className="card">
         <div className="card-title">
           📝 薬剤変更記録
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 2 }}>
+              <button
+                className={`btn btn-sm ${sortMode === 'date' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setSortMode('date')}
+              >日付順</button>
+              <button
+                className={`btn btn-sm ${sortMode === 'input' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setSortMode('input')}
+              >入力順</button>
+            </div>
             {logs.length > 0 && (
               <button className="btn btn-outline btn-sm" onClick={copyAll}>
                 {copied ? '✅ コピー済' : '📋 全コピー'}
