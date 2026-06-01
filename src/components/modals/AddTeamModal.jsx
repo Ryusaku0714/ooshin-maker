@@ -40,7 +40,7 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
           </div>
           <div>
             <label className="field-label">往診名称 *</label>
-            <input className="field-input" value={form.team_name} onChange={up('team_name')} placeholder="例：Aチーム" />
+            <input className="field-input" value={form.team_name} onChange={up('team_name')} placeholder="例：往診チームA / ○曜日往診" />
           </div>
           <div style={{ gridColumn: '1/-1' }}>
             <label className="field-label">往診スケジュール</label>

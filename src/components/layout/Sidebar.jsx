@@ -194,7 +194,7 @@ export default function Sidebar({
 
               {/* ② 施設ラベル */}
               <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-400)', paddingLeft: 8, paddingTop: 2, letterSpacing: '0.05em' }}>
-                🏠 施設
+                🏠 施設 / 在宅
               </div>
 
               {/* 施設名 */}
@@ -248,7 +248,7 @@ export default function Sidebar({
 
                     {/* ② 往診チームラベル */}
                     <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-500)', paddingLeft: 14, letterSpacing: '0.05em' }}>
-                      往診チーム
+                      往診チーム / 在宅担当
                     </div>
 
                     {/* チーム名 */}
@@ -387,7 +387,7 @@ export default function Sidebar({
             className="add-link"
             style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            🏠 ＋ 施設を追加
+            🏠 ＋ 施設 / 個人在宅を追加
           </div>
 
           <LegalFooter />

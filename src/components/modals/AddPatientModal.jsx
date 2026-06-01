@@ -27,7 +27,7 @@ export default function AddPatientModal({ teamId, onClose, onSaved }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label className="field-label">部屋番号 *</label>
-            <input className="field-input" value={form.room_number} onChange={up('room_number')} placeholder="例：101号室" autoFocus />
+            <input className="field-input" value={form.room_number} onChange={up('room_number')} placeholder="例：101 / 個人在宅は①など" autoFocus />
           </div>
           <div>
             <label className="field-label">イニシャル（任意）</label>
