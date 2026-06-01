@@ -17,7 +17,7 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
   const up = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const save = async () => {
-    if (!form.clinic_name.trim() || !form.team_name.trim()) return
+    if (!form.team_name.trim()) return
     setSaving(true)
     await db.addTeam(facilityId, {
       ...form,
@@ -35,8 +35,8 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
         <div className="modal-title">🏥 チームを追加</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <label className="field-label">クリニック名 *</label>
-            <input className="field-input" value={form.clinic_name} onChange={up('clinic_name')} placeholder="例：さくらCL" autoFocus />
+            <label className="field-label">クリニック名（任意）</label>
+            <input className="field-input" value={form.clinic_name} onChange={up('clinic_name')} placeholder="例：さくらCL / 空白でもOK" autoFocus />
           </div>
           <div>
             <label className="field-label">往診名称 *</label>
@@ -67,7 +67,7 @@ export default function AddTeamModal({ facilityId, onClose, onSaved }) {
         </div>
         <div className="modal-footer">
           <button className="btn btn-outline" onClick={onClose}>キャンセル</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving || !form.clinic_name.trim() || !form.team_name.trim()}>
+          <button className="btn btn-primary" onClick={save} disabled={saving || !form.team_name.trim()}>
             {saving ? '追加中…' : '追加'}
           </button>
         </div>
