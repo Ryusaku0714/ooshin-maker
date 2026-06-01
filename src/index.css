@@ -425,10 +425,14 @@ body {
     padding: 1px 4px !important;
   }
 
-  /* 変更記録：日付・指示理由テキストを黒に統一（見出し .card-title は青のまま） */
-  .log-instr-header,
+  /* 変更記録：日付・指示理由テキストを黒・普通字体に統一（見出し .card-title は青のまま） */
+  .log-instr-header {
+    color: #0f172a !important;
+    font-weight: normal !important;
+  }
   .log-date-span {
     color: #0f172a !important;
+    font-weight: normal !important;
   }
 
   /* 外用・頓用薬：数量テキストを黒に統一 */

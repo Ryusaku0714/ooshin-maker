@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { db } from '../../hooks/useData'
 
-export default function BasicInfoTab({ patient, onSaved }) {
+export default function BasicInfoTab({ patient, onSaved, printMode = false }) {
   const [form, setForm] = useState({
     room_number: patient?.room_number ?? '',
     initial: patient?.initial ?? '',
@@ -42,6 +42,29 @@ export default function BasicInfoTab({ patient, onSaved }) {
     setSaved(true)
     onSaved?.()
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  // 印刷専用ビュー：textarea を使わず div で全文表示、空の任意項目は非表示
+  if (printMode) {
+    const fields = [
+      { label: '病歴・既往歴', value: patient?.medical_history },
+      { label: 'アレルギー歴', value: patient?.allergy_history },
+      { label: '入院歴',       value: patient?.hospitalization_history },
+    ].filter(f => f.value?.trim())
+
+    if (fields.length === 0) return null
+
+    return (
+      <div className="card">
+        <div className="card-title">🏷️ 患者背景</div>
+        {fields.map(f => (
+          <div key={f.label} style={{ marginBottom: 6 }}>
+            <div className="field-label">{f.label}</div>
+            <div style={{ fontSize: 11, whiteSpace: 'pre-wrap', lineHeight: 1.7, color: 'var(--gray-900)' }}>{f.value}</div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (

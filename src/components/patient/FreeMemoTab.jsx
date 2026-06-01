@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
-export default function FreeMemoTab({ patient, onRefetch }) {
+export default function FreeMemoTab({ patient, onRefetch, printMode = false }) {
   const [memo, setMemo]     = useState(patient?.free_memo ?? '')
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
@@ -13,6 +13,19 @@ export default function FreeMemoTab({ patient, onRefetch }) {
     setSaved(true)
     onRefetch?.()
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  // 印刷専用ビュー：textarea を使わず div で全文表示、空なら非表示
+  if (printMode) {
+    if (!patient?.free_memo?.trim()) return null
+    return (
+      <div className="card">
+        <div className="card-title">📄 フリーメモ</div>
+        <div style={{ fontSize: 11, whiteSpace: 'pre-wrap', lineHeight: 1.8, color: 'var(--gray-900)' }}>
+          {patient.free_memo}
+        </div>
+      </div>
+    )
   }
 
   return (

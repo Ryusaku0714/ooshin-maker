@@ -237,11 +237,11 @@ export default function PatientDetail({ patientId, visitCalc }) {
 
       {/* 印刷用：全タブコンテンツ */}
       <div className="print-all-tabs" style={{ display: 'none' }}>
-        <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} /></div>
+        <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} printMode={true} /></div>
         <div className="print-section"><ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={() => {}} /></div>
         <div className="print-section"><DrugsTab       patient={patient} onRefetch={() => {}} /></div>
         <div className="print-section"><OtherVisitsTab patient={patient} onRefetch={() => {}} /></div>
-        <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} /></div>
+        <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} printMode={true} /></div>
       </div>
     </div>
   )
