@@ -176,7 +176,7 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
             {drug.drug_name}
           </span>
           {drug.prescribed_quantity && (
-            <span style={{ fontSize: 10, color: archived ? 'var(--gray-400)' : 'var(--sky-700)', fontWeight: 600 }}>
+            <span className="drug-qty-span" style={{ fontSize: 10, color: archived ? 'var(--gray-400)' : 'var(--sky-700)', fontWeight: 600 }}>
               {drug.prescribed_quantity}
             </span>
           )}

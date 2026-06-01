@@ -377,18 +377,18 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                   <div style={{ flex: 1, fontSize: 12 }}>
                     {hasStartDate ? (
                       <>
-                        <div style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                          <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                        <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
+                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
                           　{displayReason}
                         </div>
                         <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                          <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
+                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
                           　{log.content}
                         </div>
                       </>
                     ) : (
                       <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                        <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
                         　{log.content}
                       </div>
                     )}
