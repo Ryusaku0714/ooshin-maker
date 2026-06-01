@@ -126,6 +126,17 @@ export default function Sidebar({
     onRefetch()
   }
 
+  const deleteFacility = async (e, facility) => {
+    e.stopPropagation()
+    if (!confirm(`この施設を削除しますか？\n施設内のチーム・患者・全データが削除されます。この操作は取り消せません。アーカイブをご検討ください。`)) return
+    const teamIds = (facility.om_teams ?? []).map(t => t.id)
+    const patientIds = (facility.om_teams ?? []).flatMap(t => t.om_patients ?? []).map(p => p.id)
+    if (teamIds.includes(selectedTeamId)) onSelectTeam(null)
+    if (patientIds.includes(selectedPatientId)) onSelectPatient(null)
+    await db.deleteFacility(facility.id)
+    onRefetch()
+  }
+
   const startEditTeam = (e, team, isHomeCare = false) => {
     e.stopPropagation()
     setEditTeamId(team.id)
@@ -305,6 +316,11 @@ export default function Sidebar({
                       title="施設名を編集"
                       style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                     >✏️</button>
+                    <button
+                      onClick={e => deleteFacility(e, facility)}
+                      title="施設を削除"
+                      style={{ fontSize: 11, padding: '1px 4px', borderRadius: 4, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                    >🗑️</button>
                   </div>
                 )}
 
