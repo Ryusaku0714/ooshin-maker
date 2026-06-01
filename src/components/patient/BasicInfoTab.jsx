@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { db } from '../../hooks/useData'
 
-export default function BasicInfoTab({ patient, onSaved, printMode = false }) {
+export default function BasicInfoTab({ patient, onSaved, printMode = false, onDirtyChange }) {
   const [form, setForm] = useState({
     room_number: patient?.room_number ?? '',
     initial: patient?.initial ?? '',
@@ -33,6 +33,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false }) {
     const val = k === 'room_number' ? toHalf(e.target.value) : e.target.value
     setForm(f => ({ ...f, [k]: val }))
     if (e.target.tagName === 'TEXTAREA') doResize(e.target)
+    onDirtyChange?.(true)
   }
 
   const save = async () => {
@@ -40,6 +41,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false }) {
     await db.updatePatient(patient.id, form)
     setSaving(false)
     setSaved(true)
+    onDirtyChange?.(false)
     onSaved?.()
     setTimeout(() => setSaved(false), 2000)
   }

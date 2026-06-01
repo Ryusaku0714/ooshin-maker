@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import BasicInfoTab    from './BasicInfoTab'
 import DrugsTab        from './DrugsTab'
 import ChangeLogTab    from './ChangeLogTab'
@@ -64,10 +64,25 @@ function generatePatientMonthHTML(patient, logs) {
 </html>`
 }
 
-export default function PatientDetail({ patientId, visitCalc }) {
+export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [copied, setCopied]       = useState(false)
   const { patient, loading, refetch } = usePatient(patientId)
+
+  // 未保存変更の追跡：コンポーネント名をキーに保持し、いずれかが dirty なら親へ通知
+  const dirtySet = useRef(new Set())
+  const reportDirty = (name, dirty) => {
+    if (dirty) dirtySet.current.add(name)
+    else dirtySet.current.delete(name)
+    onDirtyChange?.(dirtySet.current.size > 0)
+  }
+
+  // 患者が切り替わったら dirty 状態とアクティブタブをリセット
+  useEffect(() => {
+    setActiveTab('basic')
+    dirtySet.current.clear()
+    onDirtyChange?.(false)
+  }, [patientId])
 
   if (!patientId) {
     return (
@@ -226,13 +241,34 @@ export default function PatientDetail({ patientId, visitCalc }) {
         ))}
       </div>
 
-      {/* タブコンテンツ */}
+      {/* タブコンテンツ：常時マウント＋display切替でタブ移動時の入力内容を保持 */}
+      {/* key={patient?.id} により患者切り替え時のみリマウントして状態リセット */}
       <div className="tab-content">
-        {activeTab === 'basic'  && <BasicInfoTab   patient={patient} onSaved={refetch} />}
-        {activeTab === 'log'    && <ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={refetch} />}
-        {activeTab === 'drugs'  && <DrugsTab       patient={patient} onRefetch={refetch} />}
-        {activeTab === 'visit'  && <OtherVisitsTab patient={patient} onRefetch={refetch} />}
-        {activeTab === 'free'   && <FreeMemoTab    patient={patient} onRefetch={refetch} />}
+        <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
+          <BasicInfoTab
+            key={patient?.id}
+            patient={patient}
+            onSaved={refetch}
+            onDirtyChange={d => reportDirty('basic', d)}
+          />
+        </div>
+        <div style={{ display: activeTab === 'log' ? 'block' : 'none' }}>
+          <ChangeLogTab key={patient?.id} patient={patient} visitCalc={visitCalc} onRefetch={refetch} />
+        </div>
+        <div style={{ display: activeTab === 'drugs' ? 'block' : 'none' }}>
+          <DrugsTab key={patient?.id} patient={patient} onRefetch={refetch} />
+        </div>
+        <div style={{ display: activeTab === 'visit' ? 'block' : 'none' }}>
+          <OtherVisitsTab key={patient?.id} patient={patient} onRefetch={refetch} />
+        </div>
+        <div style={{ display: activeTab === 'free' ? 'block' : 'none' }}>
+          <FreeMemoTab
+            key={patient?.id}
+            patient={patient}
+            onRefetch={refetch}
+            onDirtyChange={d => reportDirty('free', d)}
+          />
+        </div>
       </div>
 
       {/* 印刷用：全タブコンテンツ */}

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useState, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useFacilities } from './hooks/useData'
 import Login from './components/auth/Login'
@@ -16,6 +16,9 @@ export default function App() {
   const [visitCalc, setVisitCalc] = useState(null)
   const [mobileView, setMobileView] = useState('list') // 'list' | 'detail'
   const [showHelp,   setShowHelp]   = useState(false)
+
+  // 未保存変更の追跡（PatientDetail から通知される）
+  const isDirtyRef = useRef(false)
 
   if (loading) {
     return (
@@ -35,6 +38,12 @@ export default function App() {
     .find(t => t.id === selectedTeamId) ?? null
 
   const handleSelectPatient = (id) => {
+    if (isDirtyRef.current && id !== selectedPatientId) {
+      if (!window.confirm('保存されていない変更があります。\nこの患者から移動してよいですか？（変更は保存されません）')) {
+        return
+      }
+    }
+    isDirtyRef.current = false
     setSelectedPatientId(id)
     setMobileView('detail')
   }
@@ -104,7 +113,11 @@ export default function App() {
           <VisitBanner team={selectedTeam} onVisitCalcChange={setVisitCalc} />
 
           {/* 患者詳細 */}
-          <PatientDetail patientId={selectedPatientId} visitCalc={visitCalc} />
+          <PatientDetail
+            patientId={selectedPatientId}
+            visitCalc={visitCalc}
+            onDirtyChange={d => { isDirtyRef.current = d }}
+          />
         </div>
       </div>
 

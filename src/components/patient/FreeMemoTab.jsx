@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 
-export default function FreeMemoTab({ patient, onRefetch, printMode = false }) {
+export default function FreeMemoTab({ patient, onRefetch, printMode = false, onDirtyChange }) {
   const [memo, setMemo]     = useState(patient?.free_memo ?? '')
   const [saving, setSaving] = useState(false)
   const [saved,  setSaved]  = useState(false)
@@ -11,6 +11,7 @@ export default function FreeMemoTab({ patient, onRefetch, printMode = false }) {
     await db.updatePatient(patient.id, { free_memo: memo })
     setSaving(false)
     setSaved(true)
+    onDirtyChange?.(false)
     onRefetch?.()
     setTimeout(() => setSaved(false), 2000)
   }
@@ -44,7 +45,7 @@ export default function FreeMemoTab({ patient, onRefetch, printMode = false }) {
         className="field-input"
         style={{ minHeight: 200, lineHeight: 1.8 }}
         value={memo}
-        onChange={e => setMemo(e.target.value)}
+        onChange={e => { setMemo(e.target.value); onDirtyChange?.(true) }}
         placeholder="Nsからの報告、往診時の気づき、次回確認事項など"
       />
     </div>
