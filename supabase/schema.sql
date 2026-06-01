@@ -184,3 +184,9 @@ ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAU
 -- other_visits は om_patients.other_visits (JSONB配列) に格納されているため
 -- テーブルへの ALTER は不要。各要素オブジェクトに is_archived: boolean を追加する。
 -- SQL マイグレーションなし。
+
+-- ============================================================
+-- v7 マイグレーション：個人在宅モード追加
+-- ============================================================
+-- om_facilities: 個人在宅フラグを追加
+ALTER TABLE om_facilities ADD COLUMN IF NOT EXISTS is_home_care BOOLEAN NOT NULL DEFAULT FALSE;

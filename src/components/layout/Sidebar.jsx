@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
@@ -103,11 +103,16 @@ export default function Sidebar({
   const [editFacId,   setEditFacId]   = useState(null)
   const [editFacName, setEditFacName] = useState('')
 
-  // チーム名インライン編集
+  // チーム名インライン編集（通常）
   const [editTeamId,         setEditTeamId]         = useState(null)
+  const [editTeamIsHomeCare, setEditTeamIsHomeCare] = useState(false)
   const [editTeamClinic,     setEditTeamClinic]     = useState('')
   const [editTeamName,       setEditTeamName]       = useState('')
   const [editTeamVisitNotes, setEditTeamVisitNotes] = useState('')
+  // チーム編集（個人在宅用追加フィールド）
+  const [editTeamRxDays,    setEditTeamRxDays]    = useState(14)
+  const [editTeamGraceDays, setEditTeamGraceDays] = useState(1)
+  const [editTeamPharmacist, setEditTeamPharmacist] = useState('')
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -121,14 +126,28 @@ export default function Sidebar({
     onRefetch()
   }
 
-  const startEditTeam = (e, team) => {
+  const startEditTeam = (e, team, isHomeCare = false) => {
     e.stopPropagation()
     setEditTeamId(team.id)
-    setEditTeamClinic(team.clinic_name)
-    setEditTeamName(team.team_name)
+    setEditTeamIsHomeCare(isHomeCare)
+    setEditTeamClinic(team.clinic_name ?? '')
+    setEditTeamName(team.team_name ?? '')
     setEditTeamVisitNotes(team.visit_schedule_custom ?? '')
+    setEditTeamRxDays(team.default_rx_days ?? 14)
+    setEditTeamGraceDays(team.grace_days ?? 1)
+    setEditTeamPharmacist(team.pharmacist_name ?? '')
   }
   const saveTeamName = async (id) => {
+    if (editTeamIsHomeCare) {
+      await db.updateTeam(id, {
+        default_rx_days: Number(editTeamRxDays),
+        grace_days: Number(editTeamGraceDays),
+        pharmacist_name: editTeamPharmacist.trim(),
+      })
+      setEditTeamId(null)
+      onRefetch()
+      return
+    }
     if (!editTeamClinic.trim() || !editTeamName.trim()) { setEditTeamId(null); return }
     await db.updateTeam(id, {
       clinic_name: editTeamClinic.trim(),
@@ -142,7 +161,8 @@ export default function Sidebar({
   // ③ チーム削除
   const deleteTeam = async (e, team) => {
     e.stopPropagation()
-    if (!confirm(`「${team.clinic_name} ${team.team_name}」を削除しますか？\n患者データ・変更記録・外用頓用薬もすべて削除されます。`)) return
+    const label = [team.clinic_name, team.team_name].filter(Boolean).join(' ') || team.team_name
+    if (!confirm(`「${label}」を削除しますか？\n患者データ・変更記録・外用頓用薬もすべて削除されます。`)) return
     await db.deleteTeam(team.id)
     if (selectedTeamId === team.id) onSelectTeam(null)
     onRefetch()
@@ -161,6 +181,39 @@ export default function Sidebar({
     setOpenTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }))
     onSelectTeam(teamId)
   }
+
+  // 患者行の共通レンダリング
+  const renderPatientRow = (p, team) => (
+    <div
+      key={p.id}
+      style={{
+        fontSize: 11, color: selectedPatientId === p.id ? 'white' : 'var(--sky-700)',
+        padding: '4px 8px', borderRadius: 6,
+        background: selectedPatientId === p.id ? 'var(--sky-600)' : 'transparent',
+        fontWeight: selectedPatientId === p.id ? 600 : 400,
+        display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1,
+        transition: 'background 0.1s',
+      }}
+    >
+      <div
+        onClick={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
+        style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+      >
+        👤 {p.room_number}{p.initial ? `　${p.initial}` : ''}
+      </div>
+      <button
+        onClick={e => deletePatient(e, p)}
+        title="患者を削除"
+        style={{
+          fontSize: 10, padding: '1px 3px', borderRadius: 3,
+          border: selectedPatientId === p.id ? '1px solid rgba(255,255,255,0.4)' : '1px solid #fca5a5',
+          background: 'transparent',
+          color: selectedPatientId === p.id ? 'rgba(255,255,255,0.7)' : '#ef4444',
+          cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, lineHeight: 1,
+        }}
+      >🗑️</button>
+    </div>
+  )
 
   return (
     <>
@@ -189,198 +242,268 @@ export default function Sidebar({
 
         {/* Scroll area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 8px' }}>
-          {facilities.map(facility => (
-            <div key={facility.id} style={{ marginBottom: 12 }}>
+          {facilities.map(facility => {
+            const isHomeCare = !!facility.is_home_care
+            return (
+              <div key={facility.id} style={{ marginBottom: 12 }}>
 
-              {/* ② 施設ラベル */}
-              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-400)', paddingLeft: 8, paddingTop: 2, letterSpacing: '0.05em' }}>
-                🏠 施設 / 在宅
-              </div>
-
-              {/* 施設名 */}
-              {editFacId === facility.id ? (
-                <div style={{ display: 'flex', gap: 4, padding: '4px 8px', alignItems: 'center' }}>
-                  <input
-                    value={editFacName}
-                    onChange={e => setEditFacName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveFacilityName(facility.id); if (e.key === 'Escape') setEditFacId(null) }}
-                    autoFocus
-                    placeholder="施設名 / 個人在宅"
-                    style={{
-                      flex: 1, fontSize: 11, fontWeight: 700, color: 'var(--sky-700)',
-                      border: '1.5px solid var(--sky-400)', borderRadius: 4,
-                      padding: '2px 6px', fontFamily: 'inherit', outline: 'none',
-                    }}
-                  />
-                  <button
-                    onClick={() => saveFacilityName(facility.id)}
-                    style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, border: 'none', background: 'var(--sky-600)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
-                  >✅</button>
-                  <button
-                    onClick={() => setEditFacId(null)}
-                    style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--gray-200)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
-                  >✕</button>
+                {/* ② 施設ラベル */}
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-400)', paddingLeft: 8, paddingTop: 2, letterSpacing: '0.05em' }}>
+                  {isHomeCare ? '🏠 個人在宅' : '🏥 施設 / 在宅'}
                 </div>
-              ) : (
-                <div style={{
-                  fontSize: 11, fontWeight: 700, color: 'var(--sky-700)',
-                  padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4,
-                }}>
-                  <span style={{ flex: 1 }}>🏠 {facility.name}</span>
-                  <button
-                    onClick={e => { e.stopPropagation(); printFacilityLogs(facility) }}
-                    title="変更記録一括印刷"
-                    style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                  >🖨️</button>
-                  <button
-                    onClick={e => startEditFacility(e, facility)}
-                    title="施設名を編集"
-                    style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                  >✏️</button>
-                </div>
-              )}
 
-              {(facility.om_teams ?? []).map(team => {
-                const isOpen = openTeams[team.id] !== false // default open
-                const patients = sortPatients(team.om_patients, sort)
-                return (
-                  <div key={team.id} style={{ marginBottom: 6 }}>
-
-                    {/* ② 往診チームラベル */}
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-500)', paddingLeft: 14, letterSpacing: '0.05em' }}>
-                      往診チーム / 在宅担当
-                    </div>
-
-                    {/* チーム名 */}
-                    {editTeamId === team.id ? (
-                      <div style={{ padding: '4px 8px' }}>
-                        <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-                          <input
-                            value={editTeamClinic}
-                            onChange={e => setEditTeamClinic(e.target.value)}
-                            placeholder="クリニック名"
-                            autoFocus
-                            style={{ flex: 1, fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none' }}
-                          />
-                          <input
-                            value={editTeamName}
-                            onChange={e => setEditTeamName(e.target.value)}
-                            placeholder="往診名称"
-                            style={{ flex: 1, fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none' }}
-                          />
-                        </div>
-                        <div style={{ marginBottom: 4 }}>
-                          <input
-                            value={editTeamVisitNotes}
-                            onChange={e => setEditTeamVisitNotes(e.target.value)}
-                            placeholder="往診間隔（自由記載）"
-                            onKeyDown={e => { if (e.key === 'Enter') saveTeamName(team.id); if (e.key === 'Escape') setEditTeamId(null) }}
-                            style={{ width: '100%', fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                          />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
-                          <button
-                            onClick={() => saveTeamName(team.id)}
-                            style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: 'none', background: 'var(--sky-600)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >✅ 保存</button>
-                          <button
-                            onClick={() => setEditTeamId(null)}
-                            style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: '1px solid var(--gray-200)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
-                          >✕</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => toggleTeam(team.id)}
-                        style={{
-                          fontSize: 10, fontWeight: 700, color: 'var(--sky-600)',
-                          padding: '4px 8px',
-                          background: selectedTeamId === team.id ? 'var(--sky-200)' : 'var(--sky-50)',
-                          borderRadius: 6, marginBottom: 2,
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          cursor: 'pointer', border: '1px solid var(--sky-200)',
-                        }}
-                      >
-                        <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          🏥 {team.clinic_name} {team.team_name}
+                {/* 施設名 */}
+                {editFacId === facility.id ? (
+                  <div style={{ display: 'flex', gap: 4, padding: '4px 8px', alignItems: 'center' }}>
+                    <input
+                      value={editFacName}
+                      onChange={e => setEditFacName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') saveFacilityName(facility.id); if (e.key === 'Escape') setEditFacId(null) }}
+                      autoFocus
+                      placeholder="施設名 / 個人在宅"
+                      style={{
+                        flex: 1, fontSize: 11, fontWeight: 700, color: 'var(--sky-700)',
+                        border: '1.5px solid var(--sky-400)', borderRadius: 4,
+                        padding: '2px 6px', fontFamily: 'inherit', outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={() => saveFacilityName(facility.id)}
+                      style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, border: 'none', background: 'var(--sky-600)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >✅</button>
+                    <button
+                      onClick={() => setEditFacId(null)}
+                      style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, border: '1px solid var(--gray-200)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >✕</button>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, color: 'var(--sky-700)',
+                    padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4,
+                  }}>
+                    <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {isHomeCare ? '🏠' : '🏠'} {facility.name}
+                      </span>
+                      {isHomeCare && (
+                        <span style={{
+                          fontSize: 9, background: 'var(--sky-100)', color: 'var(--sky-700)',
+                          borderRadius: 4, padding: '1px 5px', fontWeight: 600,
+                          whiteSpace: 'nowrap', flexShrink: 0,
+                        }}>
+                          個人在宅
                         </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                          {team.visit_schedule_custom && (
-                            <span style={{ fontSize: 9, color: 'var(--sky-500)', fontWeight: 400 }}>
-                              {team.visit_schedule_custom}
-                            </span>
-                          )}
-                          <button
-                            onClick={e => startEditTeam(e, team)}
-                            title="チームを編集"
-                            style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                          >✏️</button>
-                          {/* ③ チーム削除 */}
-                          <button
-                            onClick={e => deleteTeam(e, team)}
-                            title="チームを削除"
-                            style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                          >🗑️</button>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </span>
+                    <button
+                      onClick={e => { e.stopPropagation(); printFacilityLogs(facility) }}
+                      title="変更記録一括印刷"
+                      style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                    >🖨️</button>
+                    <button
+                      onClick={e => startEditFacility(e, facility)}
+                      title="施設名を編集"
+                      style={{ fontSize: 11, padding: '1px 5px', borderRadius: 4, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                    >✏️</button>
+                  </div>
+                )}
 
-                    {isOpen && (
-                      <div style={{ paddingLeft: 6 }}>
-                        {patients.map(p => (
-                          <div
-                            key={p.id}
-                            style={{
-                              fontSize: 11, color: selectedPatientId === p.id ? 'white' : 'var(--sky-700)',
-                              padding: '4px 8px', borderRadius: 6,
-                              background: selectedPatientId === p.id ? 'var(--sky-600)' : 'transparent',
-                              fontWeight: selectedPatientId === p.id ? 600 : 400,
-                              display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1,
-                              transition: 'background 0.1s',
-                            }}
-                          >
-                            <div
-                              onClick={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
-                              style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-                            >
-                              👤 {p.room_number}{p.initial ? `　${p.initial}` : ''}
+                {(facility.om_teams ?? []).map(team => {
+                  const isOpen = openTeams[team.id] !== false // default open
+                  const patients = sortPatients(team.om_patients, sort)
+                  return (
+                    <div key={team.id} style={{ marginBottom: 6 }}>
+
+                      {isHomeCare ? (
+                        /* ─── 個人在宅：チーム名非表示、設定ボタンのみ ─── */
+                        editTeamId === team.id ? (
+                          /* 個人在宅 チーム設定編集フォーム */
+                          <div style={{
+                            padding: '8px', background: 'var(--sky-50)',
+                            border: '1px solid var(--sky-200)', borderRadius: 6,
+                            marginBottom: 4,
+                          }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-700)', marginBottom: 8 }}>
+                              ⚙️ 在宅処方設定
                             </div>
-                            {/* ③ 患者削除 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+                              <div>
+                                <div style={{ fontSize: 9, color: 'var(--sky-500)', marginBottom: 2 }}>処方日数</div>
+                                <input
+                                  type="number"
+                                  value={editTeamRxDays}
+                                  onChange={e => setEditTeamRxDays(e.target.value)}
+                                  min={1} max={90}
+                                  autoFocus
+                                  style={{ width: '100%', fontSize: 11, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 9, color: 'var(--sky-500)', marginBottom: 2 }}>処方ズレ日数</div>
+                                <input
+                                  type="number"
+                                  value={editTeamGraceDays}
+                                  onChange={e => setEditTeamGraceDays(e.target.value)}
+                                  min={0} max={14}
+                                  style={{ width: '100%', fontSize: 11, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                              </div>
+                            </div>
+                            <div style={{ marginBottom: 8 }}>
+                              <div style={{ fontSize: 9, color: 'var(--sky-500)', marginBottom: 2 }}>担当薬剤師</div>
+                              <input
+                                value={editTeamPharmacist}
+                                onChange={e => setEditTeamPharmacist(e.target.value)}
+                                placeholder="例：山田T"
+                                onKeyDown={e => { if (e.key === 'Enter') saveTeamName(team.id); if (e.key === 'Escape') setEditTeamId(null) }}
+                                style={{ width: '100%', fontSize: 11, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                              <button
+                                onClick={() => saveTeamName(team.id)}
+                                style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: 'none', background: 'var(--sky-600)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                              >✅ 保存</button>
+                              <button
+                                onClick={() => setEditTeamId(null)}
+                                style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: '1px solid var(--gray-200)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                              >✕</button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* 個人在宅 コンパクト操作行 */
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 3, paddingRight: 8, paddingBottom: 2 }}>
+                            {team.pharmacist_name && (
+                              <span style={{ fontSize: 9, color: 'var(--sky-500)', flex: 1, paddingLeft: 8 }}>
+                                👤 {team.pharmacist_name}
+                              </span>
+                            )}
                             <button
-                              onClick={e => deletePatient(e, p)}
-                              title="患者を削除"
-                              style={{
-                                fontSize: 10, padding: '1px 3px', borderRadius: 3,
-                                border: selectedPatientId === p.id ? '1px solid rgba(255,255,255,0.4)' : '1px solid #fca5a5',
-                                background: 'transparent',
-                                color: selectedPatientId === p.id ? 'rgba(255,255,255,0.7)' : '#ef4444',
-                                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, lineHeight: 1,
-                              }}
+                              onClick={e => startEditTeam(e, team, true)}
+                              title="処方設定を編集"
+                              style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                            >⚙️</button>
+                            <button
+                              onClick={e => deleteTeam(e, team)}
+                              title="在宅を削除"
+                              style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                             >🗑️</button>
                           </div>
-                        ))}
-                        <div
-                          onClick={() => setAddPatientTeamId(team.id)}
-                          className="add-link"
-                          style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        >
-                          ＋ 患者を追加
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                        )
+                      ) : (
+                        /* ─── 通常施設：チーム行を表示 ─── */
+                        <>
+                          {/* ② 往診チームラベル */}
+                          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--sky-500)', paddingLeft: 14, letterSpacing: '0.05em' }}>
+                            往診チーム / 在宅担当
+                          </div>
 
-              <div
-                onClick={() => setAddTeamFacilityId(facility.id)}
-                className="add-link"
-                style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-              >
-                ＋ チームを追加
+                          {/* チーム名 */}
+                          {editTeamId === team.id ? (
+                            <div style={{ padding: '4px 8px' }}>
+                              <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                                <input
+                                  value={editTeamClinic}
+                                  onChange={e => setEditTeamClinic(e.target.value)}
+                                  placeholder="クリニック名"
+                                  autoFocus
+                                  style={{ flex: 1, fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none' }}
+                                />
+                                <input
+                                  value={editTeamName}
+                                  onChange={e => setEditTeamName(e.target.value)}
+                                  placeholder="往診名称"
+                                  style={{ flex: 1, fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none' }}
+                                />
+                              </div>
+                              <div style={{ marginBottom: 4 }}>
+                                <input
+                                  value={editTeamVisitNotes}
+                                  onChange={e => setEditTeamVisitNotes(e.target.value)}
+                                  placeholder="往診間隔（自由記載）"
+                                  onKeyDown={e => { if (e.key === 'Enter') saveTeamName(team.id); if (e.key === 'Escape') setEditTeamId(null) }}
+                                  style={{ width: '100%', fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                                <button
+                                  onClick={() => saveTeamName(team.id)}
+                                  style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: 'none', background: 'var(--sky-600)', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                                >✅ 保存</button>
+                                <button
+                                  onClick={() => setEditTeamId(null)}
+                                  style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, border: '1px solid var(--gray-200)', background: 'white', cursor: 'pointer', fontFamily: 'inherit' }}
+                                >✕</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => toggleTeam(team.id)}
+                              style={{
+                                fontSize: 10, fontWeight: 700, color: 'var(--sky-600)',
+                                padding: '4px 8px',
+                                background: selectedTeamId === team.id ? 'var(--sky-200)' : 'var(--sky-50)',
+                                borderRadius: 6, marginBottom: 2,
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                cursor: 'pointer', border: '1px solid var(--sky-200)',
+                              }}
+                            >
+                              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                🏥 {team.clinic_name} {team.team_name}
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+                                {team.visit_schedule_custom && (
+                                  <span style={{ fontSize: 9, color: 'var(--sky-500)', fontWeight: 400 }}>
+                                    {team.visit_schedule_custom}
+                                  </span>
+                                )}
+                                <button
+                                  onClick={e => startEditTeam(e, team, false)}
+                                  title="チームを編集"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >✏️</button>
+                                {/* ③ チーム削除 */}
+                                <button
+                                  onClick={e => deleteTeam(e, team)}
+                                  title="チームを削除"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >🗑️</button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* 患者リスト：個人在宅は常時表示、通常は開閉 */}
+                      {(isHomeCare || isOpen) && (
+                        <div style={{ paddingLeft: 6 }}>
+                          {patients.map(p => renderPatientRow(p, team))}
+                          <div
+                            onClick={() => setAddPatientTeamId(team.id)}
+                            className="add-link"
+                            style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            ＋ 患者を追加
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* 個人在宅はチーム追加リンクを非表示 */}
+                {!isHomeCare && (
+                  <div
+                    onClick={() => setAddTeamFacilityId(facility.id)}
+                    className="add-link"
+                    style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    ＋ チームを追加
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           <div
             onClick={() => setShowAddFacility(true)}
@@ -395,7 +518,11 @@ export default function Sidebar({
       </div>
 
       {showAddFacility && (
-        <AddFacilityModal onClose={() => setShowAddFacility(false)} onSaved={onRefetch} />
+        <AddFacilityModal
+          onClose={() => setShowAddFacility(false)}
+          onSaved={onRefetch}
+          onHomeCareCreated={(teamId) => setAddPatientTeamId(teamId)}
+        />
       )}
       {addTeamFacilityId && (
         <AddTeamModal facilityId={addTeamFacilityId} onClose={() => setAddTeamFacilityId(null)} onSaved={onRefetch} />
