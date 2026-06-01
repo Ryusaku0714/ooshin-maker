@@ -11,12 +11,19 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   const [visitDate, setVisitDate] = useState(today)
   const [rxDays,    setRxDays]    = useState(team?.default_rx_days ?? 14)
   const [graceDays, setGraceDays] = useState(team?.grace_days ?? 1)
-  const [rxStart,   setRxStart]   = useState('')
   const [rxPeriod,  setRxPeriod]  = useState('—')
   const [nextVisit, setNextVisit] = useState('次回往診：—')
   const [rxEnd,     setRxEnd]     = useState('')
   const [saving,    setSaving]    = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+
+  // 処方開始日は visitDate + graceDays から導出（独立したstateを持たない）
+  const rxStartDate = (() => {
+    if (!visitDate) return ''
+    const d = new Date(visitDate)
+    d.setDate(d.getDate() + Number(graceDays))
+    return fmtFull(d)
+  })()
 
   useEffect(() => {
     if (team) {
@@ -59,11 +66,19 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     const next = new Date(visit)
     next.setDate(next.getDate() + Number(rxDays))
 
-    setRxStart(fmt(start))
     setRxPeriod(`${fmt(start)}〜${fmt(end)}（${rxDays}日分）`)
     setNextVisit(`次回往診：${fmt(next)}`)
     setRxEnd(fmtFull(end))
     onVisitCalcChange?.({ visitDate, rxDays: Number(rxDays), graceDays: Number(graceDays), rxEnd: fmtFull(end) })
+  }
+
+  // 処方開始日を変更 → 往診日との差分から処方ズレ日数を逆算
+  function handleRxStartDateChange(newDateStr) {
+    if (!newDateStr || !visitDate) return
+    const diffDays = Math.round((new Date(newDateStr) - new Date(visitDate)) / 86400000)
+    if (diffDays >= 0 && diffDays <= 14) {
+      setGraceDays(diffDays)
+    }
   }
 
   return (
@@ -105,10 +120,12 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        <Field label="処方開始" className="rx-start-field" style={{ flex: '1 1 60px', minWidth: 56 }}>
+        {/* 処方開始日：処方ズレ日数と双方向連動 */}
+        <Field label="処方開始日" className="rx-start-field" style={{ flex: '2 1 110px', minWidth: 100 }}>
           <input
-            type="text" value={rxStart} readOnly
-            style={{ ...bannerInputStyle, cursor: 'default', opacity: 0.8 }}
+            type="date" value={rxStartDate}
+            onChange={e => handleRxStartDateChange(e.target.value)}
+            style={bannerInputStyle}
           />
         </Field>
 
@@ -130,12 +147,10 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       </div>
 
       <style>{`
-        /* モバイル用折りたたみヘッダー：デフォルト非表示 */
         .visit-banner-mobile-header {
           display: none;
         }
 
-        /* 768px以下：折りたたみUI有効化 */
         @media (max-width: 768px) {
           .visit-banner-mobile-header {
             display: flex;
@@ -152,11 +167,9 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
             font-size: 11px;
             opacity: 0.8;
           }
-          /* フィールド群：折りたたみ時は非表示 */
           .visit-banner-fields {
             display: none !important;
           }
-          /* 展開時は表示 */
           .visit-banner-fields.is-open {
             display: flex !important;
             flex-wrap: wrap !important;
@@ -164,30 +177,30 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           }
         }
 
-        /* 375px以下：展開時はグリッドレイアウト */
+        /* 375px以下：2カラムグリッド（処方開始日dateピッカーの幅を確保） */
         @media (max-width: 375px) {
           .visit-banner { padding: 7px 10px !important; }
           .visit-banner-fields.is-open {
             display: grid !important;
-            grid-template-columns: 1fr 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr !important;
             gap: 5px !important;
             align-items: end !important;
             margin-top: 6px !important;
           }
           .visit-date-field {
-            grid-column: 1 / 2 !important;
+            grid-column: 1 !important;
             grid-row: 1 !important;
           }
           .rx-days-field {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+          }
+          .grace-days-field {
             grid-column: 1 !important;
             grid-row: 2 !important;
           }
-          .grace-days-field {
-            grid-column: 2 !important;
-            grid-row: 2 !important;
-          }
           .rx-start-field {
-            grid-column: 3 !important;
+            grid-column: 2 !important;
             grid-row: 2 !important;
           }
           .visit-banner-period {
