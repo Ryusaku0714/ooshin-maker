@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 
 function fmt(d) { return `${d.getMonth() + 1}/${d.getDate()}` }
@@ -16,8 +16,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   const [nextVisit, setNextVisit] = useState('次回往診：—')
   const [rxEnd,     setRxEnd]     = useState('')
   const [saving,    setSaving]    = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  // チーム切替時：保存済み設定を自動反映
   useEffect(() => {
     if (team) {
       setVisitDate(team.last_visit_date ?? fmtFull(new Date()))
@@ -26,12 +26,10 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     }
   }, [team?.id])
 
-  // 計算
   useEffect(() => {
     calc()
   }, [visitDate, rxDays, graceDays])
 
-  // 変更をチームにリアルタイム保存（デバウンス800ms）
   useEffect(() => {
     const teamId = team?.id
     if (!teamId) return
@@ -70,9 +68,19 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
 
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
-      <div className="visit-banner-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
 
-        {/* 往診日 */}
+      {/* モバイル用折りたたみヘッダー（768px以下のみ表示） */}
+      <div
+        className="visit-banner-mobile-header"
+        onClick={() => setIsExpanded(prev => !prev)}
+      >
+        <span>往診日：{visitDate.replace(/-/g, '/')}</span>
+        <span className="visit-banner-chevron">{isExpanded ? '▲' : '▼'}</span>
+      </div>
+
+      {/* フィールド群 */}
+      <div className={`visit-banner-fields${isExpanded ? ' is-open' : ''}`} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+
         <Field label="往診日" className="visit-date-field" style={{ flex: '2 1 120px', minWidth: 110 }}>
           <input
             type="date" value={visitDate}
@@ -81,7 +89,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        {/* 処方日数 */}
         <Field label="処方日数" className="rx-days-field" style={{ flex: '1 1 56px', minWidth: 52 }}>
           <input
             type="number" value={rxDays} min={1} max={90}
@@ -90,7 +97,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        {/* 処方ズレ日数 */}
         <Field label="処方ズレ日数" className="grace-days-field" style={{ flex: '1 1 68px', minWidth: 64 }}>
           <input
             type="number" value={graceDays} min={0} max={14}
@@ -99,7 +105,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        {/* 処方開始（読み取り専用） */}
         <Field label="処方開始" className="rx-start-field" style={{ flex: '1 1 60px', minWidth: 56 }}>
           <input
             type="text" value={rxStart} readOnly
@@ -107,7 +112,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        {/* 処方期間（結果表示） */}
         <div className="visit-banner-period" style={{
           flex: '2 1 150px', minWidth: 130,
           background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
@@ -118,7 +122,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 1 }}>{nextVisit}</div>
         </div>
 
-        {/* 保存インジケーター */}
         {team && (
           <div className="save-indicator" style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
             {saving ? '💾 保存中…' : '✓ 保存済'}
@@ -127,13 +130,49 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       </div>
 
       <style>{`
+        /* モバイル用折りたたみヘッダー：デフォルト非表示 */
+        .visit-banner-mobile-header {
+          display: none;
+        }
+
+        /* 768px以下：折りたたみUI有効化 */
+        @media (max-width: 768px) {
+          .visit-banner-mobile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            user-select: none;
+            padding: 2px 0;
+          }
+          .visit-banner-chevron {
+            font-size: 11px;
+            opacity: 0.8;
+          }
+          /* フィールド群：折りたたみ時は非表示 */
+          .visit-banner-fields {
+            display: none !important;
+          }
+          /* 展開時は表示 */
+          .visit-banner-fields.is-open {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            margin-top: 8px !important;
+          }
+        }
+
+        /* 375px以下：展開時はグリッドレイアウト */
         @media (max-width: 375px) {
           .visit-banner { padding: 7px 10px !important; }
-          .visit-banner-fields {
+          .visit-banner-fields.is-open {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
             gap: 5px !important;
             align-items: end !important;
+            margin-top: 6px !important;
           }
           .visit-date-field {
             grid-column: 1 / 2 !important;
