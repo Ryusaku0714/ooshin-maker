@@ -543,17 +543,19 @@ export default function Sidebar({
                         {(isHomeCare || isOpen) && (
                           <div style={{ padding: '4px 6px 3px 14px' }}>
                             {patients.map(p => renderPatientRow(p, team))}
-                            <div
-                              onClick={() => setAddPatientTeamId(team.id)}
-                              className="add-link"
-                              style={{
-                                fontSize: 10, color: cs.patientAddColor,
-                                padding: '3px 4px', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: 4,
-                              }}
-                            >
-                              ＋ 患者を追加
-                            </div>
+                            {!(isHomeCare && hasPatients) && (
+                              <div
+                                onClick={() => setAddPatientTeamId(team.id)}
+                                className="add-link"
+                                style={{
+                                  fontSize: 10, color: cs.patientAddColor,
+                                  padding: '3px 4px', cursor: 'pointer',
+                                  display: 'flex', alignItems: 'center', gap: 4,
+                                }}
+                              >
+                                ＋ 患者を追加
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
