@@ -34,6 +34,7 @@ function CalcTool({ visitCalc }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
   const [startTiming, setStartTiming] = useState('朝')
   const [manualDays,  setManualDays]  = useState('')
+  const [open,        setOpen]        = useState(true)
   const rxEnd = visitCalc?.rxEnd ?? ''
 
   useEffect(() => {
@@ -68,54 +69,71 @@ function CalcTool({ visitCalc }) {
       background: 'linear-gradient(135deg, var(--sky-800), var(--sky-900))',
       borderRadius: 10, padding: '10px 14px', marginBottom: 10,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em', marginBottom: 8 }}>
-        ⚡ 追加薬 日数計算
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 8 : 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em' }}>
+          ⚡ 追加薬 日数計算
+        </div>
+        {/* スマホのみ折りたたみボタンを表示 */}
+        <button
+          className="calc-tool-toggle"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          aria-label={open ? '折りたたむ' : '展開する'}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--sky-200)', fontSize: 13, padding: '2px 4px', lineHeight: 1,
+          }}
+        >
+          {open ? '▲' : '▼'}
+        </button>
       </div>
 
       {/* 入力行＋結果を横並びでラップ */}
-      <div className="calc-tool-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 110px', minWidth: 100 }}>
-          <label style={calcLabelStyle}>開始日</label>
-          <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
-        </div>
-        <div style={{ flex: '1 1 75px', minWidth: 70 }}>
-          <label style={calcLabelStyle}>タイミング</label>
-          <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
-            <option value="朝">朝</option>
-            <option value="昼">昼</option>
-            <option value="夕">夕</option>
-            <option value="眠前">眠前</option>
-          </select>
-        </div>
-        <div style={{ flex: '1 1 80px', minWidth: 70 }}>
-          <label style={calcLabelStyle}>定期処方末日</label>
-          <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
-        </div>
-        <div style={{ flex: '1 1 65px', minWidth: 60 }}>
-          <label style={calcLabelStyle}>日数（任意）</label>
-          <input
-            type="number" value={manualDays}
-            onChange={e => setManualDays(e.target.value)}
-            placeholder="自動" min="1"
-            style={calcInputStyle}
-          />
-        </div>
-
-        {/* 結果：横に余裕があれば同行に展開 */}
-        {periodText && (
-          <div style={{
-            flex: '2 1 160px', minWidth: 140, paddingBottom: 2,
-            borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10,
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
-              {periodText}
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
-              {daysText}
-            </div>
+      {open && (
+        <div className="calc-tool-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 110px', minWidth: 100 }}>
+            <label style={calcLabelStyle}>開始日</label>
+            <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
           </div>
-        )}
-      </div>
+          <div style={{ flex: '1 1 75px', minWidth: 70 }}>
+            <label style={calcLabelStyle}>タイミング</label>
+            <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
+              <option value="朝">朝</option>
+              <option value="昼">昼</option>
+              <option value="夕">夕</option>
+              <option value="眠前">眠前</option>
+            </select>
+          </div>
+          <div style={{ flex: '1 1 80px', minWidth: 70 }}>
+            <label style={calcLabelStyle}>定期処方末日</label>
+            <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
+          </div>
+          <div style={{ flex: '1 1 65px', minWidth: 60 }}>
+            <label style={calcLabelStyle}>日数（任意）</label>
+            <input
+              type="number" value={manualDays}
+              onChange={e => setManualDays(e.target.value)}
+              placeholder="自動" min="1"
+              style={calcInputStyle}
+            />
+          </div>
+
+          {/* 結果：横に余裕があれば同行に展開 */}
+          {periodText && (
+            <div style={{
+              flex: '2 1 160px', minWidth: 140, paddingBottom: 2,
+              borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+                {periodText}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
+                {daysText}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
