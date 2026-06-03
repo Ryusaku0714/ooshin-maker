@@ -31,6 +31,17 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   const [saving,    setSaving]    = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
 
+  // スマホ判定（768px以下）— JSXインラインstyleで直接レイアウト制御するため
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 768px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   // 処方開始日は visitDate + graceDays から導出（独立したstateを持たない）
   const rxStartDate = (() => {
     if (!visitDate) return ''
@@ -95,6 +106,9 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     }
   }
 
+  // スマホ時：50%幅（gap 6px の半分 3px を引いた calc値）
+  const mobileFieldStyle = { width: 'calc(50% - 3px)', minWidth: 0 }
+
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
 
@@ -108,9 +122,16 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       </div>
 
       {/* フィールド群 */}
-      <div className={`visit-banner-fields${isExpanded ? ' is-open' : ''}`} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <div
+        className={`visit-banner-fields${isExpanded ? ' is-open' : ''}`}
+        style={isMobile
+          ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end', marginTop: 8 }
+          : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
+        }
+      >
 
-        <Field label="往診日" dow={visitDate ? `（${DOW[parseDate(visitDate).getDay()]}）` : ''} className="visit-date-field" style={{ flex: '2 1 120px', minWidth: 110 }}>
+        <Field label="往診日" dow={visitDate ? `（${DOW[parseDate(visitDate).getDay()]}）` : ''} className="visit-date-field"
+          style={isMobile ? mobileFieldStyle : { flex: '2 1 120px', minWidth: 110 }}>
           <input
             type="date" value={visitDate}
             onChange={e => setVisitDate(e.target.value)}
@@ -118,7 +139,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        <Field label="処方日数" className="rx-days-field" style={{ flex: '1 1 56px', minWidth: 52 }}>
+        <Field label="処方日数" className="rx-days-field"
+          style={isMobile ? mobileFieldStyle : { flex: '1 1 56px', minWidth: 52 }}>
           <input
             type="number" value={rxDays} min={1} max={90}
             onChange={e => setRxDays(e.target.value)}
@@ -126,7 +148,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           />
         </Field>
 
-        <Field label="処方ズレ日数" className="grace-days-field" style={{ flex: '1 1 68px', minWidth: 64 }}>
+        <Field label="処方ズレ日数" className="grace-days-field"
+          style={isMobile ? mobileFieldStyle : { flex: '1 1 68px', minWidth: 64 }}>
           <input
             type="number" value={graceDays} min={0} max={14}
             onChange={e => setGraceDays(e.target.value)}
@@ -135,7 +158,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         {/* 処方開始日：処方ズレ日数と双方向連動 */}
-        <Field label="処方開始日" dow={rxStartDate ? `（${DOW[parseDate(rxStartDate).getDay()]}）` : ''} className="rx-start-field" style={{ flex: '2 1 110px', minWidth: 100 }}>
+        <Field label="処方開始日" dow={rxStartDate ? `（${DOW[parseDate(rxStartDate).getDay()]}）` : ''} className="rx-start-field"
+          style={isMobile ? mobileFieldStyle : { flex: '2 1 110px', minWidth: 100 }}>
           <input
             type="date" value={rxStartDate}
             onChange={e => handleRxStartDateChange(e.target.value)}
@@ -144,7 +168,10 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         <div className="visit-banner-period" style={{
-          flex: '2 1 150px', minWidth: 130,
+          ...(isMobile
+            ? { width: '100%', marginTop: 2 }
+            : { flex: '2 1 150px', minWidth: 130 }
+          ),
           background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
           borderRadius: 8, padding: '6px 12px', textAlign: 'center',
         }}>
@@ -153,7 +180,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{rxDays}日分）　{nextVisit}</div>
         </div>
 
-        {team && (
+        {team && !isMobile && (
           <div className="save-indicator" style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
             {saving ? '💾 保存中…' : '✓ 保存済'}
           </div>
@@ -168,7 +195,6 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           display: none;
         }
 
-        /* 768px以下：2カラムグリッドで縦積み（flex-wrapによる重なりを防止） */
         @media (max-width: 768px) {
           .visit-banner-mobile-header {
             display: flex;
@@ -185,46 +211,12 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
             font-size: 11px;
             opacity: 0.8;
           }
+          /* デフォルトで非表示。is-open クラスで flex 表示（レイアウトはJSインラインstyle） */
           .visit-banner-fields {
             display: none !important;
           }
           .visit-banner-fields.is-open {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 6px !important;
-            align-items: end !important;
-            margin-top: 8px !important;
-          }
-          .visit-date-field {
-            grid-column: 1 !important;
-            grid-row: 1 !important;
-            width: 100% !important;
-            min-width: 0 !important;
-          }
-          .rx-days-field {
-            grid-column: 2 !important;
-            grid-row: 1 !important;
-            width: 100% !important;
-            min-width: 0 !important;
-          }
-          .grace-days-field {
-            grid-column: 1 !important;
-            grid-row: 2 !important;
-            width: 100% !important;
-            min-width: 0 !important;
-          }
-          .rx-start-field {
-            grid-column: 2 !important;
-            grid-row: 2 !important;
-            width: 100% !important;
-            min-width: 0 !important;
-          }
-          .visit-banner-period {
-            grid-column: 1 / -1 !important;
-            grid-row: 3 !important;
-          }
-          .save-indicator {
-            display: none !important;
+            display: flex !important;
           }
           .visit-field-dow {
             display: inline;
@@ -235,10 +227,8 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           }
         }
 
-        /* 375px以下：パディングとギャップの微調整（グリッドは上の768pxクエリから継承） */
         @media (max-width: 375px) {
           .visit-banner { padding: 7px 10px !important; }
-          .visit-banner-fields.is-open { gap: 5px !important; }
         }
       `}</style>
     </div>

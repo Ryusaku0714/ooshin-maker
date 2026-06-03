@@ -232,27 +232,14 @@ body {
   }
 }
 
-/* ── 追加薬日数計算：スマホ2列グリッド（768px以下で重なりを防止） ── */
+/* ── 追加薬日数計算：スマホ対応（レイアウトはJSXインラインstyleで制御） ── */
 @media (max-width: 768px) {
+  /* display/grid-template-columns は JSX の isMobile 切り替えで管理 */
   .calc-tool-fields {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
     gap: 6px !important;
-    align-items: start !important;
   }
-  /* 全アイテムをセル幅に収める（インラインの minWidth を上書き） */
   .calc-tool-fields > div {
-    width: 100% !important;
     min-width: 0 !important;
-  }
-  /* 結果div（5番目の子）のみ全幅表示。:last-childは日数（任意）に誤適用されるため使用しない */
-  .calc-tool-fields > div:nth-child(5) {
-    grid-column: 1 / -1;
-    border-left: none !important;
-    padding-left: 0 !important;
-    border-top: 1px solid rgba(255,255,255,0.2);
-    padding-top: 8px;
-    margin-top: 2px;
   }
 }
 

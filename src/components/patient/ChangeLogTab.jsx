@@ -37,6 +37,17 @@ function CalcTool({ visitCalc }) {
   const [open,        setOpen]        = useState(true)
   const rxEnd = visitCalc?.rxEnd ?? ''
 
+  // スマホ判定（768px以下）— JSXインラインstyleで直接レイアウト制御するため
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 768px)').matches : false
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 768px)')
+    const handler = (e) => setIsMobile(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   useEffect(() => {
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
@@ -90,12 +101,16 @@ function CalcTool({ visitCalc }) {
 
       {/* 入力行＋結果を横並びでラップ */}
       {open && (
-        <div className="calc-tool-fields" style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 110px', minWidth: 100 }}>
+        <div className="calc-tool-fields" style={isMobile
+          ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end' }
+          : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
+        }>
+          {/* スマホ時: calc(50%-3px) で gap 6px を考慮した50%幅 */}
+          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 110px', minWidth: 100 }}>
             <label style={calcLabelStyle}>開始日</label>
             <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
           </div>
-          <div style={{ flex: '1 1 75px', minWidth: 70 }}>
+          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 75px', minWidth: 70 }}>
             <label style={calcLabelStyle}>タイミング</label>
             <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
               <option value="朝">朝</option>
@@ -104,11 +119,11 @@ function CalcTool({ visitCalc }) {
               <option value="眠前">眠前</option>
             </select>
           </div>
-          <div style={{ flex: '1 1 80px', minWidth: 70 }}>
+          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 80px', minWidth: 70 }}>
             <label style={calcLabelStyle}>定期処方末日</label>
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
-          <div style={{ flex: '1 1 65px', minWidth: 60 }}>
+          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
             <input
               type="number" value={manualDays}
@@ -118,12 +133,12 @@ function CalcTool({ visitCalc }) {
             />
           </div>
 
-          {/* 結果：横に余裕があれば同行に展開 */}
+          {/* 結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー */}
           {periodText && (
-            <div style={{
-              flex: '2 1 160px', minWidth: 140, paddingBottom: 2,
-              borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10,
-            }}>
+            <div style={isMobile
+              ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
+              : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }
+            }>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
                 {periodText}
               </div>
