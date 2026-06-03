@@ -168,6 +168,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           display: none;
         }
 
+        /* 768px以下：2カラムグリッドで縦積み（flex-wrapによる重なりを防止） */
         @media (max-width: 768px) {
           .visit-banner-mobile-header {
             display: flex;
@@ -188,28 +189,11 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
             display: none !important;
           }
           .visit-banner-fields.is-open {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            margin-top: 8px !important;
-          }
-          .visit-field-dow {
-            display: inline;
-            font-size: 8px;
-            font-weight: 400;
-            margin-left: 2px;
-            opacity: 0.9;
-          }
-        }
-
-        /* 375px以下：2カラムグリッド（処方開始日dateピッカーの幅を確保） */
-        @media (max-width: 375px) {
-          .visit-banner { padding: 7px 10px !important; }
-          .visit-banner-fields.is-open {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 5px !important;
+            gap: 6px !important;
             align-items: end !important;
-            margin-top: 6px !important;
+            margin-top: 8px !important;
           }
           .visit-date-field {
             grid-column: 1 !important;
@@ -234,6 +218,19 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           .save-indicator {
             display: none !important;
           }
+          .visit-field-dow {
+            display: inline;
+            font-size: 8px;
+            font-weight: 400;
+            margin-left: 2px;
+            opacity: 0.9;
+          }
+        }
+
+        /* 375px以下：パディングとギャップの微調整（グリッドは上の768pxクエリから継承） */
+        @media (max-width: 375px) {
+          .visit-banner { padding: 7px 10px !important; }
+          .visit-banner-fields.is-open { gap: 5px !important; }
         }
       `}</style>
     </div>
