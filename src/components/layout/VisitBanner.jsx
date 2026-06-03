@@ -195,6 +195,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         }
 
         @media (max-width: 768px) {
+          .visit-banner { padding-right: 22px !important; }
           .visit-banner-mobile-header {
             display: flex;
             justify-content: space-between;
