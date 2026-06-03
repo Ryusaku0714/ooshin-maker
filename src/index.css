@@ -236,7 +236,7 @@ body {
 @media (max-width: 768px) {
   .calc-tool-fields {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: minmax(0, 140px) 1fr !important;
     gap: 6px !important;
     align-items: start !important;
   }
