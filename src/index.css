@@ -236,9 +236,14 @@ body {
 @media (max-width: 768px) {
   .calc-tool-fields {
     display: grid !important;
-    grid-template-columns: minmax(0, 140px) 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 6px !important;
     align-items: start !important;
+  }
+  /* 全アイテムをセル幅に収める（インラインの minWidth を上書き） */
+  .calc-tool-fields > div {
+    width: 100% !important;
+    min-width: 0 !important;
   }
   /* 結果div（5番目の子）のみ全幅表示。:last-childは日数（任意）に誤適用されるため使用しない */
   .calc-tool-fields > div:nth-child(5) {

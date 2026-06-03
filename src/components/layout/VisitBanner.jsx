@@ -190,7 +190,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           }
           .visit-banner-fields.is-open {
             display: grid !important;
-            grid-template-columns: minmax(0, 140px) 1fr !important;
+            grid-template-columns: 1fr 1fr !important;
             gap: 6px !important;
             align-items: end !important;
             margin-top: 8px !important;
@@ -198,18 +198,26 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
           .visit-date-field {
             grid-column: 1 !important;
             grid-row: 1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
           .rx-days-field {
             grid-column: 2 !important;
             grid-row: 1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
           .grace-days-field {
             grid-column: 1 !important;
             grid-row: 2 !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
           .rx-start-field {
             grid-column: 2 !important;
             grid-row: 2 !important;
+            width: 100% !important;
+            min-width: 0 !important;
           }
           .visit-banner-period {
             grid-column: 1 / -1 !important;
