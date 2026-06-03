@@ -106,7 +106,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     }
   }
 
-  const mobileFieldStyle = { width: '40%' }
+  const mobileFieldStyle = { width: '45%' }
 
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
@@ -124,7 +124,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       <div
         className={`visit-banner-fields${isExpanded ? ' is-open' : ''}`}
         style={isMobile
-          ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end', marginTop: 8 }
+          ? { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 6, marginTop: 8 }
           : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
         }
       >

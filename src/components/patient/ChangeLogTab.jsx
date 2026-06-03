@@ -52,7 +52,7 @@ function CalcTool({ visitCalc }) {
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  const calc50MobileStyle = { width: '40%' }
+  const calc50MobileStyle = { width: '45%' }
 
   const endTiming = PREV_TIMING[startTiming]
   const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
@@ -104,7 +104,7 @@ function CalcTool({ visitCalc }) {
       {/* 入力行＋結果を横並びでラップ */}
       {open && (
         <div className="calc-tool-fields" style={isMobile
-          ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end' }
+          ? { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 6 }
           : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
         }>
           {/* 開始日・タイミングは完全50%固定（flex伸縮禁止） */}
@@ -121,11 +121,11 @@ function CalcTool({ visitCalc }) {
               <option value="眠前">眠前</option>
             </select>
           </div>
-          <div style={isMobile ? { width: '40%' } : { flex: '1 1 80px', minWidth: 70 }}>
+          <div style={isMobile ? { width: '45%' } : { flex: '1 1 80px', minWidth: 70 }}>
             <label style={calcLabelStyle}>定期処方末日</label>
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
-          <div style={isMobile ? { width: '40%' } : { flex: '1 1 65px', minWidth: 60 }}>
+          <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
             <input
               type="number" value={manualDays}
