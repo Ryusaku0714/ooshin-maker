@@ -105,12 +105,12 @@ function CalcTool({ visitCalc }) {
           ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end' }
           : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
         }>
-          {/* スマホ時: calc(50%-3px) で gap 6px を考慮した50%幅 */}
-          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 110px', minWidth: 100 }}>
+          {/* 開始日（date）は 40% に絞り、タイミング select に余裕を持たせる */}
+          <div style={isMobile ? { width: 'calc(40% - 3px)', minWidth: 0 } : { flex: '1 1 110px', minWidth: 100 }}>
             <label style={calcLabelStyle}>開始日</label>
             <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
           </div>
-          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 75px', minWidth: 70 }}>
+          <div style={isMobile ? { width: 'calc(60% - 3px)', minWidth: 0 } : { flex: '1 1 75px', minWidth: 70 }}>
             <label style={calcLabelStyle}>タイミング</label>
             <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
               <option value="朝">朝</option>

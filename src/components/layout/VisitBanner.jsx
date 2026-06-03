@@ -107,7 +107,10 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
   }
 
   // スマホ時：50%幅（gap 6px の半分 3px を引いた calc値）
-  const mobileFieldStyle = { width: 'calc(50% - 3px)', minWidth: 0 }
+  const mobileFieldStyle      = { width: 'calc(50% - 3px)', minWidth: 0 }
+  // 往診日（date）は 40% に絞り、隣の処方日数に余裕を持たせる
+  const mobileDateNarrowStyle = { width: 'calc(40% - 3px)', minWidth: 0 }
+  const mobileNumWideStyle    = { width: 'calc(60% - 3px)', minWidth: 0 }
 
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
@@ -131,7 +134,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
       >
 
         <Field label="往診日" dow={visitDate ? `（${DOW[parseDate(visitDate).getDay()]}）` : ''} className="visit-date-field"
-          style={isMobile ? mobileFieldStyle : { flex: '2 1 120px', minWidth: 110 }}>
+          style={isMobile ? mobileDateNarrowStyle : { flex: '2 1 120px', minWidth: 110 }}>
           <input
             type="date" value={visitDate}
             onChange={e => setVisitDate(e.target.value)}
@@ -140,7 +143,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         </Field>
 
         <Field label="処方日数" className="rx-days-field"
-          style={isMobile ? mobileFieldStyle : { flex: '1 1 56px', minWidth: 52 }}>
+          style={isMobile ? mobileNumWideStyle : { flex: '1 1 56px', minWidth: 52 }}>
           <input
             type="number" value={rxDays} min={1} max={90}
             onChange={e => setRxDays(e.target.value)}
