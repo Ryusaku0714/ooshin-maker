@@ -106,15 +106,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     }
   }
 
-  // スマホ時：完全50%固定（gap 6px の半分 3px を引いた calc値、flex伸縮禁止）
-  const mobileFieldStyle = {
-    width:      'calc(50% - 3px)',
-    minWidth:   'calc(50% - 3px)',
-    maxWidth:   'calc(50% - 3px)',
-    flexShrink: 0,
-    flexGrow:   0,
-    boxSizing:  'border-box',
-  }
+  const mobileFieldStyle = { width: '40%' }
 
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>

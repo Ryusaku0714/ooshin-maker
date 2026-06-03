@@ -52,15 +52,7 @@ function CalcTool({ visitCalc }) {
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  // スマホ時：完全50%固定（gap 6px の半分 3px を引いた calc値、flex伸縮禁止）
-  const calc50MobileStyle = {
-    width:      'calc(50% - 3px)',
-    minWidth:   'calc(50% - 3px)',
-    maxWidth:   'calc(50% - 3px)',
-    flexShrink: 0,
-    flexGrow:   0,
-    boxSizing:  'border-box',
-  }
+  const calc50MobileStyle = { width: '40%' }
 
   const endTiming = PREV_TIMING[startTiming]
   const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
@@ -129,11 +121,11 @@ function CalcTool({ visitCalc }) {
               <option value="眠前">眠前</option>
             </select>
           </div>
-          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 80px', minWidth: 70 }}>
+          <div style={isMobile ? { width: '40%' } : { flex: '1 1 80px', minWidth: 70 }}>
             <label style={calcLabelStyle}>定期処方末日</label>
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
-          <div style={isMobile ? { width: 'calc(50% - 3px)', minWidth: 0 } : { flex: '1 1 65px', minWidth: 60 }}>
+          <div style={isMobile ? { width: '40%' } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
             <input
               type="number" value={manualDays}
