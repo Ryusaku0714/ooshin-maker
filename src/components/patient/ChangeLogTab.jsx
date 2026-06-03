@@ -52,6 +52,16 @@ function CalcTool({ visitCalc }) {
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
+  // スマホ時：完全50%固定（gap 6px の半分 3px を引いた calc値、flex伸縮禁止）
+  const calc50MobileStyle = {
+    width:      'calc(50% - 3px)',
+    minWidth:   'calc(50% - 3px)',
+    maxWidth:   'calc(50% - 3px)',
+    flexShrink: 0,
+    flexGrow:   0,
+    boxSizing:  'border-box',
+  }
+
   const endTiming = PREV_TIMING[startTiming]
   const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
 
@@ -105,12 +115,12 @@ function CalcTool({ visitCalc }) {
           ? { display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'flex-end' }
           : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
         }>
-          {/* 開始日（date）は 40% に絞り、タイミング select に余裕を持たせる */}
-          <div style={isMobile ? { width: 'calc(40% - 3px)', minWidth: 0 } : { flex: '1 1 110px', minWidth: 100 }}>
+          {/* 開始日・タイミングは完全50%固定（flex伸縮禁止） */}
+          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 110px', minWidth: 100 }}>
             <label style={calcLabelStyle}>開始日</label>
             <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
           </div>
-          <div style={isMobile ? { width: 'calc(60% - 3px)', minWidth: 0 } : { flex: '1 1 75px', minWidth: 70 }}>
+          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 75px', minWidth: 70 }}>
             <label style={calcLabelStyle}>タイミング</label>
             <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
               <option value="朝">朝</option>
