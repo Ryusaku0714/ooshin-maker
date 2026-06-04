@@ -190,3 +190,9 @@ ALTER TABLE om_drugs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAU
 -- ============================================================
 -- om_facilities: 個人在宅フラグを追加
 ALTER TABLE om_facilities ADD COLUMN IF NOT EXISTS is_home_care BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============================================================
+-- v8 マイグレーション：施設・チームメモ機能追加
+-- ============================================================
+ALTER TABLE om_facilities ADD COLUMN IF NOT EXISTS memo TEXT;
+ALTER TABLE om_teams      ADD COLUMN IF NOT EXISTS memo TEXT;
