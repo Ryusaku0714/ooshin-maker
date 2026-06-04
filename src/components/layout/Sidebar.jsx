@@ -11,6 +11,22 @@ function fmtMMDD(dateStr) {
   return `${mm}/${dd}`
 }
 
+const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
+
+function parseDateSidebar(str) {
+  if (!str) return null
+  const [y, m, d] = str.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function fmtFullSidebar(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function fmtWithDowSidebar(d) {
+  return `${d.getMonth() + 1}/${d.getDate()}（${DOW_SIDEBAR[d.getDay()]}）`
+}
+
 async function printFacilityLogs(facility) {
   const allPatients = (facility.om_teams ?? []).flatMap(t => t.om_patients ?? [])
   const patientIds  = allPatients.map(p => p.id)
@@ -142,6 +158,7 @@ export default function Sidebar({
   const [editTeamRxDays,    setEditTeamRxDays]    = useState(14)
   const [editTeamGraceDays, setEditTeamGraceDays] = useState(1)
   const [editTeamPharmacist, setEditTeamPharmacist] = useState('')
+  const [editTeamVisitDate, setEditTeamVisitDate] = useState('')
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -176,10 +193,12 @@ export default function Sidebar({
     setEditTeamRxDays(team.default_rx_days ?? 14)
     setEditTeamGraceDays(team.grace_days ?? 1)
     setEditTeamPharmacist(team.pharmacist_name ?? '')
+    setEditTeamVisitDate(team.last_visit_date ?? fmtFullSidebar(new Date()))
   }
   const saveTeamName = async (id) => {
     if (editTeamIsHomeCare) {
       await db.updateTeam(id, {
+        last_visit_date: editTeamVisitDate || null,
         default_rx_days: Number(editTeamRxDays),
         grace_days: Number(editTeamGraceDays),
         pharmacist_name: editTeamPharmacist.trim(),
@@ -218,6 +237,32 @@ export default function Sidebar({
   const toggleTeam = (teamId) => {
     setOpenTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }))
     onSelectTeam(teamId)
+  }
+
+  // 在宅処方設定フォームの派生値（editTeamVisitDate / editTeamGraceDays / editTeamRxDays から計算）
+  const editRxStartDate = (() => {
+    if (!editTeamVisitDate) return ''
+    const d = parseDateSidebar(editTeamVisitDate)
+    if (!d) return ''
+    d.setDate(d.getDate() + Number(editTeamGraceDays))
+    return fmtFullSidebar(d)
+  })()
+
+  const editRxPeriod = (() => {
+    if (!editTeamVisitDate) return '—'
+    const visit = parseDateSidebar(editTeamVisitDate)
+    if (!visit) return '—'
+    const start = new Date(visit)
+    start.setDate(start.getDate() + Number(editTeamGraceDays))
+    const end = new Date(start)
+    end.setDate(end.getDate() + Number(editTeamRxDays) - 1)
+    return `${fmtWithDowSidebar(start)}〜${fmtWithDowSidebar(end)}`
+  })()
+
+  const handleEditRxStartDateChange = (newDateStr) => {
+    if (!newDateStr || !editTeamVisitDate) return
+    const diffDays = Math.round((parseDateSidebar(newDateStr) - parseDateSidebar(editTeamVisitDate)) / 86400000)
+    if (diffDays >= 0 && diffDays <= 14) setEditTeamGraceDays(diffDays)
   }
 
   const renderPatientRow = (p, team) => (
@@ -388,6 +433,20 @@ export default function Sidebar({
                               <div style={{ fontSize: 10, fontWeight: 700, color: '#166534', marginBottom: 8 }}>
                                 ⚙️ 在宅処方設定
                               </div>
+
+                              {/* 往診日 */}
+                              <div style={{ marginBottom: 6 }}>
+                                <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>往診日</div>
+                                <input
+                                  type="date"
+                                  value={editTeamVisitDate}
+                                  onChange={e => setEditTeamVisitDate(e.target.value)}
+                                  autoFocus
+                                  style={{ width: '100%', fontSize: 11, border: '1.5px solid #86efac', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                              </div>
+
+                              {/* 処方日数 + 処方ズレ日数 */}
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
                                 <div>
                                   <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>処方日数</div>
@@ -396,7 +455,6 @@ export default function Sidebar({
                                     value={editTeamRxDays}
                                     onChange={e => setEditTeamRxDays(e.target.value)}
                                     min={1} max={90}
-                                    autoFocus
                                     style={{ width: '100%', fontSize: 11, border: '1.5px solid #86efac', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                                   />
                                 </div>
@@ -411,6 +469,25 @@ export default function Sidebar({
                                   />
                                 </div>
                               </div>
+
+                              {/* 処方開始日（往診日＋処方ズレ日数と双方向連動） */}
+                              <div style={{ marginBottom: 6 }}>
+                                <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>処方開始日</div>
+                                <input
+                                  type="date"
+                                  value={editRxStartDate}
+                                  onChange={e => handleEditRxStartDateChange(e.target.value)}
+                                  style={{ width: '100%', fontSize: 11, border: '1.5px solid #86efac', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                              </div>
+
+                              {/* 処方期間（表示のみ） */}
+                              <div style={{ marginBottom: 6, background: 'rgba(22,163,74,0.08)', border: '1px solid #bbf7d0', borderRadius: 6, padding: '5px 8px' }}>
+                                <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>処方期間</div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#14532d', lineHeight: 1.4 }}>{editRxPeriod}</div>
+                              </div>
+
+                              {/* 担当薬剤師 */}
                               <div style={{ marginBottom: 8 }}>
                                 <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>担当薬剤師</div>
                                 <input
@@ -421,6 +498,7 @@ export default function Sidebar({
                                   style={{ width: '100%', fontSize: 11, border: '1.5px solid #86efac', borderRadius: 4, padding: '3px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                                 />
                               </div>
+
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
                                 <button
                                   onClick={() => saveTeamName(team.id)}
