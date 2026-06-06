@@ -34,6 +34,7 @@ function CalcTool({ visitCalc }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
   const [startTiming, setStartTiming] = useState('朝')
   const [manualDays,  setManualDays]  = useState('')
+  const [targetDate,  setTargetDate]  = useState('')
   const [open,        setOpen]        = useState(true)
   const rxEnd = visitCalc?.rxEnd ?? ''
 
@@ -79,6 +80,21 @@ function CalcTool({ visitCalc }) {
     }
   }
 
+  // 指定日計算：終了日から逆算して必要日数を求める
+  let targetPeriodText = ''
+  let targetDaysText   = ''
+  if (addStart && targetDate) {
+    const start    = new Date(addStart   + 'T00:00:00')
+    const end      = new Date(targetDate + 'T00:00:00')
+    const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24))
+    // 朝開始は+days-1日が終了日なのでdaysDiff+1、昼以降は+days日なのでdaysDiff
+    const tDays = startTiming === '朝' ? daysDiff + 1 : daysDiff
+    if (tDays > 0) {
+      targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(targetDate)}${endTiming}`
+      targetDaysText   = `${tDays}日分`
+    }
+  }
+
   return (
     <div className="calc-tool" style={{
       background: 'linear-gradient(135deg, var(--sky-800), var(--sky-900))',
@@ -86,7 +102,7 @@ function CalcTool({ visitCalc }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 8 : 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em' }}>
-          ⚡ 追加薬 日数計算
+          ⚡ 日数計算ツール
         </div>
         {/* スマホのみ折りたたみボタンを表示 */}
         <button
@@ -127,6 +143,14 @@ function CalcTool({ visitCalc }) {
             <label style={calcLabelStyle}>定期処方末日</label>
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
+          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 80px', minWidth: 70 }}>
+            <label style={calcLabelStyle}>指定日</label>
+            <input
+              type="date" value={targetDate}
+              onChange={e => setTargetDate(e.target.value)}
+              style={calcInputStyle}
+            />
+          </div>
           <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
             <input
@@ -137,7 +161,7 @@ function CalcTool({ visitCalc }) {
             />
           </div>
 
-          {/* 結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー */}
+          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー */}
           {periodText && (
             <div style={isMobile
               ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
@@ -148,6 +172,21 @@ function CalcTool({ visitCalc }) {
               </div>
               <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
                 {daysText}
+              </div>
+            </div>
+          )}
+
+          {/* 指定日の結果 */}
+          {targetPeriodText && (
+            <div style={isMobile
+              ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
+              : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }
+            }>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+                {targetPeriodText}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
+                {targetDaysText}
               </div>
             </div>
           )}
