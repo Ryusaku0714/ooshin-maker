@@ -63,7 +63,9 @@ function CalcTool({ visitCalc }) {
   if (addStart) {
     if (isManual) {
       const days = parseInt(manualDays)
-      const endStr = addDaysToStr(addStart, days - 1)
+      // 朝開始は同日の眠前で完結（+days-1日）、昼以降は翌日へまたぐ（+days日）
+      const daysOffset = startTiming === '朝' ? days - 1 : days
+      const endStr = addDaysToStr(addStart, daysOffset)
       periodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       daysText   = `${days}日分`
     } else if (rxEnd) {
