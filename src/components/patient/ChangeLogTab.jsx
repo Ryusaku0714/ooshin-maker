@@ -83,16 +83,19 @@ function CalcTool({ visitCalc }) {
     }
   }
 
-  // 指定日計算：指定日の眠前まで足りる日数を求める（朝開始以外は+1日分を加算）
+  // 指定末日計算：指定末日の眠前を必ず含む日数・終了タイミングを求める
   let targetPeriodText = ''
   let targetDaysText   = ''
   if (addStart && targetDate) {
     const start    = new Date(addStart   + 'T00:00:00')
     const end      = new Date(targetDate + 'T00:00:00')
     const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24))
-    const tDays = daysDiff + 1 + (startTiming === '朝' ? 0 : 1)
+    const tDays = daysDiff + 1
     if (tDays > 0) {
-      targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(targetDate)}${endTiming}`
+      // 朝開始は指定末日当日の眠前で完結（+tDays-1日）、昼以降は翌日へまたぐ（+tDays日）
+      const daysOffset = startTiming === '朝' ? tDays - 1 : tDays
+      const endStr = addDaysToStr(addStart, daysOffset)
+      targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       targetDaysText   = `${tDays}日分`
     }
   }
@@ -146,7 +149,7 @@ function CalcTool({ visitCalc }) {
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
           <div style={isMobile ? calc50MobileStyle : { flex: '1 1 140px', minWidth: 130 }}>
-            <label style={calcLabelStyle}>指定日</label>
+            <label style={calcLabelStyle}>指定末日</label>
             <div style={{ display: 'flex', gap: 4 }}>
               <input
                 type="date" value={targetDate}
@@ -157,8 +160,8 @@ function CalcTool({ visitCalc }) {
                 <button
                   type="button"
                   onClick={() => setTargetDate('')}
-                  aria-label="指定日を削除"
-                  title="指定日を削除"
+                  aria-label="指定末日を削除"
+                  title="指定末日を削除"
                   style={calcClearBtnStyle}
                 >×</button>
               )}
@@ -174,7 +177,7 @@ function CalcTool({ visitCalc }) {
             />
           </div>
 
-          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー（指定日入力中はやや薄く表示） */}
+          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー（指定末日入力中はやや薄く表示） */}
           {periodText && (
             <div style={{
               ...(isMobile
@@ -191,7 +194,7 @@ function CalcTool({ visitCalc }) {
             </div>
           )}
 
-          {/* 指定日の結果 */}
+          {/* 指定末日の結果 */}
           {targetPeriodText && (
             <div style={isMobile
               ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
@@ -219,7 +222,7 @@ const calcInputStyle = {
   fontFamily: 'inherit', width: '100%', outline: 'none',
 }
 
-// 指定日クリアボタン（×）
+// 指定末日クリアボタン（×）
 const calcClearBtnStyle = {
   flexShrink: 0, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: 6, color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1,
