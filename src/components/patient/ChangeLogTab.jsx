@@ -74,21 +74,23 @@ function CalcTool({ visitCalc }) {
       const end   = new Date(rxEnd    + 'T00:00:00')
       const diff  = Math.ceil((end - start) / (1000*60*60*24)) + 1
       if (diff > 0) {
-        periodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}${endTiming}`
+        // 朝開始以外は定期処方末日の翌日までまたがるため、末尾のタイミングは省き「+α」と表記する
+        periodText = startTiming === '朝'
+          ? `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}${endTiming}`
+          : `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}+α`
         daysText   = `定期に合わせた場合${diff}日分`
       }
     }
   }
 
-  // 指定日計算：終了日から逆算して必要日数を求める
+  // 指定日計算：指定日の眠前まで足りる日数を求める（朝開始以外は+1日分を加算）
   let targetPeriodText = ''
   let targetDaysText   = ''
   if (addStart && targetDate) {
     const start    = new Date(addStart   + 'T00:00:00')
     const end      = new Date(targetDate + 'T00:00:00')
     const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24))
-    // 朝開始は+days-1日が終了日なのでdaysDiff+1、昼以降は+days日なのでdaysDiff
-    const tDays = startTiming === '朝' ? daysDiff + 1 : daysDiff
+    const tDays = daysDiff + 1 + (startTiming === '朝' ? 0 : 1)
     if (tDays > 0) {
       targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(targetDate)}${endTiming}`
       targetDaysText   = `${tDays}日分`
@@ -143,13 +145,24 @@ function CalcTool({ visitCalc }) {
             <label style={calcLabelStyle}>定期処方末日</label>
             <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
           </div>
-          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 80px', minWidth: 70 }}>
+          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 140px', minWidth: 130 }}>
             <label style={calcLabelStyle}>指定日</label>
-            <input
-              type="date" value={targetDate}
-              onChange={e => setTargetDate(e.target.value)}
-              style={calcInputStyle}
-            />
+            <div style={{ display: 'flex', gap: 4 }}>
+              <input
+                type="date" value={targetDate}
+                onChange={e => setTargetDate(e.target.value)}
+                style={{ ...calcInputStyle, minWidth: 0, flex: 1 }}
+              />
+              {targetDate && (
+                <button
+                  type="button"
+                  onClick={() => setTargetDate('')}
+                  aria-label="指定日を削除"
+                  title="指定日を削除"
+                  style={calcClearBtnStyle}
+                >×</button>
+              )}
+            </div>
           </div>
           <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
@@ -161,12 +174,14 @@ function CalcTool({ visitCalc }) {
             />
           </div>
 
-          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー */}
+          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー（指定日入力中はやや薄く表示） */}
           {periodText && (
-            <div style={isMobile
-              ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
-              : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }
-            }>
+            <div style={{
+              ...(isMobile
+                ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
+                : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }),
+              opacity: targetDate ? 0.4 : 1,
+            }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
                 {periodText}
               </div>
@@ -202,6 +217,13 @@ const calcInputStyle = {
   background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: 6, padding: '6px 8px', fontSize: 12, color: 'white',
   fontFamily: 'inherit', width: '100%', outline: 'none',
+}
+
+// 指定日クリアボタン（×）
+const calcClearBtnStyle = {
+  flexShrink: 0, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
+  borderRadius: 6, color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1,
+  padding: '0 9px', cursor: 'pointer', fontFamily: 'inherit',
 }
 
 // select は option が白背景で見えなくなるため背景を濃く設定
