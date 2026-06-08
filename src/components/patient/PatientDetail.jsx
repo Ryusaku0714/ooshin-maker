@@ -17,6 +17,10 @@ const TABS = [
 
 const DOW_JP = ['日', '月', '火', '水', '木', '金', '土']
 
+// ボタン直下に常時表示する極小の説明ラベル
+const ACTION_CAP_STYLE = { fontSize: 9, color: 'var(--gray-400)', lineHeight: 1, marginTop: 3, whiteSpace: 'nowrap' }
+const ACTION_WRAP_STYLE = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }
+
 function fmtMMDD(dateStr) {
   if (!dateStr) return ''
   const [, mm, dd] = dateStr.split('-')
@@ -230,14 +234,23 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
           {patient.initial && <span style={{ color: 'var(--sky-600)' }}>{patient.initial}</span>}
         </div>
         <div className="patient-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-outline btn-sm"
-            onClick={copyPatientText}
-          >
-            {copied ? '✅ コピー済' : '📋 テキストコピー'}
-          </button>
-          <button className="btn btn-outline btn-sm" onClick={printPatientMonth}>🖨️ 1ヶ月分</button>
-          <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ 全体印刷</button>
+          <span style={ACTION_WRAP_STYLE}>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={copyPatientText}
+            >
+              {copied ? '✅ コピー済' : '📋 テキストコピー'}
+            </button>
+            <span style={ACTION_CAP_STYLE}>1患者情報全コピー</span>
+          </span>
+          <span style={ACTION_WRAP_STYLE}>
+            <button className="btn btn-outline btn-sm" onClick={printPatientMonth}>🖨️ 1ヶ月分</button>
+            <span style={ACTION_CAP_STYLE}>直近1ヶ月変更ログ</span>
+          </span>
+          <span style={ACTION_WRAP_STYLE}>
+            <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ 全体印刷</button>
+            <span style={ACTION_CAP_STYLE}>1患者情報印刷</span>
+          </span>
         </div>
       </div>
 

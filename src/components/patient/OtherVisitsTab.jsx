@@ -314,14 +314,29 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
       <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
         {archived ? (
           <>
-            <button className="icon-btn" title="復元（受診中に戻す）" onClick={onRestore} style={{ fontSize: 11 }}>↩️</button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>🗑️</button>
+            <button className="icon-btn" title="復元（受診中に戻す）" onClick={onRestore}>
+              <span aria-hidden="true" style={{ fontSize: 11 }}>↩️</span>
+              <span className="icon-btn-cap">復元</span>
+            </button>
+            <button className="icon-btn" title="完全削除" onClick={onDelete}>
+              <span aria-hidden="true">🗑️</span>
+              <span className="icon-btn-cap">削除</span>
+            </button>
           </>
         ) : (
           <>
-            <button className="icon-btn" title="編集" onClick={onEdit}>✏️</button>
-            <button className="icon-btn" title="アーカイブ（終了した受診記録として保存）" onClick={onArchive} style={{ fontSize: 11 }}>📂</button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>🗑️</button>
+            <button className="icon-btn" title="編集" onClick={onEdit}>
+              <span aria-hidden="true">✏️</span>
+              <span className="icon-btn-cap">編集</span>
+            </button>
+            <button className="icon-btn" title="アーカイブ（終了した受診記録として保存）" onClick={onArchive}>
+              <span aria-hidden="true" style={{ fontSize: 11 }}>📂</span>
+              <span className="icon-btn-cap">非表示</span>
+            </button>
+            <button className="icon-btn" title="完全削除" onClick={onDelete}>
+              <span aria-hidden="true">🗑️</span>
+              <span className="icon-btn-cap">削除</span>
+            </button>
           </>
         )}
       </div>

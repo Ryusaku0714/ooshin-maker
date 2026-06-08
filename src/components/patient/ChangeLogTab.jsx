@@ -495,8 +495,14 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2 }}>
-                    <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>✏️</button>
-                    <button className="icon-btn" title="削除" onClick={() => del(log.id)}>🗑️</button>
+                    <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>
+                      <span aria-hidden="true">✏️</span>
+                      <span className="icon-btn-cap">編集</span>
+                    </button>
+                    <button className="icon-btn" title="削除" onClick={() => del(log.id)}>
+                      <span aria-hidden="true">🗑️</span>
+                      <span className="icon-btn-cap">削除</span>
+                    </button>
                   </div>
                 </div>
               )}

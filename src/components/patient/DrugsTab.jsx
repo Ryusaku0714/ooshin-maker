@@ -206,25 +206,33 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
       <div className="drug-actions" style={{ display: 'flex', gap: 4 }}>
         {archived ? (
           <>
-            <button className="icon-btn" title="編集" onClick={onEdit}>✏️</button>
-            <button
-              className="icon-btn"
-              title="復元（使用中に戻す）"
-              onClick={onRestore}
-              style={{ fontSize: 11 }}
-            >↩️</button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>🗑️</button>
+            <button className="icon-btn" title="編集" onClick={onEdit}>
+              <span aria-hidden="true">✏️</span>
+              <span className="icon-btn-cap">編集</span>
+            </button>
+            <button className="icon-btn" title="復元（使用中に戻す）" onClick={onRestore}>
+              <span aria-hidden="true" style={{ fontSize: 11 }}>↩️</span>
+              <span className="icon-btn-cap">復元</span>
+            </button>
+            <button className="icon-btn" title="完全削除" onClick={onDelete}>
+              <span aria-hidden="true">🗑️</span>
+              <span className="icon-btn-cap">削除</span>
+            </button>
           </>
         ) : (
           <>
-            <button className="icon-btn" title="編集" onClick={onEdit}>✏️</button>
-            <button
-              className="icon-btn"
-              title="アーカイブ（終了薬として保存）"
-              onClick={onArchive}
-              style={{ fontSize: 11 }}
-            >📂</button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>🗑️</button>
+            <button className="icon-btn" title="編集" onClick={onEdit}>
+              <span aria-hidden="true">✏️</span>
+              <span className="icon-btn-cap">編集</span>
+            </button>
+            <button className="icon-btn" title="アーカイブ（終了薬として保存）" onClick={onArchive}>
+              <span aria-hidden="true" style={{ fontSize: 11 }}>📂</span>
+              <span className="icon-btn-cap">非表示</span>
+            </button>
+            <button className="icon-btn" title="完全削除" onClick={onDelete}>
+              <span aria-hidden="true">🗑️</span>
+              <span className="icon-btn-cap">削除</span>
+            </button>
           </>
         )}
       </div>
@@ -244,16 +252,19 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
               ⚠️ 3ヶ月以上未確認
             </span>
           )}
-          <button
-            onClick={onConfirm}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
-              color: confirmedDate ? 'var(--sky-600)' : 'var(--gray-400)',
-            }}
-          >
-            {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
-          </button>
+          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <button
+              onClick={onConfirm}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
+                color: confirmedDate ? 'var(--sky-600)' : 'var(--gray-400)',
+              }}
+            >
+              {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
+            </button>
+            <span className="icon-btn-cap">確認済み</span>
+          </span>
         </div>
       )}
     </div>

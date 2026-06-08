@@ -68,17 +68,29 @@ body {
 .btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
 
 .icon-btn {
-  width: 28px; height: 28px;
+  min-width: 38px; min-height: 36px;
+  padding: 3px 4px;
   border-radius: 6px;
   border: 1px solid var(--gray-200);
   background: white;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   font-size: 12px;
+  line-height: 1;
   transition: all 0.1s;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 .icon-btn:hover { border-color: var(--sky-400); background: var(--sky-50); }
+
+/* ボタン直下に常時表示する極小の説明ラベル */
+.icon-btn-cap {
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--gray-400);
+  white-space: nowrap;
+}
 
 /* ── Cards ── */
 .card {
