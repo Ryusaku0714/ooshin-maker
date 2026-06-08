@@ -643,13 +643,13 @@ export default function Sidebar({
                           ) : (
                             /* 個人在宅 コンパクト操作行 */
                             <div style={{
-                              display: 'flex', alignItems: 'flex-start', gap: 4,
+                              display: 'flex', alignItems: 'center', gap: 4,
                               padding: '5px 8px',
                               background: '#f0fdf4',
                               borderBottom: hasPatients ? `1px solid ${cs.teamBorder}` : 'none',
                             }}>
                               {/* 在宅患者ラベル */}
-                              <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0, paddingTop: 1 }}>
+                              <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0 }}>
                                 🏠 在宅患者
                                 {team.pharmacist_name && (
                                   <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 400, marginLeft: 6 }}>
@@ -657,49 +657,31 @@ export default function Sidebar({
                                   </span>
                                 )}
                               </span>
-                              {/* 2段ボタングループ */}
+                              {/* 1行ボタングループ */}
                               <div
                                 onClick={e => e.stopPropagation()}
-                                style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}
+                                style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
-                                {/* 1段目：変更ログ一括・チームメモ */}
-                                <div style={{ display: 'flex', gap: 3 }}>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={() => printTeamLogs(team, facility.name)}
-                                      title="変更記録一括印刷"
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >🖨️</button>
-                                    <span style={ICON_CAP_STYLE}>変更ログ一括</span>
-                                  </span>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={() => setMemoTarget({ type: 'team', id: team.id, name: '在宅患者', memo: team.memo ?? '' })}
-                                      title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid #86efac', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >📝</button>
-                                    <span style={ICON_CAP_STYLE}>チームメモ</span>
-                                  </span>
-                                </div>
-                                {/* 2段目：処方日数設定・削除 */}
-                                <div style={{ display: 'flex', gap: 3 }}>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={e => startEditTeam(e, team, true)}
-                                      title="処方設定を編集"
-                                      style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >⚙️</button>
-                                    <span style={ICON_CAP_STYLE}>処方日数設定</span>
-                                  </span>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={e => deleteTeam(e, team)}
-                                      title="在宅を削除"
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >🗑️</button>
-                                    <span style={ICON_CAP_STYLE}>削除</span>
-                                  </span>
-                                </div>
+                                <button
+                                  onClick={() => printTeamLogs(team, facility.name)}
+                                  title="変更記録一括印刷"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >🖨️</button>
+                                <button
+                                  onClick={() => setMemoTarget({ type: 'team', id: team.id, name: '在宅患者', memo: team.memo ?? '' })}
+                                  title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid #86efac', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >📝</button>
+                                <button
+                                  onClick={e => startEditTeam(e, team, true)}
+                                  title="処方設定を編集"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >⚙️</button>
+                                <button
+                                  onClick={e => deleteTeam(e, team)}
+                                  title="在宅を削除"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >🗑️</button>
                               </div>
                             </div>
                           )
@@ -754,12 +736,12 @@ export default function Sidebar({
                                 padding: '5px 8px',
                                 background: selectedTeamId === team.id ? 'var(--sky-100)' : 'var(--sky-50)',
                                 borderBottom: (isOpen && hasPatients) ? '1px solid var(--sky-100)' : 'none',
-                                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4,
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4,
                                 cursor: 'pointer',
                               }}
                             >
                               {/* チーム名＋往診間隔 */}
-                              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', paddingTop: 1 }}>
+                              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   🏥 {team.clinic_name} {team.team_name}
                                 </div>
@@ -769,49 +751,31 @@ export default function Sidebar({
                                   </div>
                                 )}
                               </div>
-                              {/* 2段ボタングループ */}
+                              {/* 1行ボタングループ */}
                               <div
                                 onClick={e => e.stopPropagation()}
-                                style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0 }}
+                                style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
-                                {/* 1段目：変更ログ一括・チームメモ */}
-                                <div style={{ display: 'flex', gap: 3 }}>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={() => printTeamLogs(team, facility.name)}
-                                      title="変更記録一括印刷"
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >🖨️</button>
-                                    <span style={ICON_CAP_STYLE}>変更ログ一括</span>
-                                  </span>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={() => setMemoTarget({ type: 'team', id: team.id, name: [team.clinic_name, team.team_name].filter(Boolean).join(' '), memo: team.memo ?? '' })}
-                                      title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid var(--sky-200)', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >📝</button>
-                                    <span style={ICON_CAP_STYLE}>チームメモ</span>
-                                  </span>
-                                </div>
-                                {/* 2段目：編集・削除 */}
-                                <div style={{ display: 'flex', gap: 3 }}>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={e => startEditTeam(e, team, false)}
-                                      title="チームを編集"
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >✏️</button>
-                                    <span style={ICON_CAP_STYLE}>編集</span>
-                                  </span>
-                                  <span style={ICON_WRAP_STYLE}>
-                                    <button
-                                      onClick={e => deleteTeam(e, team)}
-                                      title="チームを削除"
-                                      style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                    >🗑️</button>
-                                    <span style={ICON_CAP_STYLE}>削除</span>
-                                  </span>
-                                </div>
+                                <button
+                                  onClick={() => printTeamLogs(team, facility.name)}
+                                  title="変更記録一括印刷"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >🖨️</button>
+                                <button
+                                  onClick={() => setMemoTarget({ type: 'team', id: team.id, name: [team.clinic_name, team.team_name].filter(Boolean).join(' '), memo: team.memo ?? '' })}
+                                  title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid var(--sky-200)', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >📝</button>
+                                <button
+                                  onClick={e => startEditTeam(e, team, false)}
+                                  title="チームを編集"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >✏️</button>
+                                <button
+                                  onClick={e => deleteTeam(e, team)}
+                                  title="チームを削除"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >🗑️</button>
                               </div>
                             </div>
                           )
