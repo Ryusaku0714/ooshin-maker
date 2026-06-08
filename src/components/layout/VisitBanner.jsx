@@ -20,7 +20,7 @@ function fmtFullWithDow(str) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${DOW[d.getDay()]}）`
 }
 
-export default function VisitBanner({ team, onVisitCalcChange }) {
+export default function VisitBanner({ team, patientOverride, onVisitCalcChange }) {
   const today = fmtFull(new Date())
   const [visitDate, setVisitDate] = useState(today)
   const [rxDays,    setRxDays]    = useState(team?.default_rx_days ?? 14)
@@ -42,11 +42,16 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     return () => mql.removeEventListener('change', handler)
   }, [])
 
-  // 処方開始日は visitDate + graceDays から導出（独立したstateを持たない）
+  // 個別設定ON（patientOverride）の患者を選択中は、その患者専用の値で計算する
+  // ※ チーム単位の rxDays / graceDays state やその保存ロジックはそのまま
+  const effRxDays    = patientOverride?.rxDays    ?? Number(rxDays)
+  const effGraceDays = patientOverride?.graceDays ?? Number(graceDays)
+
+  // 処方開始日は visitDate + 処方ズレ日数（個別設定があれば個別値）から導出（独立したstateを持たない）
   const rxStartDate = (() => {
     if (!visitDate) return ''
     const d = new Date(visitDate)
-    d.setDate(d.getDate() + Number(graceDays))
+    d.setDate(d.getDate() + effGraceDays)
     return fmtFull(d)
   })()
 
@@ -60,7 +65,7 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
 
   useEffect(() => {
     calc()
-  }, [visitDate, rxDays, graceDays])
+  }, [visitDate, rxDays, graceDays, patientOverride])
 
   useEffect(() => {
     const teamId = team?.id
@@ -85,16 +90,16 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
     if (!visitDate) return
     const visit = new Date(visitDate)
     const start = new Date(visit)
-    start.setDate(start.getDate() + Number(graceDays))
+    start.setDate(start.getDate() + effGraceDays)
     const end = new Date(start)
-    end.setDate(end.getDate() + Number(rxDays) - 1)
+    end.setDate(end.getDate() + effRxDays - 1)
     const next = new Date(visit)
-    next.setDate(next.getDate() + Number(rxDays))
+    next.setDate(next.getDate() + effRxDays)
 
     setRxPeriod(`${fmtWithDow(start)}〜${fmtWithDow(end)}`)
     setNextVisit(`次回往診：${fmt(next)}`)
     setRxEnd(fmtFull(end))
-    onVisitCalcChange?.({ visitDate, rxDays: Number(rxDays), graceDays: Number(graceDays), rxEnd: fmtFull(end) })
+    onVisitCalcChange?.({ visitDate, rxDays: effRxDays, graceDays: effGraceDays, rxEnd: fmtFull(end) })
   }
 
   // 処方開始日を変更 → 往診日との差分から処方ズレ日数を逆算
@@ -141,28 +146,34 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         <Field label="処方日数" className="rx-days-field"
           style={isMobile ? mobileFieldStyle : { flex: '1 1 56px', minWidth: 52 }}>
           <input
-            type="number" value={rxDays} min={1} max={90}
+            type="number" value={patientOverride ? patientOverride.rxDays : rxDays} min={1} max={90}
+            disabled={!!patientOverride}
             onChange={e => setRxDays(e.target.value)}
-            style={bannerInputStyle}
+            style={patientOverride ? overrideInputStyle : bannerInputStyle}
+            title={patientOverride ? '個別設定中：この患者の値は患者一覧の「個別設定」で編集してください' : undefined}
           />
         </Field>
 
         <Field label="処方ズレ日数" className="grace-days-field"
           style={isMobile ? mobileFieldStyle : { flex: '1 1 68px', minWidth: 64 }}>
           <input
-            type="number" value={graceDays} min={0} max={14}
+            type="number" value={patientOverride ? patientOverride.graceDays : graceDays} min={0} max={14}
+            disabled={!!patientOverride}
             onChange={e => setGraceDays(e.target.value)}
-            style={bannerInputStyle}
+            style={patientOverride ? overrideInputStyle : bannerInputStyle}
+            title={patientOverride ? '個別設定中：この患者の値は患者一覧の「個別設定」で編集してください' : undefined}
           />
         </Field>
 
-        {/* 処方開始日：処方ズレ日数と双方向連動 */}
+        {/* 処方開始日：処方ズレ日数と双方向連動（個別設定中は個別値から算出し編集不可） */}
         <Field label="処方開始日" dow={rxStartDate ? `（${DOW[parseDate(rxStartDate).getDay()]}）` : ''} className="rx-start-field"
           style={isMobile ? mobileFieldStyle : { flex: '2 1 110px', minWidth: 100 }}>
           <input
             type="date" value={rxStartDate}
+            disabled={!!patientOverride}
             onChange={e => handleRxStartDateChange(e.target.value)}
-            style={bannerInputStyle}
+            style={patientOverride ? overrideInputStyle : bannerInputStyle}
+            title={patientOverride ? '個別設定中：この患者の値は患者一覧の「個別設定」で編集してください' : undefined}
           />
         </Field>
 
@@ -176,8 +187,21 @@ export default function VisitBanner({ team, onVisitCalcChange }) {
         }}>
           <div style={{ fontSize: 9, color: 'var(--sky-200)' }}>処方期間</div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{rxPeriod}</div>
-          <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{rxDays}日分）　{nextVisit}</div>
+          <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{effRxDays}日分）　{nextVisit}</div>
         </div>
+
+        {/* 個別設定中バッジ：選択中の患者の個別値で計算していることを示す */}
+        {patientOverride && (
+          <div style={{
+            ...(isMobile ? { width: '100%', marginTop: 2 } : { flex: '0 0 auto' }),
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+            background: 'rgba(245,158,11,0.22)', border: '1px solid rgba(245,158,11,0.5)',
+            borderRadius: 8, padding: '6px 10px',
+            fontSize: 10, fontWeight: 700, color: '#fef3c7', whiteSpace: 'nowrap',
+          }}>
+            👤 個別設定を使用中
+          </div>
+        )}
 
         {team && !isMobile && (
           <div className="save-indicator" style={{ fontSize: 9, color: saving ? 'var(--sky-300)' : 'rgba(255,255,255,0.35)', alignSelf: 'flex-end', paddingBottom: 4, whiteSpace: 'nowrap' }}>
@@ -250,4 +274,11 @@ const bannerInputStyle = {
   background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: 6, padding: '5px 7px', fontSize: 12, color: 'white',
   fontFamily: 'inherit', outline: 'none', width: '100%',
+}
+
+// 個別設定中（patientOverride）の患者を選択している間、編集不可であることを示す配色
+const overrideInputStyle = {
+  ...bannerInputStyle,
+  background: 'rgba(245,158,11,0.22)', border: '1px solid rgba(245,158,11,0.5)',
+  cursor: 'not-allowed', opacity: 0.9,
 }

@@ -37,6 +37,16 @@ export default function App() {
     .flatMap(f => f.om_teams ?? [])
     .find(t => t.id === selectedTeamId) ?? null
 
+  // 選択中患者を特定し、個別設定（custom_days / custom_offset）がONなら上部バーへ伝える
+  const selectedPatient = facilities
+    .flatMap(f => f.om_teams ?? [])
+    .flatMap(t => t.om_patients ?? [])
+    .find(p => p.id === selectedPatientId) ?? null
+
+  const patientOverride = (selectedPatient?.custom_days != null && selectedPatient?.custom_offset != null)
+    ? { rxDays: selectedPatient.custom_days, graceDays: selectedPatient.custom_offset }
+    : null
+
   const handleSelectPatient = (id) => {
     if (isDirtyRef.current && id !== selectedPatientId) {
       if (!window.confirm('保存されていない変更があります。\nこの患者から移動してよいですか？（変更は保存されません）')) {
@@ -110,7 +120,7 @@ export default function App() {
           style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
         >
           {/* 往診設定バナー */}
-          <VisitBanner team={selectedTeam} onVisitCalcChange={setVisitCalc} />
+          <VisitBanner team={selectedTeam} patientOverride={patientOverride} onVisitCalcChange={setVisitCalc} />
 
           {/* 患者詳細 */}
           <PatientDetail

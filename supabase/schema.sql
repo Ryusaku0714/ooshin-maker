@@ -196,3 +196,11 @@ ALTER TABLE om_facilities ADD COLUMN IF NOT EXISTS is_home_care BOOLEAN NOT NULL
 -- ============================================================
 ALTER TABLE om_facilities ADD COLUMN IF NOT EXISTS memo TEXT;
 ALTER TABLE om_teams      ADD COLUMN IF NOT EXISTS memo TEXT;
+
+-- ============================================================
+-- v9 マイグレーション：患者ごとの処方日数・処方ズレ日数の個別設定
+-- ============================================================
+-- どちらも NULL の場合は個別設定OFF（チームのデフォルト値を使用）。
+-- 両方に値が入っている場合のみ個別設定ONとして扱う。
+ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS custom_days   INTEGER;
+ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS custom_offset INTEGER;

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
@@ -136,6 +136,139 @@ const HOME_STYLE = {
   patientAddColor: '#16a34a',
 }
 
+// 患者ごとの「個別設定」トグル＋処方日数・処方ズレ日数の入力欄
+// custom_days / custom_offset の両方に値が入っている場合のみ個別設定ONとして扱う
+function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch }) {
+  const isCustom = p.custom_days != null && p.custom_offset != null
+
+  const [days,   setDays]   = useState(p.custom_days   ?? team.default_rx_days ?? 14)
+  const [offset, setOffset] = useState(p.custom_offset ?? team.grace_days ?? 1)
+
+  // 患者切り替え・サーバ側の値変化に追従
+  useEffect(() => {
+    setDays(p.custom_days ?? team.default_rx_days ?? 14)
+    setOffset(p.custom_offset ?? team.grace_days ?? 1)
+  }, [p.id, p.custom_days, p.custom_offset])
+
+  // 個別設定ON時のみ、入力値をデバウンスして自動保存
+  useEffect(() => {
+    if (!isCustom) return
+    const d = Number(days)
+    const o = Number(offset)
+    if (!(d >= 1) || !(o >= 0)) return
+    if (d === p.custom_days && o === p.custom_offset) return
+
+    const timer = setTimeout(() => {
+      // 上部情報バー（個別値で計算）に最新値を反映するため、保存後に一覧を再取得する
+      db.updatePatient(p.id, { custom_days: d, custom_offset: o }).then(() => onRefetch())
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [days, offset, isCustom, p.id, p.custom_days, p.custom_offset, onRefetch])
+
+  const toggleCustom = async (e) => {
+    e.stopPropagation()
+    if (isCustom) {
+      await db.updatePatient(p.id, { custom_days: null, custom_offset: null })
+    } else {
+      await db.updatePatient(p.id, {
+        custom_days:   team.default_rx_days ?? 14,
+        custom_offset: team.grace_days ?? 1,
+      })
+    }
+    onRefetch()
+  }
+
+  return (
+    <div style={{ marginBottom: 2 }}>
+      <div
+        style={{
+          fontSize: 11,
+          color: selected ? 'white' : 'var(--sky-700)',
+          padding: '4px 6px',
+          borderRadius: 5,
+          background: selected ? 'var(--sky-600)' : 'transparent',
+          fontWeight: selected ? 600 : 400,
+          display: 'flex', alignItems: 'center', gap: 4,
+          transition: 'background 0.1s',
+        }}
+      >
+        <div
+          onClick={onSelect}
+          style={{ flex: 1, minWidth: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+        >
+          <span style={{ opacity: 0.6, fontSize: 10, flexShrink: 0 }}>👤</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {p.room_number}{p.initial ? `　${p.initial}` : ''}
+          </span>
+        </div>
+
+        {/* 個別設定トグル（小さめのスイッチ） */}
+        <button
+          onClick={toggleCustom}
+          title={isCustom ? '個別設定：ON（クリックでOFFに戻す）' : '個別設定：OFF（クリックでこの患者専用の処方日数・処方ズレ日数を設定）'}
+          style={{
+            flexShrink: 0, width: 26, height: 14, borderRadius: 7, border: 'none', padding: 0,
+            position: 'relative', cursor: 'pointer',
+            background: isCustom ? '#f59e0b' : (selected ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.15)'),
+            transition: 'background 0.15s',
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: 1.5, left: isCustom ? 13.5 : 1.5,
+            width: 11, height: 11, borderRadius: '50%', background: 'white',
+            transition: 'left 0.15s', boxShadow: '0 1px 2px rgba(0,0,0,0.25)',
+          }} />
+        </button>
+
+        <button
+          onClick={onDelete}
+          title="患者を削除"
+          style={{
+            fontSize: 10, padding: '1px 3px', borderRadius: 3,
+            border: selected ? '1px solid rgba(255,255,255,0.4)' : '1px solid #fca5a5',
+            background: 'transparent',
+            color: selected ? 'rgba(255,255,255,0.7)' : '#ef4444',
+            cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, lineHeight: 1,
+          }}
+        >🗑️</button>
+      </div>
+
+      {/* 個別設定ON時：この患者専用の処方日数・処方ズレ日数 */}
+      {isCustom && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6,
+            margin: '2px 0 3px 19px', padding: '4px 7px',
+            background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 5,
+            fontSize: 10, color: '#92400e',
+          }}
+        >
+          <span style={{ fontWeight: 700, color: '#f59e0b', flexShrink: 0 }}>👤個別設定</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            処方日数
+            <input
+              type="number" value={days} min={1} max={90}
+              onChange={e => setDays(e.target.value)}
+              style={{ width: 36, fontSize: 10, border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 4px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+            />
+            日
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            ズレ日数
+            <input
+              type="number" value={offset} min={0} max={14}
+              onChange={e => setOffset(e.target.value)}
+              style={{ width: 32, fontSize: 10, border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 4px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+            />
+            日
+          </label>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Sidebar({
   facilities, selectedPatientId, selectedTeamId,
   onSelectPatient, onSelectTeam, onRefetch,
@@ -269,38 +402,15 @@ export default function Sidebar({
   }
 
   const renderPatientRow = (p, team) => (
-    <div
+    <PatientRow
       key={p.id}
-      style={{
-        fontSize: 11,
-        color: selectedPatientId === p.id ? 'white' : 'var(--sky-700)',
-        padding: '4px 6px',
-        borderRadius: 5,
-        background: selectedPatientId === p.id ? 'var(--sky-600)' : 'transparent',
-        fontWeight: selectedPatientId === p.id ? 600 : 400,
-        display: 'flex', alignItems: 'center', gap: 4, marginBottom: 1,
-        transition: 'background 0.1s',
-      }}
-    >
-      <div
-        onClick={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
-        style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
-      >
-        <span style={{ opacity: 0.6, fontSize: 10 }}>👤</span>
-        {p.room_number}{p.initial ? `　${p.initial}` : ''}
-      </div>
-      <button
-        onClick={e => deletePatient(e, p)}
-        title="患者を削除"
-        style={{
-          fontSize: 10, padding: '1px 3px', borderRadius: 3,
-          border: selectedPatientId === p.id ? '1px solid rgba(255,255,255,0.4)' : '1px solid #fca5a5',
-          background: 'transparent',
-          color: selectedPatientId === p.id ? 'rgba(255,255,255,0.7)' : '#ef4444',
-          cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, lineHeight: 1,
-        }}
-      >🗑️</button>
-    </div>
+      patient={p}
+      team={team}
+      selected={selectedPatientId === p.id}
+      onSelect={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
+      onDelete={e => deletePatient(e, p)}
+      onRefetch={onRefetch}
+    />
   )
 
   return (
