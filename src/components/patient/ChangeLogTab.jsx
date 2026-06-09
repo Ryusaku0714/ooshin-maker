@@ -36,6 +36,8 @@ function CalcTool({ visitCalc }) {
   const [manualDays,  setManualDays]  = useState('')
   const [targetDate,  setTargetDate]  = useState('')
   const [open,        setOpen]        = useState(true)
+  const [copiedPeriod, setCopiedPeriod] = useState(false)
+  const [copiedTarget, setCopiedTarget] = useState(false)
   const rxEnd = visitCalc?.rxEnd ?? ''
 
   // スマホ判定（768px以下）— JSXインラインstyleで直接レイアウト制御するため
@@ -60,6 +62,7 @@ function CalcTool({ visitCalc }) {
 
   let periodText = ''
   let daysText   = ''
+  let periodCopyDays = ''
 
   if (addStart) {
     if (isManual) {
@@ -67,18 +70,20 @@ function CalcTool({ visitCalc }) {
       // 朝開始は同日の眠前で完結（+days-1日）、昼以降は翌日へまたぐ（+days日）
       const daysOffset = startTiming === '朝' ? days - 1 : days
       const endStr = addDaysToStr(addStart, daysOffset)
-      periodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
-      daysText   = `${days}日分`
+      periodText     = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
+      daysText       = `${days}日分`
+      periodCopyDays = `${days}日分`
     } else if (rxEnd) {
       const start = new Date(addStart + 'T00:00:00')
       const end   = new Date(rxEnd    + 'T00:00:00')
       const diff  = Math.ceil((end - start) / (1000*60*60*24)) + 1
       if (diff > 0) {
         // 朝開始以外は定期処方末日の翌日までまたがるため、末尾のタイミングは省き「+α」と表記する
-        periodText = startTiming === '朝'
+        periodText     = startTiming === '朝'
           ? `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}${endTiming}`
           : `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}+α`
-        daysText   = `定期に合わせた場合${diff}日分`
+        daysText       = `定期に合わせた場合${diff}日分`
+        periodCopyDays = `${diff}日分`
       }
     }
   }
@@ -98,6 +103,26 @@ function CalcTool({ visitCalc }) {
       targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       targetDaysText   = `${tDays}日分`
     }
+  }
+
+  function stripDow(str) {
+    return str.replace(/（[日月火水木金土]）/g, '')
+  }
+
+  const handleCopyPeriod = async () => {
+    if (!periodText || !periodCopyDays) return
+    const text = `日数：${periodCopyDays}\n調剤：${stripDow(periodText)}`
+    await navigator.clipboard.writeText(text)
+    setCopiedPeriod(true)
+    setTimeout(() => setCopiedPeriod(false), 1500)
+  }
+
+  const handleCopyTarget = async () => {
+    if (!targetPeriodText || !targetDaysText) return
+    const text = `日数：${targetDaysText}\n調剤：${stripDow(targetPeriodText)}`
+    await navigator.clipboard.writeText(text)
+    setCopiedTarget(true)
+    setTimeout(() => setCopiedTarget(false), 1500)
   }
 
   return (
@@ -185,11 +210,18 @@ function CalcTool({ visitCalc }) {
                 : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }),
               opacity: targetDate ? 0.4 : 1,
             }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
-                {periodText}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
-                {daysText}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+                    {periodText}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
+                    {daysText}
+                  </div>
+                </div>
+                <button type="button" onClick={handleCopyPeriod} style={calcCopyBtnStyle}>
+                  {copiedPeriod ? '✅' : '日付コピー'}
+                </button>
               </div>
             </div>
           )}
@@ -200,11 +232,18 @@ function CalcTool({ visitCalc }) {
               ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
               : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }
             }>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
-                {targetPeriodText}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
-                {targetDaysText}
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+                    {targetPeriodText}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
+                    {targetDaysText}
+                  </div>
+                </div>
+                <button type="button" onClick={handleCopyTarget} style={calcCopyBtnStyle}>
+                  {copiedTarget ? '✅' : '日付コピー'}
+                </button>
               </div>
             </div>
           )}
@@ -220,6 +259,24 @@ const calcInputStyle = {
   background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: 6, padding: '6px 8px', fontSize: 12, color: 'white',
   fontFamily: 'inherit', width: '100%', outline: 'none',
+}
+
+// 日付コピーボタン
+const calcCopyBtnStyle = {
+  flexShrink: 0,
+  background: 'rgba(255,255,255,0.15)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  borderRadius: 5,
+  color: 'white',
+  fontSize: 9,
+  fontWeight: 700,
+  padding: '3px 7px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  whiteSpace: 'nowrap',
+  lineHeight: 1.4,
+  alignSelf: 'flex-start',
+  marginTop: 2,
 }
 
 // 指定末日クリアボタン（×）

@@ -20,10 +20,23 @@ export default function DrugsTab({ patient, onRefetch }) {
   const [showAdd,      setShowAdd]      = useState(false)
   const [editDrug,     setEditDrug]     = useState(null)
   const [showArchived, setShowArchived] = useState(false)
+  const [sortOrder,    setSortOrder]    = useState('prescription') // 'prescription' | 'edit'
 
   const allDrugs      = patient?.om_drugs ?? []
   const activeDrugs   = allDrugs.filter(d => !d.is_archived)
   const archivedDrugs = allDrugs.filter(d => d.is_archived)
+
+  const sortedActiveDrugs = [...activeDrugs].sort((a, b) => {
+    if (sortOrder === 'prescription') {
+      const aDate = a.prescribed_at ? new Date(a.prescribed_at) : null
+      const bDate = b.prescribed_at ? new Date(b.prescribed_at) : null
+      if (!aDate && !bDate) return 0
+      if (!aDate) return 1
+      if (!bDate) return -1
+      return bDate - aDate
+    }
+    return new Date(a.created_at ?? 0) - new Date(b.created_at ?? 0)
+  })
 
   const del = async (id) => {
     if (!confirm(
@@ -54,7 +67,17 @@ export default function DrugsTab({ patient, onRefetch }) {
       <div className="card">
         <div className="card-title">
           💊 使用中の外用・頓用薬
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 2 }}>
+              <button
+                className={`btn btn-sm ${sortOrder === 'prescription' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setSortOrder('prescription')}
+              >処方日順</button>
+              <button
+                className={`btn btn-sm ${sortOrder === 'edit' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setSortOrder('edit')}
+              >編集順</button>
+            </div>
             {archivedDrugs.length > 0 && (
               <button
                 className="btn btn-outline btn-sm"
@@ -74,7 +97,7 @@ export default function DrugsTab({ patient, onRefetch }) {
           </p>
         )}
 
-        {activeDrugs.map(drug => (
+        {sortedActiveDrugs.map(drug => (
           <DrugRow
             key={drug.id}
             drug={drug}
