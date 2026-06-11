@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
+import CopyButton from '../common/CopyButton'
 
 export default function FreeMemoTab({ patient, onRefetch, printMode = false, onDirtyChange }) {
   const [memo, setMemo]     = useState(patient?.free_memo ?? '')
@@ -33,13 +34,16 @@ export default function FreeMemoTab({ patient, onRefetch, printMode = false, onD
     <div className="card">
       <div className="card-title">
         📄 フリーメモ
-        <button
-          className={`btn btn-sm ${saved ? 'btn-outline' : 'btn-primary'}`}
-          onClick={saveMemo}
-          disabled={saving}
-        >
-          {saving ? '保存中…' : saved ? '✅ 保存済' : '💾 保存'}
-        </button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <CopyButton variant="btn" title="フリーメモをコピー" getText={() => memo} />
+          <button
+            className={`btn btn-sm ${saved ? 'btn-outline' : 'btn-primary'}`}
+            onClick={saveMemo}
+            disabled={saving}
+          >
+            {saving ? '保存中…' : saved ? '✅ 保存済' : '💾 保存'}
+          </button>
+        </div>
       </div>
       <textarea
         className="field-input"

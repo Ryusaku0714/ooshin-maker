@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
+import CopyButton from '../common/CopyButton'
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -18,6 +19,11 @@ function fmtFullWithDow(str) {
   const d = parseDate(str)
   if (!d) return ''
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${DOW[d.getDay()]}）`
+}
+
+// 「（月）」などの曜日表記を取り除く
+function stripDow(str) {
+  return str.replace(/（[日月火水木金土]）/g, '')
 }
 
 export default function VisitBanner({ team, patientOverride, onVisitCalcChange }) {
@@ -184,10 +190,20 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
           ),
           background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
           borderRadius: 8, padding: '6px 12px', textAlign: 'center',
+          display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <div style={{ fontSize: 9, color: 'var(--sky-200)' }}>処方期間</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{rxPeriod}</div>
-          <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{effRxDays}日分）　{nextVisit}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 9, color: 'var(--sky-200)' }}>処方期間</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{rxPeriod}</div>
+            <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{effRxDays}日分）　{nextVisit}</div>
+          </div>
+          {rxPeriod !== '—' && (
+            <CopyButton
+              variant="banner"
+              title="処方期間をコピー"
+              getText={() => `${stripDow(rxPeriod)}（${effRxDays}日分）${nextVisit}`}
+            />
+          )}
         </div>
 
         {/* 個別設定中バッジ：選択中の患者の個別値で計算していることを示す */}

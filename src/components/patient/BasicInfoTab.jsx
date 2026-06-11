@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { db } from '../../hooks/useData'
+import CopyButton from '../common/CopyButton'
 
 export default function BasicInfoTab({ patient, onSaved, printMode = false, onDirtyChange }) {
   const [form, setForm] = useState({
@@ -46,6 +47,15 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
     setTimeout(() => setSaved(false), 2000)
   }
 
+  // 基本情報の表示テキスト全体（コピー用）
+  const buildBasicInfoText = () => {
+    let text = `${form.room_number}${form.initial ? '　' + form.initial : ''}`
+    if (form.medical_history?.trim())        text += `\n【病歴・既往歴】\n${form.medical_history.trim()}`
+    if (form.allergy_history?.trim())         text += `\n【アレルギー歴】\n${form.allergy_history.trim()}`
+    if (form.hospitalization_history?.trim()) text += `\n【入院歴】\n${form.hospitalization_history.trim()}`
+    return text
+  }
+
   // 印刷専用ビュー：textarea を使わず div で全文表示、空の任意項目は非表示
   if (printMode) {
     const fields = [
@@ -73,13 +83,16 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
     <div className="card">
       <div className="card-title">
         🏷️ 患者情報
-        <button
-          className={`btn btn-sm ${saved ? 'btn-outline' : 'btn-primary'}`}
-          onClick={save}
-          disabled={saving}
-        >
-          {saving ? '保存中…' : saved ? '✅ 保存済' : '💾 保存'}
-        </button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <CopyButton variant="btn" title="基本情報をコピー" getText={buildBasicInfoText} />
+          <button
+            className={`btn btn-sm ${saved ? 'btn-outline' : 'btn-primary'}`}
+            onClick={save}
+            disabled={saving}
+          >
+            {saving ? '保存中…' : saved ? '✅ 保存済' : '💾 保存'}
+          </button>
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div>

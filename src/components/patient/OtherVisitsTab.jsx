@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
+import CopyButton from '../common/CopyButton'
 
 const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
 const PREV_TIMING = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
@@ -33,6 +34,24 @@ function fmtPeriod(from, to) {
   if (from)       return `${from} 〜`
   if (to)         return `〜 ${to}`
   return ''
+}
+
+// 受診1件分のテキスト（コピー用）
+function formatVisitText(v) {
+  let line = `・${v.hospital}`
+  if (v.department) line += ` / ${v.department}`
+  const from = v.dispensing_from ?? v.dispensing_date ?? ''
+  const to   = v.dispensing_to ?? ''
+  if (from && to)  line += `　調剤：${from}〜${to}`
+  else if (from)   line += `　調剤：${from}〜`
+  else if (to)     line += `　調剤：〜${to}`
+  if (v.medication_timing) {
+    const endT = v.medication_timing_end || (PREV_TIMING[v.medication_timing] ?? '')
+    line += `　服用：${v.medication_timing}〜${endT}`
+  }
+  if (v.next_visit_date) line += `　次回：${v.next_visit_date}`
+  if (v.notes)           line += `　備考：${v.notes}`
+  return line
 }
 
 export default function OtherVisitsTab({ patient, onRefetch }) {
@@ -311,7 +330,8 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
           {v.notes             && <span>📝 備考：{v.notes}</span>}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <CopyButton title="この受診記録をコピー" getText={() => formatVisitText(v)} />
         {archived ? (
           <>
             <button className="icon-btn" title="復元（受診中に戻す）" onClick={onRestore}>

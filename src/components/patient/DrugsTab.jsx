@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 import AddDrugModal from '../modals/AddDrugModal'
+import CopyButton from '../common/CopyButton'
 
 // YYYY-MM-DD に正規化（TIMESTAMPTZ → date string 対応）
 function sliceDate(val) {
@@ -14,6 +15,19 @@ function isUnconfirmed(drug) {
   const ref = drug.last_confirmed_at || drug.prescribed_at
   if (!ref) return true
   return new Date(sliceDate(ref)) < ninety
+}
+
+// 薬剤1件分のテキスト（コピー用）
+function formatDrugText(drug) {
+  const type = drug.drug_type === 'gaiyou' ? '外用' : '頓用'
+  let line = `・${drug.drug_name}（${type}）`
+  if (drug.prescribed_quantity) line += `　${drug.prescribed_quantity}`
+  if (drug.remaining_quantity)  line += `　残：${drug.remaining_quantity}`
+  if (drug.description)         line += `　${drug.description}`
+  const cd = sliceDate(drug.last_confirmed_at)
+  if (cd) line += `　✅確認：${cd}`
+  if (isUnconfirmed(drug)) line += `　⚠️未確認`
+  return line
 }
 
 export default function DrugsTab({ patient, onRefetch }) {
@@ -226,7 +240,8 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
       </div>
 
       {/* アクション（残量確認ボタンを削除し確認エリアに統合） */}
-      <div className="drug-actions" style={{ display: 'flex', gap: 4 }}>
+      <div className="drug-actions" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <CopyButton title="この薬剤をコピー" getText={() => formatDrugText(drug)} />
         {archived ? (
           <>
             <button className="icon-btn" title="編集" onClick={onEdit}>

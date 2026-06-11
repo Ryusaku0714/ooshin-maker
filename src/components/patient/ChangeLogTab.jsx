@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
+import CopyButton from '../common/CopyButton'
 
 // ── 日付ヘルパー ────────────────────────────────────────────
 function fmtMMDD(dateStr) {
@@ -551,7 +552,8 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                       </div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <CopyButton title="この記録をコピー" getText={() => formatLogText(log)} />
                     <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>
                       <span aria-hidden="true">✏️</span>
                       <span className="icon-btn-cap">編集</span>
