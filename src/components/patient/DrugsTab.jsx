@@ -307,21 +307,15 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
             ⚠️ 3ヶ月以上未確認
           </span>
         )}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {!archived && (
-            <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <button onClick={onConfirm} style={checkboxBtnStyle(!!confirmedDate)}>
-                {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
-              </button>
-              <span className="icon-btn-cap">確認済み</span>
-            </span>
-          )}
-          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <button onClick={handleCopy} style={checkboxBtnStyle(copied)}>
-              {copied ? '✅ コピー' : '□ コピー'}
+            <button onClick={onConfirm} style={checkboxBtnStyle(!!confirmedDate)}>
+              {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
             </button>
-            <span className="icon-btn-cap">コピー</span>
-          </span>
+          )}
+          <button onClick={handleCopy} style={checkboxBtnStyle(copied)}>
+            {copied ? '✅ コピー' : '□ コピー'}
+          </button>
         </div>
       </div>
     </div>
