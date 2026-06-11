@@ -5,12 +5,7 @@ import AddPatientModal from '../modals/AddPatientModal'
 import MemoModal from '../modals/MemoModal'
 import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
-
-function fmtMMDD(dateStr) {
-  if (!dateStr) return ''
-  const [, mm, dd] = dateStr.split('-')
-  return `${mm}/${dd}`
-}
+import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -45,6 +40,11 @@ async function printTeamLogs(team, facilityName) {
     const pLogs = logsByPatient[p.id] ?? []
     if (pLogs.length === 0) return ''
     const logsHTML = pLogs.map(log => {
+      if (log.log_type === 'temporary') {
+        return `<div class="le">
+          <div><span class="bt">臨時</span> ${formatChangeLogText(log)}</div>
+        </div>`
+      }
       const reason   = log.reason?.trim() || '指示受け'
       const instrD   = fmtMMDD(log.changed_at)
       const startD   = log.start_date ? fmtMMDD(log.start_date) : null
@@ -71,6 +71,7 @@ async function printTeamLogs(team, facilityName) {
   .ps{margin-bottom:16px;page-break-inside:avoid}
   .le{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0f2fe}
   .ld{font-weight:700;color:#0284c7;margin-bottom:2px}
+  .bt{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#fef3c7;color:#92400e;margin-right:4px;vertical-align:middle}
   @media print{body{padding:0}.ps{page-break-inside:avoid}}
 </style></head><body>
 <h1>📝 変更記録一括印刷 - ${facilityName} / ${teamLabel}　（${today}）</h1>

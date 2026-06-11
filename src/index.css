@@ -113,6 +113,56 @@ body {
   flex-wrap: wrap;
 }
 
+/* ── 変更記録：「＋追加」の定期変更／臨時薬 選択メニュー ── */
+.add-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+}
+.add-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1.5px solid var(--sky-100);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 130px;
+  overflow: hidden;
+  z-index: 10;
+}
+.add-menu-item {
+  background: white;
+  border: none;
+  border-bottom: 1px solid var(--sky-50);
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.add-menu-item:last-child { border-bottom: none; }
+.add-menu-item:hover { background: var(--sky-50); color: var(--sky-600); }
+
+/* ── 変更記録：「臨時」バッジ ── */
+.log-badge-temp {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  margin-right: 4px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 /* ── Form fields ── */
 .field-label {
   font-size: 10px;

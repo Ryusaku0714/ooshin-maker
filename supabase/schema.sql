@@ -209,3 +209,19 @@ ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS custom_offset INTEGER;
 -- v10 マイグレーション：基本情報に「定時薬」欄を追加
 -- ============================================================
 ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS regular_medication TEXT;
+
+-- ============================================================
+-- v11 マイグレーション：薬剤変更記録に「臨時薬」モードを追加
+-- ============================================================
+-- log_type: 'regular'（定期変更・既定値・既存データもこの扱い） / 'temporary'（臨時薬）
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS log_type     TEXT NOT NULL DEFAULT 'regular';
+-- 臨時薬：薬剤名・用量（自由テキスト）
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS drug_name    TEXT;
+-- 臨時薬：開始タイミング（朝／昼／夕／眠前）
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS start_timing TEXT;
+-- 臨時薬：終了タイミング（自動計算結果を保存）
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS end_timing   TEXT;
+-- 臨時薬：日数
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS days         INTEGER;
+-- 臨時薬：終了日
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS end_date     DATE;

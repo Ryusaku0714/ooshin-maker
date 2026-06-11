@@ -1,34 +1,19 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
-
-// ── 日付ヘルパー ────────────────────────────────────────────
-function fmtMMDD(dateStr) {
-  if (!dateStr) return ''
-  const [, mm, dd] = dateStr.split('-')
-  return `${mm}/${dd}`
-}
-function fmtDisp(d) { return `${d.getMonth() + 1}/${d.getDate()}` }
-function fmtFull(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
+import {
+  PREV_TIMING, fmtMMDD, fmtMD, addDaysToStr,
+  computeTemporaryEnd, computeTemporaryDays, formatChangeLogText,
+} from '../../lib/changeLogFormat'
 
 // ── 追加薬 日数計算ツール（変更ログタブ上部） ──────────────
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
-const PREV_TIMING = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
 
 /** yyyy-MM-dd → "5/28（木）" */
 function fmtWithDay(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr + 'T00:00:00')
   return `${d.getMonth()+1}/${d.getDate()}（${DAY_LABELS[d.getDay()]}）`
-}
-
-/** dateStr に days 日加算した yyyy-MM-dd を返す */
-function addDaysToStr(dateStr, days) {
-  const d = new Date(dateStr + 'T00:00:00')
-  d.setDate(d.getDate() + days)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
 function CalcTool({ visitCalc }) {
@@ -293,16 +278,105 @@ const calcSelectStyle = {
   colorScheme: 'dark',
 }
 
-// ── ログのフォーマット ──────────────────────────────────────
-function formatLogText(log) {
-  const reason = log.reason?.trim() || '指示受け'
-  const instrDate = fmtMMDD(log.changed_at)
-  if (log.start_date) {
-    const startDate = fmtMMDD(log.start_date)
-    return `${instrDate}　${reason}\n${startDate}〜　${log.content}`
+// 編集前の空フォーム（log_type で「定期変更」「臨時薬」を判別）
+const BLANK_REGULAR_EDIT = { log_type: 'regular', changed_at: '', reason: '', start_date: '', content: '' }
+
+function blankTempForm(instrDate) {
+  return { changed_at: instrDate, drug_name: '', start_timing: '朝', days: '', end_date: '', end_timing: '' }
+}
+
+// ── 臨時薬：入力フィールド群（追加・編集フォーム共通） ───────
+function TemporaryLogFields({ value, onChange }) {
+  // 日数入力 → 終了日・終了タイミングを再計算
+  const recalcFromDays = (next) => {
+    const n = parseInt(next.days)
+    if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.changed_at) {
+      const { endDate, endTiming } = computeTemporaryEnd(next.changed_at, next.start_timing, n)
+      return { ...next, end_date: endDate, end_timing: endTiming }
+    }
+    return { ...next, end_timing: '' }
   }
-  // 旧形式（start_date なし）のバックワード互換
-  return `${instrDate}　${log.content}`
+
+  // 終了日入力 → 日数・終了タイミングを再計算
+  const recalcFromEndDate = (next) => {
+    if (next.end_date && next.changed_at) {
+      const { days, endTiming } = computeTemporaryDays(next.changed_at, next.start_timing, next.end_date)
+      if (days > 0) return { ...next, days: String(days), end_timing: endTiming }
+    }
+    return { ...next, end_timing: '' }
+  }
+
+  const handleDaysChange = (val) => onChange(recalcFromDays({ ...value, days: val }))
+  const handleEndDateChange = (val) => onChange(recalcFromEndDate({ ...value, end_date: val }))
+
+  // 指示日・開始タイミング変更時は、入力済みの日数／終了日を基準に再計算
+  const handleBaseChange = (patch) => {
+    const next = { ...value, ...patch }
+    if (next.days?.toString().trim() !== '') onChange(recalcFromDays(next))
+    else if (next.end_date) onChange(recalcFromEndDate(next))
+    else onChange(next)
+  }
+
+  const previewText = (value.changed_at && value.end_date && value.end_timing)
+    ? `${fmtMD(value.changed_at)} ${value.start_timing}〜${fmtMD(value.end_date)} ${value.end_timing}`
+    : ''
+
+  return (
+    <>
+      <div>
+        <label className="field-label">指示日</label>
+        <input
+          type="date" className="field-input"
+          value={value.changed_at}
+          onChange={e => handleBaseChange({ changed_at: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="field-label">開始タイミング</label>
+        <select
+          className="field-input"
+          value={value.start_timing}
+          onChange={e => handleBaseChange({ start_timing: e.target.value })}
+        >
+          <option value="朝">朝</option>
+          <option value="昼">昼</option>
+          <option value="夕">夕</option>
+          <option value="眠前">眠前</option>
+        </select>
+      </div>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <label className="field-label">薬剤名・用量</label>
+        <input
+          type="text" className="field-input"
+          value={value.drug_name}
+          onChange={e => onChange({ ...value, drug_name: e.target.value })}
+          placeholder="例：ロキソプロフェン60mg 飲み切り / ムコスタ100mg 2錠 飲み切り"
+        />
+      </div>
+      <div>
+        <label className="field-label">日数</label>
+        <input
+          type="number" inputMode="numeric" className="field-input" min="1"
+          value={value.days}
+          onChange={e => handleDaysChange(e.target.value)}
+          placeholder="自動"
+        />
+      </div>
+      <div>
+        <label className="field-label">終了日</label>
+        <input
+          type="date" className="field-input"
+          value={value.end_date}
+          onChange={e => handleEndDateChange(e.target.value)}
+        />
+      </div>
+      {previewText && (
+        <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--sky-700)' }}>
+          {previewText}
+        </div>
+      )}
+    </>
+  )
 }
 
 // ── メインコンポーネント ───────────────────────────────────
@@ -313,10 +387,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const [startDate, setStartDate]   = useState('')
   const [content,   setContent]     = useState('')
   const [adding,      setAdding]      = useState(false)
-  const [showForm,    setShowForm]    = useState(false)
+  const [addMode,     setAddMode]     = useState(null) // null | 'regular' | 'temporary'
+  const [showAddMenu, setShowAddMenu] = useState(false)
+  const [tempForm,    setTempForm]    = useState(() => blankTempForm(visitCalc?.visitDate ?? today))
   const [copied,      setCopied]      = useState(false)
   const [editingId,   setEditingId]   = useState(null)
-  const [editForm,    setEditForm]    = useState({ changed_at: '', reason: '', start_date: '', content: '' })
+  const [editForm,    setEditForm]    = useState(BLANK_REGULAR_EDIT)
   const [editSaving,  setEditSaving]  = useState(false)
   const [sortMode,    setSortMode]    = useState('date')
 
@@ -340,6 +416,14 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     setContent('')
   }
 
+  const resetTempForm = () => setTempForm(blankTempForm(instrDate))
+
+  const closeAddForm = () => {
+    setAddMode(null)
+    resetForm()
+    resetTempForm()
+  }
+
   const add = async () => {
     if (!content.trim()) return
     setAdding(true)
@@ -351,7 +435,27 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     })
     resetForm()
     setAdding(false)
-    setShowForm(false)
+    setAddMode(null)
+    onRefetch?.()
+  }
+
+  const addTemporary = async () => {
+    if (!tempForm.drug_name.trim() || !tempForm.end_date || !tempForm.end_timing) return
+    setAdding(true)
+    await db.addLog(patient.id, {
+      changed_at:   tempForm.changed_at,
+      log_type:     'temporary',
+      drug_name:    tempForm.drug_name.trim(),
+      start_timing: tempForm.start_timing,
+      end_timing:   tempForm.end_timing,
+      days:         tempForm.days.trim() !== '' ? parseInt(tempForm.days) : null,
+      end_date:     tempForm.end_date,
+      start_date:   tempForm.changed_at,
+      content:      tempForm.drug_name.trim(),
+    })
+    resetTempForm()
+    setAdding(false)
+    setAddMode(null)
     onRefetch?.()
   }
 
@@ -363,20 +467,51 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
   const startEdit = (log) => {
     setEditingId(log.id)
-    setEditForm({
-      changed_at: log.changed_at ?? '',
-      reason:     log.reason     ?? '',
-      start_date: log.start_date ?? '',
-      content:    log.content    ?? '',
-    })
+    if (log.log_type === 'temporary') {
+      setEditForm({
+        log_type:     'temporary',
+        changed_at:   log.changed_at   ?? '',
+        drug_name:    log.drug_name    ?? '',
+        start_timing: log.start_timing ?? '朝',
+        days:         log.days != null ? String(log.days) : '',
+        end_date:     log.end_date     ?? '',
+        end_timing:   log.end_timing   ?? '',
+      })
+    } else {
+      setEditForm({
+        log_type:   'regular',
+        changed_at: log.changed_at ?? '',
+        reason:     log.reason     ?? '',
+        start_date: log.start_date ?? '',
+        content:    log.content    ?? '',
+      })
+    }
   }
 
   const cancelEdit = () => {
     setEditingId(null)
-    setEditForm({ changed_at: '', reason: '', start_date: '', content: '' })
+    setEditForm(BLANK_REGULAR_EDIT)
   }
 
   const saveEdit = async () => {
+    if (editForm.log_type === 'temporary') {
+      if (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing) return
+      setEditSaving(true)
+      await db.updateLog(editingId, {
+        changed_at:   editForm.changed_at,
+        drug_name:    editForm.drug_name.trim(),
+        start_timing: editForm.start_timing,
+        end_timing:   editForm.end_timing,
+        days:         editForm.days.trim() !== '' ? parseInt(editForm.days) : null,
+        end_date:     editForm.end_date,
+        start_date:   editForm.changed_at,
+        content:      editForm.drug_name.trim(),
+      })
+      setEditSaving(false)
+      cancelEdit()
+      onRefetch?.()
+      return
+    }
     if (!editForm.content.trim()) return
     setEditSaving(true)
     await db.updateLog(editingId, {
@@ -393,7 +528,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const upEdit = k => e => setEditForm(f => ({ ...f, [k]: e.target.value }))
 
   const copyAll = async () => {
-    const text = logs.map(formatLogText).join('\n\n')
+    const text = logs.map(formatChangeLogText).join('\n\n')
     await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -422,14 +557,32 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 {copied ? '✅ コピー済' : '📋 全コピー'}
               </button>
             )}
-            <button className="btn btn-outline btn-sm" onClick={() => setShowForm(s => !s)}>
-              {showForm ? '✕ 閉じる' : '＋ 追加'}
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => addMode ? closeAddForm() : setShowAddMenu(m => !m)}
+              >
+                {addMode ? '✕ 閉じる' : '＋ 追加'}
+              </button>
+              {showAddMenu && (
+                <>
+                  <div className="add-menu-overlay" onClick={() => setShowAddMenu(false)} />
+                  <div className="add-menu">
+                    <button className="add-menu-item" onClick={() => { setAddMode('regular'); setShowAddMenu(false) }}>
+                      📋 定期変更
+                    </button>
+                    <button className="add-menu-item" onClick={() => { setAddMode('temporary'); setShowAddMenu(false) }}>
+                      💊 臨時薬
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 入力フォーム */}
-        {showForm && (
+        {/* 入力フォーム：定期変更 */}
+        {addMode === 'regular' && (
           <div style={{
             background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
             borderRadius: 8, padding: 12, marginBottom: 12,
@@ -469,8 +622,29 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-              <button className="btn btn-outline btn-sm" onClick={() => { setShowForm(false); resetForm() }}>キャンセル</button>
+              <button className="btn btn-outline btn-sm" onClick={closeAddForm}>キャンセル</button>
               <button className="btn btn-primary btn-sm" onClick={add} disabled={adding || !content.trim()}>
+                {adding ? '…' : '追加'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 入力フォーム：臨時薬 */}
+        {addMode === 'temporary' && (
+          <div style={{
+            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+            borderRadius: 8, padding: 12, marginBottom: 12,
+          }}>
+            <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <TemporaryLogFields value={tempForm} onChange={setTempForm} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+              <button className="btn btn-outline btn-sm" onClick={closeAddForm}>キャンセル</button>
+              <button
+                className="btn btn-primary btn-sm" onClick={addTemporary}
+                disabled={adding || !tempForm.drug_name.trim() || !tempForm.end_date || !tempForm.end_timing}
+              >
                 {adding ? '…' : '追加'}
               </button>
             </div>
@@ -503,30 +677,41 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                   borderRadius: 8, padding: 12,
                 }}>
                   <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                    <div>
-                      <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
-                      <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
-                    </div>
-                    <div>
-                      <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
-                      <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
-                    </div>
-                    <div>
-                      <label className="field-label">開始日</label>
-                      <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
-                    </div>
-                    <div>
-                      <label className="field-label">内容</label>
-                      <input
-                        type="text" className="field-input"
-                        value={editForm.content} onChange={upEdit('content')}
-                        onKeyDown={e => e.key === 'Enter' && saveEdit()}
-                      />
-                    </div>
+                    {editForm.log_type === 'temporary' ? (
+                      <TemporaryLogFields value={editForm} onChange={setEditForm} />
+                    ) : (
+                      <>
+                        <div>
+                          <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
+                          <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
+                        </div>
+                        <div>
+                          <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
+                          <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
+                        </div>
+                        <div>
+                          <label className="field-label">開始日</label>
+                          <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
+                        </div>
+                        <div>
+                          <label className="field-label">内容</label>
+                          <input
+                            type="text" className="field-input"
+                            value={editForm.content} onChange={upEdit('content')}
+                            onKeyDown={e => e.key === 'Enter' && saveEdit()}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
                     <button className="btn btn-outline btn-sm" onClick={cancelEdit}>キャンセル</button>
-                    <button className="btn btn-primary btn-sm" onClick={saveEdit} disabled={editSaving || !editForm.content.trim()}>
+                    <button
+                      className="btn btn-primary btn-sm" onClick={saveEdit}
+                      disabled={editSaving || (editForm.log_type === 'temporary'
+                        ? (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing)
+                        : !editForm.content.trim())}
+                    >
                       {editSaving ? '…' : '保存'}
                     </button>
                   </div>
@@ -534,7 +719,15 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
               ) : (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, fontSize: 12 }}>
-                    {hasStartDate ? (
+                    {log.log_type === 'temporary' ? (
+                      <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                        <span className="log-badge-temp">臨時</span>
+                        <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
+                          {fmtMD(log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
+                        </span>
+                        　{log.drug_name}
+                      </div>
+                    ) : hasStartDate ? (
                       <>
                         <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
                           <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
@@ -553,7 +746,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <CopyButton title="この記録をコピー" getText={() => formatLogText(log)} />
+                    <CopyButton title="この記録をコピー" getText={() => formatChangeLogText(log)} />
                     <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>
                       <span aria-hidden="true">✏️</span>
                       <span className="icon-btn-cap">編集</span>

@@ -5,6 +5,7 @@ import ChangeLogTab    from './ChangeLogTab'
 import FreeMemoTab     from './FreeMemoTab'
 import OtherVisitsTab  from './OtherVisitsTab'
 import { usePatient }  from '../../hooks/useData'
+import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
 
 // タブ順序：基本情報 → 変更ログ → 外用・頓用薬 → 他科受診 → フリーメモ
 const TABS = [
@@ -20,12 +21,6 @@ const DOW_JP = ['日', '月', '火', '水', '木', '金', '土']
 // ボタン直下に常時表示する極小の説明ラベル
 const ACTION_CAP_STYLE = { fontSize: 9, color: 'var(--gray-400)', lineHeight: 1, marginTop: 3, whiteSpace: 'nowrap' }
 const ACTION_WRAP_STYLE = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }
-
-function fmtMMDD(dateStr) {
-  if (!dateStr) return ''
-  const [, mm, dd] = dateStr.split('-')
-  return `${mm}/${dd}`
-}
 
 function parseLocalDate(str) {
   if (!str) return null
@@ -56,6 +51,11 @@ function isUnconfirmedDrug(d) {
 
 function generatePatientMonthHTML(patient, logs, visitCalc) {
   const logsHTML = logs.map(log => {
+    if (log.log_type === 'temporary') {
+      return `<div class="log-entry">
+        <div><span class="log-badge-temp">臨時</span> ${formatChangeLogText(log)}</div>
+      </div>`
+    }
     const reason = log.reason?.trim() || '指示受け'
     const instrDate = fmtMMDD(log.changed_at)
     const startDate = log.start_date ? fmtMMDD(log.start_date) : null
@@ -80,6 +80,11 @@ function generatePatientMonthHTML(patient, logs, visitCalc) {
     .vi { font-size: 10px; color: #475569; margin: 0 0 14px; }
     .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e0f2fe; }
     .log-date { font-weight: 700; color: #0284c7; margin-bottom: 3px; }
+    .log-badge-temp {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 10px;
+      background: #fef3c7; color: #92400e; margin-right: 4px; vertical-align: middle;
+    }
     @media print { body { padding: 0; } }
   </style>
 </head>
@@ -136,16 +141,6 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
     const drugs = patient?.om_drugs ?? []
     const otherVisits = patient?.other_visits ?? []
 
-    const formatLog = (log) => {
-      const reason = log.reason?.trim() || '指示受け'
-      const instrD = fmtMMDD(log.changed_at)
-      if (log.start_date) {
-        const startD = fmtMMDD(log.start_date)
-        return `${instrD}　${reason}\n${startD}〜　${log.content}`
-      }
-      return `${instrD}　${log.content}`
-    }
-
     let text = `${'═'.repeat(28)}\n`
     text += `往診資料　${patient.room_number}${patient.initial ? '　' + patient.initial : ''}\n`
     text += `${'═'.repeat(28)}\n`
@@ -159,7 +154,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
 
     if (logs.length > 0) {
       text += `\n【変更記録】\n`
-      text += logs.map(formatLog).join('\n\n')
+      text += logs.map(formatChangeLogText).join('\n\n')
       text += '\n'
     }
 
