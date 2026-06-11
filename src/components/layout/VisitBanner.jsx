@@ -152,7 +152,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
         <Field label="処方日数" className="rx-days-field"
           style={isMobile ? mobileFieldStyle : { flex: '1 1 56px', minWidth: 52 }}>
           <input
-            type="number" value={patientOverride ? patientOverride.rxDays : rxDays} min={1} max={90}
+            type="number" inputMode="numeric" value={patientOverride ? patientOverride.rxDays : rxDays} min={1} max={90}
             disabled={!!patientOverride}
             onChange={e => setRxDays(e.target.value)}
             style={patientOverride ? overrideInputStyle : bannerInputStyle}
@@ -163,7 +163,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
         <Field label="処方ズレ日数" className="grace-days-field"
           style={isMobile ? mobileFieldStyle : { flex: '1 1 68px', minWidth: 64 }}>
           <input
-            type="number" value={patientOverride ? patientOverride.graceDays : graceDays} min={0} max={14}
+            type="number" inputMode="numeric" value={patientOverride ? patientOverride.graceDays : graceDays} min={0} max={14}
             disabled={!!patientOverride}
             onChange={e => setGraceDays(e.target.value)}
             style={patientOverride ? overrideInputStyle : bannerInputStyle}

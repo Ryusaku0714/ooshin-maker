@@ -256,7 +256,7 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             処方日数
             <input
-              type="number" value={days} min={1} max={90}
+              type="number" inputMode="numeric" value={days} min={1} max={90}
               onChange={e => setDays(e.target.value)}
               style={{ width: 36, fontSize: 10, border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 4px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
             />
@@ -265,7 +265,7 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             ズレ日数
             <input
-              type="number" value={offset} min={0} max={14}
+              type="number" inputMode="numeric" value={offset} min={0} max={14}
               onChange={e => setOffset(e.target.value)}
               style={{ width: 32, fontSize: 10, border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 4px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
             />
@@ -283,6 +283,7 @@ export default function Sidebar({
 }) {
   const [sort, setSort] = useState('room')
   const [openTeams, setOpenTeams] = useState({})
+  const [openFacilities, setOpenFacilities] = useState({})
   const [showAddFacility, setShowAddFacility] = useState(false)
   const [addTeamFacilityId, setAddTeamFacilityId] = useState(null)
   const [addPatientTeamId, setAddPatientTeamId] = useState(null)
@@ -383,6 +384,10 @@ export default function Sidebar({
     onSelectTeam(teamId)
   }
 
+  const toggleFacility = (facilityId) => {
+    setOpenFacilities(prev => ({ ...prev, [facilityId]: !prev[facilityId] }))
+  }
+
   // 在宅処方設定フォームの派生値（editTeamVisitDate / editTeamGraceDays / editTeamRxDays から計算）
   const editRxStartDate = (() => {
     if (!editTeamVisitDate) return ''
@@ -451,6 +456,8 @@ export default function Sidebar({
           {facilities.map(facility => {
             const isHomeCare = !!facility.is_home_care
             const cs = isHomeCare ? HOME_STYLE : FAC_STYLE
+            const facOpen = openFacilities[facility.id] !== false
+            const isEditingFacility = editFacId === facility.id
 
             return (
               <div
@@ -465,11 +472,15 @@ export default function Sidebar({
                 }}
               >
                 {/* ── 施設ヘッダー ── */}
-                <div style={{
-                  background: cs.headerBg,
-                  borderLeft: `3px solid ${cs.accentBorder}`,
-                  padding: '5px 8px 5px',
-                }}>
+                <div
+                  onClick={() => { if (!isEditingFacility) toggleFacility(facility.id) }}
+                  style={{
+                    background: cs.headerBg,
+                    borderLeft: `3px solid ${cs.accentBorder}`,
+                    padding: '5px 8px 5px',
+                    cursor: isEditingFacility ? 'default' : 'pointer',
+                  }}
+                >
                   {/* タイプラベル */}
                   <div style={{
                     fontSize: 9, fontWeight: 700, color: cs.labelColor,
@@ -504,6 +515,9 @@ export default function Sidebar({
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <span style={{ fontSize: 9, color: cs.accentBorder, flexShrink: 0, width: 11, textAlign: 'center' }}>
+                        {facOpen ? '▼' : '▶'}
+                      </span>
                       <span style={{
                         flex: 1, fontSize: 11, fontWeight: 700, color: cs.nameColor,
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
@@ -539,6 +553,7 @@ export default function Sidebar({
                 </div>
 
                 {/* ── チーム＆患者エリア ── */}
+                {facOpen && (
                 <div style={{ padding: '5px 6px 4px' }}>
                   {(facility.om_teams ?? []).map(team => {
                     const isOpen = openTeams[team.id] !== false
@@ -581,7 +596,7 @@ export default function Sidebar({
                                 <div>
                                   <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>処方日数</div>
                                   <input
-                                    type="number"
+                                    type="number" inputMode="numeric"
                                     value={editTeamRxDays}
                                     onChange={e => setEditTeamRxDays(e.target.value)}
                                     min={1} max={90}
@@ -591,7 +606,7 @@ export default function Sidebar({
                                 <div>
                                   <div style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>処方ズレ日数</div>
                                   <input
-                                    type="number"
+                                    type="number" inputMode="numeric"
                                     value={editTeamGraceDays}
                                     onChange={e => setEditTeamGraceDays(e.target.value)}
                                     min={0} max={14}
@@ -642,12 +657,19 @@ export default function Sidebar({
                             </div>
                           ) : (
                             /* 個人在宅 コンパクト操作行 */
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 4,
-                              padding: '5px 8px',
-                              background: '#f0fdf4',
-                              borderBottom: hasPatients ? `1px solid ${cs.teamBorder}` : 'none',
-                            }}>
+                            <div
+                              onClick={() => toggleTeam(team.id)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                padding: '5px 8px',
+                                background: '#f0fdf4',
+                                borderBottom: (isOpen && hasPatients) ? `1px solid ${cs.teamBorder}` : 'none',
+                                cursor: 'pointer',
+                              }}>
+                              {/* 開閉アイコン */}
+                              <span style={{ fontSize: 9, color: '#16a34a', flexShrink: 0, width: 11, textAlign: 'center' }}>
+                                {isOpen ? '▼' : '▶'}
+                              </span>
                               {/* 在宅患者ラベル */}
                               <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0 }}>
                                 🏠 在宅患者
@@ -741,15 +763,20 @@ export default function Sidebar({
                               }}
                             >
                               {/* チーム名＋往診間隔 */}
-                              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  🏥 {team.clinic_name} {team.team_name}
-                                </div>
-                                {team.visit_schedule_custom && (
-                                  <div style={{ fontSize: 9, color: 'var(--sky-400)', fontWeight: 400, marginTop: 2 }}>
-                                    {team.visit_schedule_custom}
+                              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+                                <span style={{ fontSize: 9, color: 'var(--sky-400)', flexShrink: 0, width: 11, textAlign: 'center', marginTop: 1 }}>
+                                  {isOpen ? '▼' : '▶'}
+                                </span>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    🏥 {team.clinic_name} {team.team_name}
                                   </div>
-                                )}
+                                  {team.visit_schedule_custom && (
+                                    <div style={{ fontSize: 9, color: 'var(--sky-400)', fontWeight: 400, marginTop: 2 }}>
+                                      {team.visit_schedule_custom}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               {/* 1行ボタングループ */}
                               <div
@@ -782,7 +809,7 @@ export default function Sidebar({
                         )}
 
                         {/* 患者リスト（チームブロック内にインデント） */}
-                        {(isHomeCare || isOpen) && (
+                        {isOpen && (
                           <div style={{ padding: '4px 6px 3px 14px' }}>
                             {patients.map(p => renderPatientRow(p, team))}
                             {!(isHomeCare && hasPatients) && (
@@ -819,6 +846,7 @@ export default function Sidebar({
                     </div>
                   )}
                 </div>
+                )}
               </div>
             )
           })}

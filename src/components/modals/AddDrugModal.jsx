@@ -79,7 +79,15 @@ export default function AddDrugModal({ patientId, drug, onClose, onSaved }) {
           </div>
           <div>
             <label className="field-label">処方日</label>
-            <input type="date" className="field-input" value={form.prescribed_at} onChange={up('prescribed_at')} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input type="date" className="field-input" value={form.prescribed_at} onChange={up('prescribed_at')} style={{ flex: 1 }} />
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setForm(f => ({ ...f, prescribed_at: new Date().toISOString().slice(0, 10) }))}
+                style={{ flexShrink: 0, minHeight: 36 }}
+              >今日</button>
+            </div>
           </div>
         </div>
         <div className="modal-footer">

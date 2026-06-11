@@ -196,7 +196,7 @@ function CalcTool({ visitCalc }) {
           <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
             <label style={calcLabelStyle}>日数（任意）</label>
             <input
-              type="number" value={manualDays}
+              type="number" inputMode="numeric" value={manualDays}
               onChange={e => setManualDays(e.target.value)}
               placeholder="自動" min="1"
               style={calcInputStyle}
