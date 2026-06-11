@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 import AddDrugModal from '../modals/AddDrugModal'
-import CopyButton from '../common/CopyButton'
 
 // YYYY-MM-DD に正規化（TIMESTAMPTZ → date string 対応）
 function sliceDate(val) {
@@ -28,6 +27,15 @@ function formatDrugText(drug) {
   if (cd) line += `　✅確認：${cd}`
   if (isUnconfirmed(drug)) line += `　⚠️未確認`
   return line
+}
+
+// 「確認する」「コピー」共通のチェックボックス風ボタンスタイル
+function checkboxBtnStyle(active) {
+  return {
+    background: 'none', border: 'none', cursor: 'pointer',
+    fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
+    color: active ? 'var(--sky-600)' : 'var(--gray-400)',
+  }
 }
 
 export default function DrugsTab({ patient, onRefetch }) {
@@ -173,6 +181,15 @@ export default function DrugsTab({ patient, onRefetch }) {
 function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDelete }) {
   const needsAlert    = !archived && isUnconfirmed(drug)
   const confirmedDate = sliceDate(drug.last_confirmed_at)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    const text = formatDrugText(drug)
+    if (!text) return
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   const detailParts = [
     drug.description,
@@ -274,11 +291,13 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
         )}
       </div>
 
-      {/* 確認エリア（コピー＋確認チェック・グリッド全幅） */}
+      {/* 確認エリア（確認チェック＋コピーチェック・グリッド全幅） */}
       <div className="drug-confirm-area" style={{
         gridColumn: '1 / -1',
         display: 'flex',
         alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 4,
         justifyContent: needsAlert ? 'space-between' : 'flex-end',
         paddingTop: 5,
         borderTop: `1px dashed ${needsAlert ? '#fde68a' : (archived ? 'var(--gray-200)' : 'var(--sky-100)')}`,
@@ -288,23 +307,21 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
             ⚠️ 3ヶ月以上未確認
           </span>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <CopyButton title="この薬剤をコピー" getText={() => formatDrugText(drug)} />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           {!archived && (
             <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <button
-                onClick={onConfirm}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
-                  color: confirmedDate ? 'var(--sky-600)' : 'var(--gray-400)',
-                }}
-              >
+              <button onClick={onConfirm} style={checkboxBtnStyle(!!confirmedDate)}>
                 {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
               </button>
               <span className="icon-btn-cap">確認済み</span>
             </span>
           )}
+          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <button onClick={handleCopy} style={checkboxBtnStyle(copied)}>
+              {copied ? '✅ コピー' : '□ コピー'}
+            </button>
+            <span className="icon-btn-cap">コピー</span>
+          </span>
         </div>
       </div>
     </div>
