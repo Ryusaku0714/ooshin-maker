@@ -9,6 +9,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
     medical_history: patient?.medical_history ?? '',
     allergy_history: patient?.allergy_history ?? '',
     hospitalization_history: patient?.hospitalization_history ?? '',
+    regular_medication: patient?.regular_medication ?? '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -16,6 +17,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
   const medicalRef      = useRef(null)
   const allergyRef      = useRef(null)
   const hospitalizationRef = useRef(null)
+  const regularMedicationRef = useRef(null)
 
   const doResize = (el) => {
     if (!el) return
@@ -27,6 +29,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
     doResize(medicalRef.current)
     doResize(allergyRef.current)
     doResize(hospitalizationRef.current)
+    doResize(regularMedicationRef.current)
   }, [patient?.id])
 
   const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
@@ -53,6 +56,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
     if (form.medical_history?.trim())        text += `\n【病歴・既往歴】\n${form.medical_history.trim()}`
     if (form.allergy_history?.trim())         text += `\n【アレルギー歴】\n${form.allergy_history.trim()}`
     if (form.hospitalization_history?.trim()) text += `\n【入院歴】\n${form.hospitalization_history.trim()}`
+    if (form.regular_medication?.trim())      text += `\n【定時薬】\n${form.regular_medication.trim()}`
     return text
   }
 
@@ -62,6 +66,7 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
       { label: '病歴・既往歴', value: patient?.medical_history },
       { label: 'アレルギー歴', value: patient?.allergy_history },
       { label: '入院歴',       value: patient?.hospitalization_history },
+      { label: '定時薬',       value: patient?.regular_medication },
     ].filter(f => f.value?.trim())
 
     if (fields.length === 0) return null
@@ -137,6 +142,18 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
             value={form.hospitalization_history}
             onChange={up('hospitalization_history')}
             placeholder="例：2024/5月 ○○病院 心不全増悪入院"
+          />
+        </div>
+        <div style={{ gridColumn: '1/-1' }}>
+          <label className="field-label">定時薬（任意）</label>
+          <textarea
+            ref={regularMedicationRef}
+            className="field-input"
+            rows={2}
+            style={{ resize: 'none', overflowY: 'hidden', minHeight: '2.5em' }}
+            value={form.regular_medication}
+            onChange={up('regular_medication')}
+            placeholder="例：アムロジピン5mg 朝／メトホルミン500mg 朝夕"
           />
         </div>
       </div>

@@ -239,9 +239,8 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
         )}
       </div>
 
-      {/* アクション（残量確認ボタンを削除し確認エリアに統合） */}
+      {/* アクション（コピーボタンは確認エリアに移動） */}
       <div className="drug-actions" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <CopyButton title="この薬剤をコピー" getText={() => formatDrugText(drug)} />
         {archived ? (
           <>
             <button className="icon-btn" title="編集" onClick={onEdit}>
@@ -275,36 +274,39 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
         )}
       </div>
 
-      {/* 確認エリア（アクティブ薬のみ・グリッド全幅） */}
-      {!archived && (
-        <div className="drug-confirm-area" style={{
-          gridColumn: '1 / -1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: needsAlert ? 'space-between' : 'flex-end',
-          paddingTop: 5,
-          borderTop: `1px dashed ${needsAlert ? '#fde68a' : 'var(--sky-100)'}`,
-        }}>
-          {needsAlert && (
-            <span style={{ fontSize: 9, color: '#b45309', fontWeight: 700 }}>
-              ⚠️ 3ヶ月以上未確認
+      {/* 確認エリア（コピー＋確認チェック・グリッド全幅） */}
+      <div className="drug-confirm-area" style={{
+        gridColumn: '1 / -1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: needsAlert ? 'space-between' : 'flex-end',
+        paddingTop: 5,
+        borderTop: `1px dashed ${needsAlert ? '#fde68a' : (archived ? 'var(--gray-200)' : 'var(--sky-100)')}`,
+      }}>
+        {needsAlert && (
+          <span style={{ fontSize: 9, color: '#b45309', fontWeight: 700 }}>
+            ⚠️ 3ヶ月以上未確認
+          </span>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <CopyButton title="この薬剤をコピー" getText={() => formatDrugText(drug)} />
+          {!archived && (
+            <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <button
+                onClick={onConfirm}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
+                  color: confirmedDate ? 'var(--sky-600)' : 'var(--gray-400)',
+                }}
+              >
+                {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
+              </button>
+              <span className="icon-btn-cap">確認済み</span>
             </span>
           )}
-          <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <button
-              onClick={onConfirm}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
-                color: confirmedDate ? 'var(--sky-600)' : 'var(--gray-400)',
-              }}
-            >
-              {confirmedDate ? `✅ 最終確認：${confirmedDate}` : '□ 確認する'}
-            </button>
-            <span className="icon-btn-cap">確認済み</span>
-          </span>
         </div>
-      )}
+      </div>
     </div>
   )
 }

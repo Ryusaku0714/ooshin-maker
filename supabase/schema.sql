@@ -204,3 +204,8 @@ ALTER TABLE om_teams      ADD COLUMN IF NOT EXISTS memo TEXT;
 -- 両方に値が入っている場合のみ個別設定ONとして扱う。
 ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS custom_days   INTEGER;
 ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS custom_offset INTEGER;
+
+-- ============================================================
+-- v10 マイグレーション：基本情報に「定時薬」欄を追加
+-- ============================================================
+ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS regular_medication TEXT;
