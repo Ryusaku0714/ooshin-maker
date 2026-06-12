@@ -337,7 +337,7 @@ function TemporaryLogFields({ value, onChange }) {
 
   return (
     <>
-      <div>
+      <div className="temp-field-full temp-field-normal">
         <label className="field-label">指示日</label>
         <input
           type="date" className="field-input"
@@ -345,7 +345,7 @@ function TemporaryLogFields({ value, onChange }) {
           onChange={e => onChange({ ...value, changed_at: e.target.value })}
         />
       </div>
-      <div>
+      <div className="temp-field-full temp-field-normal">
         <label className="field-label">症状・理由（空欄→「変更指示」）</label>
         <input
           type="text" className="field-input"
@@ -405,7 +405,7 @@ function TemporaryLogFields({ value, onChange }) {
           placeholder="自動"
         />
       </div>
-      <div>
+      <div className="temp-field-normal">
         <label className="field-label">薬剤名・用法等</label>
         <input
           type="text" className="field-input"

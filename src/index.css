@@ -248,11 +248,6 @@ body {
   padding: 4px 7px;
   font-size: 11px;
 }
-@media (max-width: 480px) {
-  .temp-log-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
 
 /* ── 他科受診フォーム：日付・タイミング欄をコンパクト表示（臨時薬と同等サイズ） ── */
 .visit-form-grid > div {
@@ -331,6 +326,23 @@ body {
   /* 変更ログフォームグリッド */
   .log-form-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* 臨時薬フォーム：2カラム構成を維持（指示日・症状理由・プレビューは全幅） */
+  .temp-log-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .temp-log-grid .temp-field-full {
+    grid-column: 1 / -1;
+  }
+  .temp-log-grid .temp-field-normal .field-input {
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+  .temp-log-grid .temp-field-normal .field-label {
+    font-size: 10px;
+    margin-bottom: 3px;
   }
 
   /* 他科受診フォームグリッド：2カラム構成を維持し、gapのみ詰める */
