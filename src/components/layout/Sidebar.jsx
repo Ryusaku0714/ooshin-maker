@@ -20,7 +20,7 @@ function fmtFullSidebar(d) {
 }
 
 function fmtWithDowSidebar(d) {
-  return `${d.getMonth() + 1}/${d.getDate()}（${DOW_SIDEBAR[d.getDay()]}）`
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}（${DOW_SIDEBAR[d.getDay()]}）`
 }
 
 async function printTeamLogs(team, facilityName) {
@@ -60,7 +60,8 @@ async function printTeamLogs(team, facilityName) {
   }).filter(Boolean).join('')
 
   const teamLabel = [team.clinic_name, team.team_name].filter(Boolean).join(' ') || '在宅患者'
-  const today = new Date().toLocaleDateString('ja-JP')
+  const now = new Date()
+  const today = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
   const html = `<!DOCTYPE html>
 <html lang="ja"><head><meta charset="utf-8">
 <title>変更記録一括印刷 - ${facilityName} / ${teamLabel}</title>

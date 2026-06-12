@@ -28,15 +28,17 @@ function parseLocalDate(str) {
   return new Date(y, m - 1, d)
 }
 
+function pad2(n) { return String(n).padStart(2, '0') }
+
 function fmtVisitCalcInfo(visitCalc) {
   if (!visitCalc?.visitDate) return ''
   const vDate = parseLocalDate(visitCalc.visitDate)
-  const visitStr = `${vDate.getFullYear()}/${vDate.getMonth() + 1}/${vDate.getDate()}（${DOW_JP[vDate.getDay()]}）`
+  const visitStr = `${vDate.getFullYear()}/${pad2(vDate.getMonth() + 1)}/${pad2(vDate.getDate())}（${DOW_JP[vDate.getDay()]}）`
   const start = new Date(vDate)
   start.setDate(start.getDate() + (visitCalc.graceDays ?? 0))
-  const startStr = `${start.getMonth() + 1}/${start.getDate()}（${DOW_JP[start.getDay()]}）`
+  const startStr = `${pad2(start.getMonth() + 1)}/${pad2(start.getDate())}（${DOW_JP[start.getDay()]}）`
   const end = parseLocalDate(visitCalc.rxEnd)
-  const endStr = `${end.getMonth() + 1}/${end.getDate()}（${DOW_JP[end.getDay()]}）`
+  const endStr = `${pad2(end.getMonth() + 1)}/${pad2(end.getDate())}（${DOW_JP[end.getDay()]}）`
   return `往診日：${visitStr}｜処方日数：${visitCalc.rxDays}日｜処方期間：${startStr}〜${endStr}`
 }
 

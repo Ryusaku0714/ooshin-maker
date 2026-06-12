@@ -11,13 +11,6 @@ export function fmtMMDD(dateStr) {
   return `${mm}/${dd}`
 }
 
-/** "yyyy-MM-dd" → "M/D"（ゼロ埋めなし） */
-export function fmtMD(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr + 'T00:00:00')
-  return `${d.getMonth() + 1}/${d.getDate()}`
-}
-
 /** "yyyy-MM-dd" に days 日加算した "yyyy-MM-dd" を返す */
 export function addDaysToStr(dateStr, days) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -50,10 +43,10 @@ export function computeTemporaryDays(startDate, startTiming, endDate) {
 /** 変更記録1件分の表示・コピー用テキストを生成 */
 export function formatChangeLogText(log) {
   if (log.log_type === 'temporary') {
-    const instrDate = fmtMD(log.changed_at)
+    const instrDate = fmtMMDD(log.changed_at)
     const reason = log.reason?.trim() || '変更指示'
-    const start = fmtMD(log.start_date ?? log.changed_at)
-    const end = fmtMD(log.end_date)
+    const start = fmtMMDD(log.start_date ?? log.changed_at)
+    const end = fmtMMDD(log.end_date)
     return `${instrDate}　${reason}\n${start}${log.start_timing}〜${end}${log.end_timing}　${log.drug_name ?? log.content ?? ''}`
   }
   const reason = log.reason?.trim() || '指示受け'

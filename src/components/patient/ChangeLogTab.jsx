@@ -3,18 +3,18 @@ import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
 import RowActionsMenu from '../common/RowActionsMenu'
 import {
-  PREV_TIMING, fmtMMDD, fmtMD, addDaysToStr,
+  PREV_TIMING, fmtMMDD, addDaysToStr,
   computeTemporaryEnd, computeTemporaryDays, formatChangeLogText,
 } from '../../lib/changeLogFormat'
 
 // ── 追加薬 日数計算ツール（変更ログタブ上部） ──────────────
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
 
-/** yyyy-MM-dd → "5/28（木）" */
+/** yyyy-MM-dd → "05/28（木）" */
 function fmtWithDay(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr + 'T00:00:00')
-  return `${d.getMonth()+1}/${d.getDate()}（${DAY_LABELS[d.getDay()]}）`
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}（${DAY_LABELS[d.getDay()]}）`
 }
 
 function CalcTool({ visitCalc }) {
@@ -329,10 +329,10 @@ function TemporaryLogFields({ value, onChange }) {
   }
 
   const line1 = value.changed_at
-    ? `${fmtMD(value.changed_at)}　${value.reason?.trim() || '変更指示'}`
+    ? `${fmtMMDD(value.changed_at)}　${value.reason?.trim() || '変更指示'}`
     : ''
   const line2 = (value.start_date && value.end_date && value.end_timing)
-    ? `${fmtMD(value.start_date)}${value.start_timing}〜${fmtMD(value.end_date)}${value.end_timing}　${value.drug_name}`
+    ? `${fmtMMDD(value.start_date)}${value.start_timing}〜${fmtMMDD(value.end_date)}${value.end_timing}　${value.drug_name}`
     : ''
 
   return (
@@ -680,12 +680,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 <>
                   <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
                     <span className="log-badge-temp">臨時</span>
-                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMD(log.changed_at)}</span>
+                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMMDD(log.changed_at)}</span>
                     　{log.reason?.trim() || '変更指示'}
                   </div>
                   <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
                     <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
-                      {fmtMD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
+                      {fmtMMDD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMMDD(log.end_date)}{log.end_timing}
                     </span>
                     　{log.drug_name}
                   </div>

@@ -10,15 +10,16 @@ function parseDate(str) {
   return new Date(y, m - 1, d)
 }
 
-function fmt(d) { return `${d.getMonth() + 1}/${d.getDate()}` }
-function fmtWithDow(d) { return `${d.getMonth() + 1}/${d.getDate()}（${DOW[d.getDay()]}）` }
+function pad2(n) { return String(n).padStart(2, '0') }
+function fmt(d) { return `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}` }
+function fmtWithDow(d) { return `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}（${DOW[d.getDay()]}）` }
 function fmtFull(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 function fmtFullWithDow(str) {
   const d = parseDate(str)
   if (!d) return ''
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${DOW[d.getDay()]}）`
+  return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}（${DOW[d.getDay()]}）`
 }
 
 // 「（月）」などの曜日表記を取り除く
