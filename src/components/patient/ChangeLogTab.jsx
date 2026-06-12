@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
+import RowActionsMenu from '../common/RowActionsMenu'
 import {
   PREV_TIMING, fmtMMDD, fmtMD, addDaysToStr,
   computeTemporaryEnd, computeTemporaryDays, formatChangeLogText,
@@ -439,13 +440,14 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const [editForm,    setEditForm]    = useState(BLANK_REGULAR_EDIT)
   const [editSaving,  setEditSaving]  = useState(false)
   const [sortMode,    setSortMode]    = useState('date')
+  const [showArchived, setShowArchived] = useState(false)
 
   // 往診日が変わったらデフォルト日付を同期
   useEffect(() => {
     if (visitCalc?.visitDate) setInstrDate(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  const logs = [...(patient?.om_change_logs ?? [])].sort((a, b) => {
+  const sortedLogs = [...(patient?.om_change_logs ?? [])].sort((a, b) => {
     if (sortMode === 'date') {
       const diff = new Date(a.changed_at) - new Date(b.changed_at)
       if (diff !== 0) return diff
@@ -453,6 +455,9 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     }
     return new Date(a.created_at) - new Date(b.created_at)
   })
+
+  const logs         = sortedLogs.filter(l => !l.is_archived)
+  const archivedLogs = sortedLogs.filter(l => l.is_archived)
 
   const resetForm = () => {
     setReason('')
@@ -507,6 +512,16 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const del = async (id) => {
     if (!confirm('このログを削除しますか？')) return
     await db.deleteLog(id)
+    onRefetch?.()
+  }
+
+  const archiveLog = async (id) => {
+    await db.updateLog(id, { is_archived: true })
+    onRefetch?.()
+  }
+
+  const restoreLog = async (id) => {
+    await db.updateLog(id, { is_archived: false })
     onRefetch?.()
   }
 
@@ -583,6 +598,123 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  // ログ1件分の表示行（使用中／アーカイブ共通）
+  const renderLog = (log, i, arr, archived) => {
+    const isEditing    = editingId === log.id
+    const displayReason = log.reason?.trim() || '指示受け'
+    const instrD       = fmtMMDD(log.changed_at)
+    const hasStartDate = !!log.start_date
+    const startD       = hasStartDate ? fmtMMDD(log.start_date) : null
+
+    const actions = archived
+      ? [
+          { key: 'edit',    icon: '✏️', label: '編集', onClick: () => startEdit(log) },
+          { key: 'restore', icon: '↩️', label: '復元', title: '復元（記録に戻す）', onClick: () => restoreLog(log.id) },
+          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: () => del(log.id) },
+        ]
+      : [
+          { key: 'edit',    icon: '✏️', label: '編集', onClick: () => startEdit(log) },
+          { key: 'archive', icon: '📂', label: 'アーカイブ', title: 'アーカイブ（記録として保存）', onClick: () => archiveLog(log.id) },
+          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: () => del(log.id) },
+        ]
+
+    return (
+      <div key={log.id} style={{
+        padding: isEditing ? 0 : '8px 0',
+        borderBottom: (!isEditing && i < arr.length - 1) ? '1px solid var(--sky-50)' : 'none',
+        marginBottom: isEditing ? 8 : 0,
+        opacity: archived ? 0.7 : 1,
+      }}>
+        {isEditing ? (
+          <div style={{
+            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+            borderRadius: 8, padding: 12,
+          }}>
+            <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+              {editForm.log_type === 'temporary' ? (
+                <TemporaryLogFields value={editForm} onChange={setEditForm} />
+              ) : (
+                <>
+                  <div>
+                    <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
+                    <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
+                  </div>
+                  <div>
+                    <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
+                    <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
+                  </div>
+                  <div>
+                    <label className="field-label">開始日</label>
+                    <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
+                  </div>
+                  <div>
+                    <label className="field-label">内容</label>
+                    <input
+                      type="text" className="field-input"
+                      value={editForm.content} onChange={upEdit('content')}
+                      onKeyDown={e => e.key === 'Enter' && saveEdit()}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+              <button className="btn btn-outline btn-sm" onClick={cancelEdit}>キャンセル</button>
+              <button
+                className="btn btn-primary btn-sm" onClick={saveEdit}
+                disabled={editSaving || (editForm.log_type === 'temporary'
+                  ? (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing)
+                  : !editForm.content.trim())}
+              >
+                {editSaving ? '…' : '保存'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, fontSize: 12 }}>
+              {log.log_type === 'temporary' ? (
+                <>
+                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
+                    <span className="log-badge-temp">臨時</span>
+                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMD(log.changed_at)}</span>
+                    　{log.reason?.trim() || '変更指示'}
+                  </div>
+                  <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
+                      {fmtMD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
+                    </span>
+                    　{log.drug_name}
+                  </div>
+                </>
+              ) : hasStartDate ? (
+                <>
+                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                    　{displayReason}
+                  </div>
+                  <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
+                    　{log.content}
+                  </div>
+                </>
+              ) : (
+                <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                  <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                  　{log.content}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
+              <CopyButton title="この記録をコピー" getText={() => formatChangeLogText(log)} />
+              <RowActionsMenu actions={actions} />
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       <CalcTool visitCalc={visitCalc} />
@@ -604,6 +736,15 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             {logs.length > 0 && (
               <button className="btn btn-outline btn-sm" onClick={copyAll}>
                 {copied ? '✅ コピー済' : '📋 全コピー'}
+              </button>
+            )}
+            {archivedLogs.length > 0 && (
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowArchived(s => !s)}
+                style={{ color: showArchived ? 'var(--sky-600)' : 'var(--gray-400)', borderColor: showArchived ? 'var(--sky-200)' : 'var(--gray-200)' }}
+              >
+                {showArchived ? '📂 アーカイブを隠す' : `📂 アーカイブを表示（${archivedLogs.length}件）`}
               </button>
             )}
             <div style={{ position: 'relative' }}>
@@ -700,122 +841,28 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
           </div>
         )}
 
-        {logs.length === 0 && (
+        {logs.length === 0 && !showArchived && (
           <p style={{ fontSize: 12, color: 'var(--gray-400)', textAlign: 'center', padding: '20px 0' }}>
             変更記録がまだありません
           </p>
         )}
 
         {/* ログ一覧 */}
-        {logs.map((log, i) => {
-          const isEditing    = editingId === log.id
-          const displayReason = log.reason?.trim() || '指示受け'
-          const instrD       = fmtMMDD(log.changed_at)
-          const hasStartDate = !!log.start_date
-          const startD       = hasStartDate ? fmtMMDD(log.start_date) : null
+        {logs.map((log, i) => renderLog(log, i, logs, false))}
 
-          return (
-            <div key={log.id} style={{
-              padding: isEditing ? 0 : '8px 0',
-              borderBottom: (!isEditing && i < logs.length - 1) ? '1px solid var(--sky-50)' : 'none',
-              marginBottom: isEditing ? 8 : 0,
+        {showArchived && archivedLogs.length > 0 && (
+          <>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--gray-400)',
+              margin: '10px 0 4px', paddingTop: 10,
+              borderTop: '1px dashed var(--gray-200)',
+              letterSpacing: '0.06em',
             }}>
-              {isEditing ? (
-                <div style={{
-                  background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
-                  borderRadius: 8, padding: 12,
-                }}>
-                  <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                    {editForm.log_type === 'temporary' ? (
-                      <TemporaryLogFields value={editForm} onChange={setEditForm} />
-                    ) : (
-                      <>
-                        <div>
-                          <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
-                          <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
-                        </div>
-                        <div>
-                          <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
-                          <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
-                        </div>
-                        <div>
-                          <label className="field-label">開始日</label>
-                          <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
-                        </div>
-                        <div>
-                          <label className="field-label">内容</label>
-                          <input
-                            type="text" className="field-input"
-                            value={editForm.content} onChange={upEdit('content')}
-                            onKeyDown={e => e.key === 'Enter' && saveEdit()}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                    <button className="btn btn-outline btn-sm" onClick={cancelEdit}>キャンセル</button>
-                    <button
-                      className="btn btn-primary btn-sm" onClick={saveEdit}
-                      disabled={editSaving || (editForm.log_type === 'temporary'
-                        ? (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing)
-                        : !editForm.content.trim())}
-                    >
-                      {editSaving ? '…' : '保存'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, fontSize: 12 }}>
-                    {log.log_type === 'temporary' ? (
-                      <>
-                        <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                          <span className="log-badge-temp">臨時</span>
-                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMD(log.changed_at)}</span>
-                          　{log.reason?.trim() || '変更指示'}
-                        </div>
-                        <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
-                            {fmtMD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
-                          </span>
-                          　{log.drug_name}
-                        </div>
-                      </>
-                    ) : hasStartDate ? (
-                      <>
-                        <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
-                          　{displayReason}
-                        </div>
-                        <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
-                          　{log.content}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                        <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
-                        　{log.content}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <CopyButton title="この記録をコピー" getText={() => formatChangeLogText(log)} />
-                    <button className="icon-btn" title="編集" onClick={() => startEdit(log)}>
-                      <span aria-hidden="true">✏️</span>
-                      <span className="icon-btn-cap">編集</span>
-                    </button>
-                    <button className="icon-btn" title="削除" onClick={() => del(log.id)}>
-                      <span aria-hidden="true">🗑️</span>
-                      <span className="icon-btn-cap">削除</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              📂 アーカイブ（変更記録）
             </div>
-          )
-        })}
+            {archivedLogs.map((log, i) => renderLog(log, i, archivedLogs, true))}
+          </>
+        )}
       </div>
     </>
   )

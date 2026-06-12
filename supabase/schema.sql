@@ -225,3 +225,8 @@ ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS end_timing   TEXT;
 ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS days         INTEGER;
 -- 臨時薬：終了日
 ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS end_date     DATE;
+
+-- ============================================================
+-- v12 マイグレーション：薬剤変更記録にアーカイブ機能を追加
+-- ============================================================
+ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;

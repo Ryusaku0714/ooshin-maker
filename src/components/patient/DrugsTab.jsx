@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { db } from '../../hooks/useData'
 import AddDrugModal from '../modals/AddDrugModal'
+import RowActionsMenu from '../common/RowActionsMenu'
 
 // YYYY-MM-DD に正規化（TIMESTAMPTZ → date string 対応）
 function sliceDate(val) {
@@ -258,37 +259,15 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
 
       {/* アクション（コピーボタンは確認エリアに移動） */}
       <div className="drug-actions" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        {archived ? (
-          <>
-            <button className="icon-btn" title="編集" onClick={onEdit}>
-              <span aria-hidden="true">✏️</span>
-              <span className="icon-btn-cap">編集</span>
-            </button>
-            <button className="icon-btn" title="復元（使用中に戻す）" onClick={onRestore}>
-              <span aria-hidden="true" style={{ fontSize: 11 }}>↩️</span>
-              <span className="icon-btn-cap">復元</span>
-            </button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>
-              <span aria-hidden="true">🗑️</span>
-              <span className="icon-btn-cap">削除</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <button className="icon-btn" title="編集" onClick={onEdit}>
-              <span aria-hidden="true">✏️</span>
-              <span className="icon-btn-cap">編集</span>
-            </button>
-            <button className="icon-btn" title="アーカイブ（終了薬として保存）" onClick={onArchive}>
-              <span aria-hidden="true" style={{ fontSize: 11 }}>📂</span>
-              <span className="icon-btn-cap">非表示</span>
-            </button>
-            <button className="icon-btn" title="完全削除" onClick={onDelete}>
-              <span aria-hidden="true">🗑️</span>
-              <span className="icon-btn-cap">削除</span>
-            </button>
-          </>
-        )}
+        <RowActionsMenu actions={archived ? [
+          { key: 'edit',    icon: '✏️', label: '編集', onClick: onEdit },
+          { key: 'restore', icon: '↩️', label: '復元', title: '復元（使用中に戻す）', onClick: onRestore },
+          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: onDelete },
+        ] : [
+          { key: 'edit',    icon: '✏️', label: '編集', onClick: onEdit },
+          { key: 'archive', icon: '📂', label: '非表示', title: 'アーカイブ（終了薬として保存）', onClick: onArchive },
+          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: onDelete },
+        ]} />
       </div>
 
       {/* 確認エリア（確認チェック＋コピーチェック・グリッド全幅） */}

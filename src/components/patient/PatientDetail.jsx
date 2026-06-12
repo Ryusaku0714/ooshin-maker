@@ -135,9 +135,9 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
 
   // テキストコピー
   const copyPatientText = async () => {
-    const logs = [...(patient?.om_change_logs ?? [])].sort((a, b) =>
-      new Date(b.changed_at) - new Date(a.changed_at)
-    )
+    const logs = [...(patient?.om_change_logs ?? [])]
+      .filter(l => !l.is_archived)
+      .sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at))
     const drugs = patient?.om_drugs ?? []
     const otherVisits = patient?.other_visits ?? []
 
@@ -212,7 +212,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
     const allLogs = [...(patient?.om_change_logs ?? [])].sort((a, b) =>
       new Date(b.changed_at) - new Date(a.changed_at)
     )
-    const recentLogs = allLogs.filter(l => new Date(l.changed_at) >= oneMonthAgo)
+    const recentLogs = allLogs.filter(l => !l.is_archived && new Date(l.changed_at) >= oneMonthAgo)
     const html = generatePatientMonthHTML(patient, recentLogs, visitCalc)
     const w = window.open('', '_blank', 'width=800,height=600')
     w.document.write(html)

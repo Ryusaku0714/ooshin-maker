@@ -113,6 +113,59 @@ body {
   flex-wrap: wrap;
 }
 
+/* ── レコード単位アクション（編集・削除・アーカイブ等） ── */
+.row-actions-desktop {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.row-actions-mobile {
+  display: none;
+  position: relative;
+}
+@media (max-width: 768px) {
+  .row-actions-desktop { display: none !important; }
+  .row-actions-mobile  { display: inline-block !important; }
+}
+.row-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+}
+.row-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1.5px solid var(--sky-100);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  overflow: hidden;
+  z-index: 10;
+}
+.row-menu-item {
+  background: white;
+  border: none;
+  border-bottom: 1px solid var(--sky-50);
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.row-menu-item:last-child { border-bottom: none; }
+.row-menu-item:hover { background: var(--sky-50); color: var(--sky-600); }
+
 /* ── 変更記録：「＋追加」の定期変更／臨時薬 選択メニュー ── */
 .add-menu-overlay {
   position: fixed;
@@ -379,7 +432,10 @@ body {
   .visit-banner,
   .mobile-tabs-bar,
   button:not(.print-show),
-  .icon-btn {
+  .icon-btn,
+  .row-actions-mobile,
+  .row-menu,
+  .row-menu-overlay {
     display: none !important;
   }
 
