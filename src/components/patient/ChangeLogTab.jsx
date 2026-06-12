@@ -376,6 +376,14 @@ function TemporaryLogFields({ value, onChange }) {
         </select>
       </div>
       <div>
+        <label className="field-label">終了日</label>
+        <input
+          type="date" className="field-input"
+          value={value.end_date}
+          onChange={e => handleEndDateChange(e.target.value)}
+        />
+      </div>
+      <div>
         <label className="field-label">終了タイミング</label>
         <select
           className="field-input"
@@ -388,15 +396,6 @@ function TemporaryLogFields({ value, onChange }) {
           <option value="眠前">眠前</option>
         </select>
       </div>
-      <div style={{ gridColumn: '1 / -1' }}>
-        <label className="field-label">薬剤名・用法等</label>
-        <input
-          type="text" className="field-input"
-          value={value.drug_name}
-          onChange={e => onChange({ ...value, drug_name: e.target.value })}
-          placeholder="例：ロキソプロフェン60mg 飲み切り / ムコスタ100mg 2錠 飲み切り"
-        />
-      </div>
       <div>
         <label className="field-label">日数</label>
         <input
@@ -407,11 +406,12 @@ function TemporaryLogFields({ value, onChange }) {
         />
       </div>
       <div>
-        <label className="field-label">終了日</label>
+        <label className="field-label">薬剤名・用法等</label>
         <input
-          type="date" className="field-input"
-          value={value.end_date}
-          onChange={e => handleEndDateChange(e.target.value)}
+          type="text" className="field-input"
+          value={value.drug_name}
+          onChange={e => onChange({ ...value, drug_name: e.target.value })}
+          placeholder="例：ロキソプロフェン60mg 飲み切り / ムコスタ100mg 2錠 飲み切り"
         />
       </div>
       {(line1 || line2) && (
@@ -630,7 +630,10 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
             borderRadius: 8, padding: 12,
           }}>
-            <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div
+              className={`log-form-grid ${editForm.log_type === 'temporary' ? 'temp-log-grid' : ''}`}
+              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: editForm.log_type === 'temporary' ? 6 : 8, marginBottom: 8 }}
+            >
               {editForm.log_type === 'temporary' ? (
                 <TemporaryLogFields value={editForm} onChange={setEditForm} />
               ) : (
@@ -826,7 +829,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
             borderRadius: 8, padding: 12, marginBottom: 12,
           }}>
-            <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+            <div className="log-form-grid temp-log-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
               <TemporaryLogFields value={tempForm} onChange={setTempForm} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>

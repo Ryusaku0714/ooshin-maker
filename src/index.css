@@ -239,6 +239,21 @@ body {
 }
 .field-input:focus { border-color: var(--sky-400); }
 
+/* ── 臨時薬フォーム：コンパクト表示 ── */
+.temp-log-grid .field-label {
+  font-size: 9px;
+  margin-bottom: 2px;
+}
+.temp-log-grid .field-input {
+  padding: 4px 7px;
+  font-size: 11px;
+}
+@media (max-width: 480px) {
+  .temp-log-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
