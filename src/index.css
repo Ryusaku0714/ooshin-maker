@@ -345,9 +345,37 @@ body {
     margin-bottom: 3px;
   }
 
+  /* 臨時薬フォーム：日付欄・タイミング欄を必要最小限の幅に */
+  .temp-log-grid input[type="date"],
+  .temp-log-grid select {
+    width: auto;
+    height: 30px;
+    box-sizing: border-box;
+  }
+  .temp-log-grid input[type="date"] {
+    max-width: 116px;
+  }
+  .temp-log-grid select {
+    max-width: 60px;
+  }
+
   /* 他科受診フォームグリッド：2カラム構成を維持し、gapのみ詰める */
   .visit-form-grid {
     gap: 6px !important;
+  }
+
+  /* 他科受診フォーム：日付欄・タイミング欄を必要最小限の幅に */
+  .visit-compact-field input[type="date"],
+  .visit-compact-field select {
+    width: auto;
+    height: 30px;
+    box-sizing: border-box;
+  }
+  .visit-compact-field input[type="date"] {
+    max-width: 116px;
+  }
+  .visit-compact-field select {
+    max-width: 60px;
   }
 
   /* タブ */

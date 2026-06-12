@@ -241,7 +241,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 value={visitForm.medication_timing}
                 onChange={e => handleStartChange({ medication_timing: e.target.value })}
               >
-                <option value="">-- 選択 --</option>
+                <option value="">選択</option>
                 {TIMING_OPTIONS.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -263,7 +263,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 value={visitForm.medication_timing_end}
                 onChange={e => setVisitForm(f => ({ ...f, medication_timing_end: e.target.value }))}
               >
-                <option value="">-- 選択 --</option>
+                <option value="">選択</option>
                 {TIMING_OPTIONS.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
