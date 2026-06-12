@@ -2,28 +2,56 @@ import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
 import RowActionsMenu from '../common/RowActionsMenu'
+import { PREV_TIMING, computeTemporaryEnd, computeTemporaryDays } from '../../lib/changeLogFormat'
 
 const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
-const PREV_TIMING = { '朝': '眠前', '昼': '朝', '夕': '昼', '眠前': '夕' }
 
 const EMPTY_VISIT = {
   hospital: '', department: '',
   dispensing_from: '', dispensing_to: '',
   medication_timing: '', medication_timing_end: '',
+  days: '',
   next_visit_date: '',
   notes: '',
   is_archived: false,
 }
 
+// 日数入力 → 終了日・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
+function recalcFromDays(next) {
+  const n = parseInt(next.days)
+  if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.dispensing_from && next.medication_timing) {
+    const { endDate, endTiming } = computeTemporaryEnd(next.dispensing_from, next.medication_timing, n)
+    return { ...next, dispensing_to: endDate, medication_timing_end: endTiming }
+  }
+  return next
+}
+
+// 終了日入力 → 日数・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
+function recalcFromEndDate(next) {
+  if (next.dispensing_to && next.dispensing_from && next.medication_timing) {
+    const { days, endTiming } = computeTemporaryDays(next.dispensing_from, next.medication_timing, next.dispensing_to)
+    if (days > 0) return { ...next, days: String(days), medication_timing_end: endTiming }
+  }
+  return next
+}
+
 function toFormData(v) {
   const startT = v.medication_timing ?? ''
+  const from   = v.dispensing_from   ?? v.dispensing_date ?? ''
+  const to     = v.dispensing_to     ?? ''
+  let days = (v.days != null && v.days !== '') ? String(v.days) : ''
+  if (!days && from && to && startT) {
+    const computed = computeTemporaryDays(from, startT, to)
+    if (computed.days > 0) days = String(computed.days)
+  }
   return {
     hospital:              v.hospital              ?? '',
     department:            v.department            ?? '',
-    dispensing_from:       v.dispensing_from       ?? v.dispensing_date ?? '',
-    dispensing_to:         v.dispensing_to         ?? '',
+    dispensing_from:       from,
+    dispensing_to:         to,
     medication_timing:     startT,
     medication_timing_end: v.medication_timing_end ?? (startT ? (PREV_TIMING[startT] ?? '') : ''),
+    days,
     next_visit_date:       v.next_visit_date       ?? '',
     notes:                 v.notes                 ?? '',
     is_archived:           v.is_archived           ?? false,
@@ -73,13 +101,25 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
   const upV = k => e => setVisitForm(f => ({ ...f, [k]: e.target.value }))
 
-  const handleTimingChange = (e) => {
-    const t = e.target.value
-    setVisitForm(f => ({
-      ...f,
-      medication_timing:     t,
-      medication_timing_end: t ? (PREV_TIMING[t] ?? '') : '',
-    }))
+  // 調剤開始日・開始タイミング変更 → 終了タイミングを再計算し、入力済みの日数／終了日を基準に再計算
+  const handleStartChange = (patch) => {
+    setVisitForm(f => {
+      let next = { ...f, ...patch }
+      if ('medication_timing' in patch) {
+        next = { ...next, medication_timing_end: next.medication_timing ? (PREV_TIMING[next.medication_timing] ?? '') : '' }
+      }
+      if (next.days?.toString().trim() !== '') next = recalcFromDays(next)
+      else if (next.dispensing_to) next = recalcFromEndDate(next)
+      return next
+    })
+  }
+
+  const handleDaysChange = (val) => {
+    setVisitForm(f => recalcFromDays({ ...f, days: val }))
+  }
+
+  const handleEndDateChange = (val) => {
+    setVisitForm(f => recalcFromEndDate({ ...f, dispensing_to: val }))
   }
 
   const openAddVisit = () => {
@@ -185,56 +225,68 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
                 onChange={upV('department')} placeholder="例：循環器科"
               />
             </div>
-            <div>
-              <label className="field-label">調剤期間（開始）</label>
+
+            <div className="visit-compact-field">
+              <label className="field-label">調剤開始日</label>
               <input
                 type="date" className="field-input"
-                value={visitForm.dispensing_from} onChange={upV('dispensing_from')}
+                value={visitForm.dispensing_from}
+                onChange={e => handleStartChange({ dispensing_from: e.target.value })}
               />
             </div>
-            <div>
-              <label className="field-label">調剤期間（終了）</label>
+            <div className="visit-compact-field">
+              <label className="field-label">開始タイミング</label>
+              <select
+                className="field-input"
+                value={visitForm.medication_timing}
+                onChange={e => handleStartChange({ medication_timing: e.target.value })}
+              >
+                <option value="">-- 選択 --</option>
+                {TIMING_OPTIONS.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="visit-compact-field">
+              <label className="field-label">終了日</label>
               <input
                 type="date" className="field-input"
-                value={visitForm.dispensing_to} onChange={upV('dispensing_to')}
+                value={visitForm.dispensing_to}
+                onChange={e => handleEndDateChange(e.target.value)}
               />
             </div>
-            <div style={{ gridColumn: '1/-1' }}>
-              <label className="field-label">服用タイミング（開始〜終了）</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <select
-                  className="field-input"
-                  value={visitForm.medication_timing}
-                  onChange={handleTimingChange}
-                  style={{ flex: '0 0 90px' }}
-                >
-                  <option value="">-- 選択 --</option>
-                  {TIMING_OPTIONS.map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                {visitForm.medication_timing && (
-                  <>
-                    <span style={{ fontSize: 12, color: 'var(--gray-400)', flexShrink: 0 }}>〜</span>
-                    <div style={{
-                      fontSize: 12, fontWeight: 600, color: 'var(--sky-700)',
-                      background: 'var(--sky-50)', border: '1.5px solid var(--sky-200)',
-                      borderRadius: 6, padding: '6px 12px', flexShrink: 0,
-                    }}>
-                      {visitForm.medication_timing_end}
-                      <span style={{ fontSize: 10, color: 'var(--gray-400)', marginLeft: 4 }}>（自動）</span>
-                    </div>
-                  </>
-                )}
-              </div>
+            <div className="visit-compact-field">
+              <label className="field-label">終了タイミング</label>
+              <select
+                className="field-input"
+                value={visitForm.medication_timing_end}
+                onChange={e => setVisitForm(f => ({ ...f, medication_timing_end: e.target.value }))}
+              >
+                <option value="">-- 選択 --</option>
+                {TIMING_OPTIONS.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
-            <div style={{ gridColumn: '1/-1' }}>
+
+            <div className="visit-compact-field">
+              <label className="field-label">日数</label>
+              <input
+                type="number" inputMode="numeric" className="field-input" min="1"
+                value={visitForm.days}
+                onChange={e => handleDaysChange(e.target.value)}
+                placeholder="自動"
+              />
+            </div>
+            <div className="visit-compact-field">
               <label className="field-label">次回受診日</label>
               <input
                 type="date" className="field-input"
                 value={visitForm.next_visit_date} onChange={upV('next_visit_date')}
               />
             </div>
+
             <div style={{ gridColumn: '1/-1' }}>
               <label className="field-label">備考</label>
               <input

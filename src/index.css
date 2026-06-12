@@ -254,6 +254,19 @@ body {
   }
 }
 
+/* ── 他科受診フォーム：日付・タイミング欄をコンパクト表示（臨時薬と同等サイズ） ── */
+.visit-form-grid > div {
+  min-width: 0;
+}
+.visit-compact-field .field-label {
+  font-size: 9px;
+  margin-bottom: 2px;
+}
+.visit-compact-field .field-input {
+  padding: 4px 7px;
+  font-size: 11px;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -320,9 +333,9 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* 他科受診フォームグリッド */
+  /* 他科受診フォームグリッド：2カラム構成を維持し、gapのみ詰める */
   .visit-form-grid {
-    grid-template-columns: 1fr !important;
+    gap: 6px !important;
   }
 
   /* タブ */
@@ -420,6 +433,15 @@ body {
   /* タブボタン */
   .tabs button {
     padding: 5px 6px !important;
+    font-size: 10px !important;
+  }
+
+  /* 他科受診フォーム：2カラムをさらに詰める */
+  .visit-form-grid {
+    gap: 5px !important;
+  }
+  .visit-compact-field .field-input {
+    padding: 4px 5px !important;
     font-size: 10px !important;
   }
 }
