@@ -50,9 +50,11 @@ export function computeTemporaryDays(startDate, startTiming, endDate) {
 /** 変更記録1件分の表示・コピー用テキストを生成 */
 export function formatChangeLogText(log) {
   if (log.log_type === 'temporary') {
-    const start = fmtMD(log.changed_at)
+    const instrDate = fmtMD(log.changed_at)
+    const reason = log.reason?.trim() || '変更指示'
+    const start = fmtMD(log.start_date ?? log.changed_at)
     const end = fmtMD(log.end_date)
-    return `${start}${log.start_timing}〜${end}${log.end_timing}　${log.drug_name ?? log.content ?? ''}`
+    return `${instrDate}　${reason}\n${start}${log.start_timing}〜${end}${log.end_timing}　${log.drug_name ?? log.content ?? ''}`
   }
   const reason = log.reason?.trim() || '指示受け'
   const instrDate = fmtMMDD(log.changed_at)

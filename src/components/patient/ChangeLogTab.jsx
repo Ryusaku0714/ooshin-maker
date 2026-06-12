@@ -282,43 +282,56 @@ const calcSelectStyle = {
 const BLANK_REGULAR_EDIT = { log_type: 'regular', changed_at: '', reason: '', start_date: '', content: '' }
 
 function blankTempForm(instrDate) {
-  return { changed_at: instrDate, drug_name: '', start_timing: '朝', days: '', end_date: '', end_timing: '' }
+  return {
+    changed_at: instrDate,
+    reason: '',
+    start_date: instrDate,
+    start_timing: '朝',
+    end_timing: PREV_TIMING['朝'],
+    drug_name: '',
+    days: '',
+    end_date: '',
+  }
 }
 
 // ── 臨時薬：入力フィールド群（追加・編集フォーム共通） ───────
 function TemporaryLogFields({ value, onChange }) {
-  // 日数入力 → 終了日・終了タイミングを再計算
+  // 日数入力 → 終了日・終了タイミングを再計算（分4ロジック）
   const recalcFromDays = (next) => {
     const n = parseInt(next.days)
-    if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.changed_at) {
-      const { endDate, endTiming } = computeTemporaryEnd(next.changed_at, next.start_timing, n)
+    if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.start_date) {
+      const { endDate, endTiming } = computeTemporaryEnd(next.start_date, next.start_timing, n)
       return { ...next, end_date: endDate, end_timing: endTiming }
     }
-    return { ...next, end_timing: '' }
+    return next
   }
 
-  // 終了日入力 → 日数・終了タイミングを再計算
+  // 終了日入力 → 日数・終了タイミングを再計算（分4ロジック）
   const recalcFromEndDate = (next) => {
-    if (next.end_date && next.changed_at) {
-      const { days, endTiming } = computeTemporaryDays(next.changed_at, next.start_timing, next.end_date)
+    if (next.end_date && next.start_date) {
+      const { days, endTiming } = computeTemporaryDays(next.start_date, next.start_timing, next.end_date)
       if (days > 0) return { ...next, days: String(days), end_timing: endTiming }
     }
-    return { ...next, end_timing: '' }
+    return next
   }
 
   const handleDaysChange = (val) => onChange(recalcFromDays({ ...value, days: val }))
   const handleEndDateChange = (val) => onChange(recalcFromEndDate({ ...value, end_date: val }))
 
-  // 指示日・開始タイミング変更時は、入力済みの日数／終了日を基準に再計算
-  const handleBaseChange = (patch) => {
-    const next = { ...value, ...patch }
-    if (next.days?.toString().trim() !== '') onChange(recalcFromDays(next))
-    else if (next.end_date) onChange(recalcFromEndDate(next))
-    else onChange(next)
+  // 開始日・開始タイミング変更時は、終了タイミングを再計算し、入力済みの日数／終了日を基準に再計算
+  const handleStartChange = (patch) => {
+    let next = { ...value, ...patch }
+    if (patch.start_timing) next = { ...next, end_timing: PREV_TIMING[patch.start_timing] }
+    if (next.days?.toString().trim() !== '') next = recalcFromDays(next)
+    else if (next.end_date) next = recalcFromEndDate(next)
+    onChange(next)
   }
 
-  const previewText = (value.changed_at && value.end_date && value.end_timing)
-    ? `${fmtMD(value.changed_at)} ${value.start_timing}〜${fmtMD(value.end_date)} ${value.end_timing}`
+  const line1 = value.changed_at
+    ? `${fmtMD(value.changed_at)}　${value.reason?.trim() || '変更指示'}`
+    : ''
+  const line2 = (value.start_date && value.end_date && value.end_timing)
+    ? `${fmtMD(value.start_date)}${value.start_timing}〜${fmtMD(value.end_date)}${value.end_timing}　${value.drug_name}`
     : ''
 
   return (
@@ -328,7 +341,24 @@ function TemporaryLogFields({ value, onChange }) {
         <input
           type="date" className="field-input"
           value={value.changed_at}
-          onChange={e => handleBaseChange({ changed_at: e.target.value })}
+          onChange={e => onChange({ ...value, changed_at: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="field-label">症状・理由（空欄→「変更指示」）</label>
+        <input
+          type="text" className="field-input"
+          value={value.reason}
+          onChange={e => onChange({ ...value, reason: e.target.value })}
+          placeholder="例：発熱・疼痛・便秘"
+        />
+      </div>
+      <div>
+        <label className="field-label">開始日</label>
+        <input
+          type="date" className="field-input"
+          value={value.start_date}
+          onChange={e => handleStartChange({ start_date: e.target.value })}
         />
       </div>
       <div>
@@ -336,7 +366,20 @@ function TemporaryLogFields({ value, onChange }) {
         <select
           className="field-input"
           value={value.start_timing}
-          onChange={e => handleBaseChange({ start_timing: e.target.value })}
+          onChange={e => handleStartChange({ start_timing: e.target.value })}
+        >
+          <option value="朝">朝</option>
+          <option value="昼">昼</option>
+          <option value="夕">夕</option>
+          <option value="眠前">眠前</option>
+        </select>
+      </div>
+      <div>
+        <label className="field-label">終了タイミング</label>
+        <select
+          className="field-input"
+          value={value.end_timing}
+          onChange={e => onChange({ ...value, end_timing: e.target.value })}
         >
           <option value="朝">朝</option>
           <option value="昼">昼</option>
@@ -345,7 +388,7 @@ function TemporaryLogFields({ value, onChange }) {
         </select>
       </div>
       <div style={{ gridColumn: '1 / -1' }}>
-        <label className="field-label">薬剤名・用量</label>
+        <label className="field-label">薬剤名・用法等</label>
         <input
           type="text" className="field-input"
           value={value.drug_name}
@@ -370,9 +413,10 @@ function TemporaryLogFields({ value, onChange }) {
           onChange={e => handleEndDateChange(e.target.value)}
         />
       </div>
-      {previewText && (
-        <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--sky-700)' }}>
-          {previewText}
+      {(line1 || line2) && (
+        <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--sky-700)', lineHeight: 1.6 }}>
+          <div>{line1}</div>
+          {line2 && <div>{line2}</div>}
         </div>
       )}
     </>
@@ -445,12 +489,13 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     await db.addLog(patient.id, {
       changed_at:   tempForm.changed_at,
       log_type:     'temporary',
+      reason:       tempForm.reason.trim() || '変更指示',
       drug_name:    tempForm.drug_name.trim(),
       start_timing: tempForm.start_timing,
       end_timing:   tempForm.end_timing,
       days:         tempForm.days.trim() !== '' ? parseInt(tempForm.days) : null,
+      start_date:   tempForm.start_date,
       end_date:     tempForm.end_date,
-      start_date:   tempForm.changed_at,
       content:      tempForm.drug_name.trim(),
     })
     resetTempForm()
@@ -468,14 +513,17 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const startEdit = (log) => {
     setEditingId(log.id)
     if (log.log_type === 'temporary') {
+      const startTiming = log.start_timing ?? '朝'
       setEditForm({
         log_type:     'temporary',
         changed_at:   log.changed_at   ?? '',
+        reason:       log.reason       ?? '',
+        start_date:   log.start_date   ?? log.changed_at ?? '',
+        start_timing: startTiming,
+        end_timing:   log.end_timing   ?? PREV_TIMING[startTiming],
         drug_name:    log.drug_name    ?? '',
-        start_timing: log.start_timing ?? '朝',
         days:         log.days != null ? String(log.days) : '',
         end_date:     log.end_date     ?? '',
-        end_timing:   log.end_timing   ?? '',
       })
     } else {
       setEditForm({
@@ -499,12 +547,13 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
       setEditSaving(true)
       await db.updateLog(editingId, {
         changed_at:   editForm.changed_at,
+        reason:       editForm.reason.trim() || '変更指示',
         drug_name:    editForm.drug_name.trim(),
         start_timing: editForm.start_timing,
         end_timing:   editForm.end_timing,
         days:         editForm.days.trim() !== '' ? parseInt(editForm.days) : null,
+        start_date:   editForm.start_date,
         end_date:     editForm.end_date,
-        start_date:   editForm.changed_at,
         content:      editForm.drug_name.trim(),
       })
       setEditSaving(false)
@@ -720,13 +769,19 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, fontSize: 12 }}>
                     {log.log_type === 'temporary' ? (
-                      <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                        <span className="log-badge-temp">臨時</span>
-                        <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
-                          {fmtMD(log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
-                        </span>
-                        　{log.drug_name}
-                      </div>
+                      <>
+                        <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
+                          <span className="log-badge-temp">臨時</span>
+                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMD(log.changed_at)}</span>
+                          　{log.reason?.trim() || '変更指示'}
+                        </div>
+                        <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                          <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
+                            {fmtMD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMD(log.end_date)}{log.end_timing}
+                          </span>
+                          　{log.drug_name}
+                        </div>
+                      </>
                     ) : hasStartDate ? (
                       <>
                         <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
