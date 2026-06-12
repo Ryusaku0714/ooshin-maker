@@ -16,11 +16,6 @@ function fmtWithDow(d) { return `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}�
 function fmtFull(d) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
-function fmtFullWithDow(str) {
-  const d = parseDate(str)
-  if (!d) return ''
-  return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}（${DOW[d.getDay()]}）`
-}
 
 // 「（月）」などの曜日表記を取り除く
 function stripDow(str) {
@@ -123,12 +118,14 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   return (
     <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
 
-      {/* モバイル用折りたたみヘッダー（768px以下のみ表示） */}
+      {/* モバイル用折りたたみヘッダー（768px以下のみ表示）：往診日＋処方期間を1行で表示 */}
       <div
         className="visit-banner-mobile-header"
         onClick={() => setIsExpanded(prev => !prev)}
       >
-        <span>往診日：{fmtFullWithDow(visitDate)}</span>
+        <span className="visit-banner-mobile-summary">
+          {`往診日：${visitDate ? fmtWithDow(parseDate(visitDate)) : ''}${rxPeriod !== '—' ? `　${stripDow(rxPeriod)}（${effRxDays}日分）` : ''}`}
+        </span>
         <span className="visit-banner-chevron">{isExpanded ? '▲' : '▼'}</span>
       </div>
 
@@ -248,9 +245,18 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
             user-select: none;
             padding: 2px 0;
           }
+          .visit-banner-mobile-summary {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
           .visit-banner-chevron {
             font-size: 11px;
             opacity: 0.8;
+            flex-shrink: 0;
+            margin-left: 6px;
           }
           /* デフォルトで非表示。is-open クラスで flex 表示（レイアウトはJSインラインstyle） */
           .visit-banner-fields {
@@ -270,6 +276,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
 
         @media (max-width: 375px) {
           .visit-banner { padding: 7px 10px !important; }
+          .visit-banner-mobile-header { font-size: 11.5px; }
         }
       `}</style>
     </div>
