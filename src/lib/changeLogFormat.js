@@ -58,7 +58,7 @@ export function formatChangeLogText(log) {
   const instrDate = fmtMMDD(log.changed_at)
   if (log.start_date) {
     const startDate = fmtMMDD(log.start_date)
-    return `${instrDate}　${reason}\n${startDate}〜　${log.content}`
+    return `${instrDate}　${reason}\n${startDate}〜${log.content}`
   }
   // 旧形式（start_date なし）のバックワード互換
   return `${instrDate}　${log.content}`
