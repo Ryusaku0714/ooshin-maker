@@ -334,11 +334,12 @@ body {
     padding: 14px;
   }
 
-  /* 2カラム行（開始日｜タイミング、終了日｜タイミング）：45% : 35% + 5%gap */
+  /* 2カラム行（開始日｜タイミング、終了日｜タイミング）：52% : 1fr + 5%gap（タイミング欄を右寄りに） */
   .rx-row {
     display: grid;
-    grid-template-columns: 45% 35%;
+    grid-template-columns: 52% 1fr;
     gap: 5%;
+    align-items: center;
   }
 
   /* 1カラム行（日数・次回受診日など）：幅45%に統一 */
@@ -348,11 +349,17 @@ body {
 
   /* 入力欄・プルダウンの高さ・padding・font-sizeを統一 */
   .rx-input {
-    height: 38px;
-    padding: 6px 9px;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 8px;
     font-size: 12px;
     box-sizing: border-box;
     width: 100%;
+  }
+  /* iOSのdate inputは高さが自動調整されるため、appearanceをリセットして高さを統一 */
+  input[type="date"].rx-input {
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   /* タブ */
@@ -453,14 +460,10 @@ body {
     font-size: 10px !important;
   }
 
-  /* 臨時薬・他科受診フォーム：行間・入力欄をさらに詰める */
+  /* 臨時薬・他科受診フォーム：行間をさらに詰める（入力欄の高さ・paddingは768px版と統一） */
   .temp-log-grid,
   .visit-form-grid {
     gap: 8px !important;
-  }
-  .rx-input {
-    padding: 4px 6px !important;
-    font-size: 11px !important;
   }
 }
 
