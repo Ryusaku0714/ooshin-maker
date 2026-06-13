@@ -345,17 +345,18 @@ body {
     margin-bottom: 3px;
   }
 
-  /* 臨時薬フォーム：日付欄・タイミング欄を必要最小限の幅に */
-  .temp-log-grid input[type="date"],
-  .temp-log-grid select {
-    width: auto;
-    height: 30px;
-    box-sizing: border-box;
+  /* 臨時薬フォーム：入力欄の縦幅を統一し、日付欄はゆとりのある幅に */
+  .temp-log-grid .field-input {
+    height: 32px;
   }
   .temp-log-grid input[type="date"] {
-    max-width: 116px;
+    width: auto;
+    max-width: 140px;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .temp-log-grid select {
+    width: auto;
     max-width: 60px;
   }
 
@@ -364,17 +365,18 @@ body {
     gap: 6px !important;
   }
 
-  /* 他科受診フォーム：日付欄・タイミング欄を必要最小限の幅に */
-  .visit-compact-field input[type="date"],
-  .visit-compact-field select {
-    width: auto;
-    height: 30px;
-    box-sizing: border-box;
+  /* 他科受診フォーム：入力欄の縦幅を統一し、日付欄はゆとりのある幅に */
+  .visit-form-grid .field-input {
+    height: 32px;
   }
   .visit-compact-field input[type="date"] {
-    max-width: 116px;
+    width: auto;
+    max-width: 140px;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .visit-compact-field select {
+    width: auto;
     max-width: 60px;
   }
 
