@@ -206,83 +206,84 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
       {/* 入力フォーム */}
       {showVisitForm && (
-        <div style={{
-          background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
-          borderRadius: 8, padding: 12, marginBottom: 12,
-        }}>
+        <div className="rx-form-box">
           <div className="visit-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
             <div>
               <label className="field-label">受診先 *</label>
               <input
-                className="field-input" value={visitForm.hospital}
+                className="field-input rx-input" value={visitForm.hospital}
                 onChange={upV('hospital')} placeholder="例：○○病院" autoFocus
               />
             </div>
             <div>
               <label className="field-label">診療科</label>
               <input
-                className="field-input" value={visitForm.department}
+                className="field-input rx-input" value={visitForm.department}
                 onChange={upV('department')} placeholder="例：循環器科"
               />
             </div>
 
-            <div className="visit-compact-field">
-              <label className="field-label">調剤開始日</label>
-              <input
-                type="date" className="field-input"
-                value={visitForm.dispensing_from}
-                onChange={e => handleStartChange({ dispensing_from: e.target.value })}
-              />
-            </div>
-            <div className="visit-compact-field">
-              <label className="field-label">開始タイミング</label>
-              <select
-                className="field-input"
-                value={visitForm.medication_timing}
-                onChange={e => handleStartChange({ medication_timing: e.target.value })}
-              >
-                <option value="">選択</option>
-                {TIMING_OPTIONS.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="visit-compact-field">
-              <label className="field-label">終了日</label>
-              <input
-                type="date" className="field-input"
-                value={visitForm.dispensing_to}
-                onChange={e => handleEndDateChange(e.target.value)}
-              />
-            </div>
-            <div className="visit-compact-field">
-              <label className="field-label">終了タイミング</label>
-              <select
-                className="field-input"
-                value={visitForm.medication_timing_end}
-                onChange={e => setVisitForm(f => ({ ...f, medication_timing_end: e.target.value }))}
-              >
-                <option value="">選択</option>
-                {TIMING_OPTIONS.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+            <div className="rx-row">
+              <div>
+                <label className="field-label">調剤開始日</label>
+                <input
+                  type="date" className="field-input rx-input"
+                  value={visitForm.dispensing_from}
+                  onChange={e => handleStartChange({ dispensing_from: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="field-label">開始タイミング</label>
+                <select
+                  className="field-input rx-input"
+                  value={visitForm.medication_timing}
+                  onChange={e => handleStartChange({ medication_timing: e.target.value })}
+                >
+                  <option value="">選択</option>
+                  {TIMING_OPTIONS.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="visit-compact-field">
+            <div className="rx-row">
+              <div>
+                <label className="field-label">終了日</label>
+                <input
+                  type="date" className="field-input rx-input"
+                  value={visitForm.dispensing_to}
+                  onChange={e => handleEndDateChange(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="field-label">終了タイミング</label>
+                <select
+                  className="field-input rx-input"
+                  value={visitForm.medication_timing_end}
+                  onChange={e => setVisitForm(f => ({ ...f, medication_timing_end: e.target.value }))}
+                >
+                  <option value="">選択</option>
+                  {TIMING_OPTIONS.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="rx-field-45">
               <label className="field-label">日数</label>
               <input
-                type="number" inputMode="numeric" className="field-input" min="1"
+                type="number" inputMode="numeric" className="field-input rx-input" min="1"
                 value={visitForm.days}
                 onChange={e => handleDaysChange(e.target.value)}
                 placeholder="自動"
               />
             </div>
-            <div className="visit-compact-field">
+            <div className="rx-field-45">
               <label className="field-label">次回受診日</label>
               <input
-                type="date" className="field-input"
+                type="date" className="field-input rx-input"
                 value={visitForm.next_visit_date} onChange={upV('next_visit_date')}
               />
             </div>
@@ -290,7 +291,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
             <div style={{ gridColumn: '1/-1' }}>
               <label className="field-label">備考</label>
               <input
-                className="field-input" value={visitForm.notes}
+                className="field-input rx-input" value={visitForm.notes}
                 onChange={upV('notes')} placeholder="メモなど"
               />
             </div>

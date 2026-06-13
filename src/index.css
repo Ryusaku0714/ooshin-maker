@@ -239,27 +239,21 @@ body {
 }
 .field-input:focus { border-color: var(--sky-400); }
 
-/* ── 臨時薬フォーム：コンパクト表示 ── */
-.temp-log-grid .field-label {
-  font-size: 9px;
-  margin-bottom: 2px;
+/* ── 臨時薬・他科受診フォーム：共通レイアウト（rx-*） ── */
+.rx-form-box {
+  background: var(--sky-50);
+  border: 1.5px solid var(--sky-100);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
 }
-.temp-log-grid .field-input {
-  padding: 4px 7px;
-  font-size: 11px;
+.rx-row {
+  display: contents;
 }
-
-/* ── 他科受診フォーム：日付・タイミング欄をコンパクト表示（臨時薬と同等サイズ） ── */
-.visit-form-grid > div {
+.temp-log-grid > div,
+.visit-form-grid > div,
+.rx-row > div {
   min-width: 0;
-}
-.visit-compact-field .field-label {
-  font-size: 9px;
-  margin-bottom: 2px;
-}
-.visit-compact-field .field-input {
-  padding: 4px 7px;
-  font-size: 11px;
 }
 
 /* ── Scrollbar ── */
@@ -328,45 +322,37 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* 臨時薬フォーム：2カラム構成を維持（指示日・症状理由・プレビューは全幅）／幅比率は左55%:右35%+gap */
-  .temp-log-grid {
-    grid-template-columns: 55fr 35fr !important;
-    gap: 8px !important;
+  /* 臨時薬・他科受診フォーム：スマホ版レイアウト（共通クラス rx-*） */
+  .temp-log-grid,
+  .visit-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
   }
-  .temp-log-grid .temp-field-full {
-    grid-column: 1 / -1;
+
+  /* フォームカード全体に余裕のあるpaddingを設ける */
+  .rx-form-box {
+    padding: 14px;
   }
-  .temp-log-grid .temp-field-normal .field-input {
+
+  /* 2カラム行（開始日｜タイミング、終了日｜タイミング）：45% : 35% + 5%gap */
+  .rx-row {
+    display: grid;
+    grid-template-columns: 45% 35%;
+    gap: 5%;
+  }
+
+  /* 1カラム行（日数・次回受診日など）：幅45%に統一 */
+  .rx-field-45 {
+    width: 45%;
+  }
+
+  /* 入力欄・プルダウンの高さ・padding・font-sizeを統一 */
+  .rx-input {
+    height: 38px;
     padding: 6px 9px;
     font-size: 12px;
-  }
-  .temp-log-grid .temp-field-normal .field-label {
-    font-size: 10px;
-    margin-bottom: 3px;
-  }
-
-  /* 臨時薬フォーム：入力欄の縦幅を統一し、開始日・終了日は日数欄と同じ幅に */
-  .temp-log-grid .field-input {
-    height: 32px;
-  }
-  .temp-log-grid select {
-    width: auto;
-    max-width: 60px;
-  }
-
-  /* 他科受診フォームグリッド：2カラム構成（左55%:右35%+gap）に統一 */
-  .visit-form-grid {
-    grid-template-columns: 55fr 35fr !important;
-    gap: 8px !important;
-  }
-
-  /* 他科受診フォーム：入力欄の縦幅を統一し、開始日・終了日は日数欄と同じ幅に */
-  .visit-form-grid .field-input {
-    height: 32px;
-  }
-  .visit-compact-field select {
-    width: auto;
-    max-width: 60px;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   /* タブ */
@@ -467,13 +453,14 @@ body {
     font-size: 10px !important;
   }
 
-  /* 他科受診フォーム：2カラムをさらに詰める */
+  /* 臨時薬・他科受診フォーム：行間・入力欄をさらに詰める */
+  .temp-log-grid,
   .visit-form-grid {
-    gap: 5px !important;
+    gap: 8px !important;
   }
-  .visit-compact-field .field-input {
-    padding: 4px 5px !important;
-    font-size: 10px !important;
+  .rx-input {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
   }
 }
 

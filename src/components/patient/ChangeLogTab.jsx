@@ -337,78 +337,85 @@ function TemporaryLogFields({ value, onChange }) {
 
   return (
     <>
-      <div className="temp-field-full temp-field-normal">
+      <div>
         <label className="field-label">指示日</label>
         <input
-          type="date" className="field-input"
+          type="date" className="field-input rx-input"
           value={value.changed_at}
           onChange={e => onChange({ ...value, changed_at: e.target.value })}
         />
       </div>
-      <div className="temp-field-full temp-field-normal">
+      <div>
         <label className="field-label">症状・理由（空欄→「変更指示」）</label>
         <input
-          type="text" className="field-input"
+          type="text" className="field-input rx-input"
           value={value.reason}
           onChange={e => onChange({ ...value, reason: e.target.value })}
           placeholder="例：発熱・疼痛・便秘"
         />
       </div>
-      <div>
-        <label className="field-label">開始日</label>
-        <input
-          type="date" className="field-input"
-          value={value.start_date}
-          onChange={e => handleStartChange({ start_date: e.target.value })}
-        />
+
+      <div className="rx-row">
+        <div>
+          <label className="field-label">開始日</label>
+          <input
+            type="date" className="field-input rx-input"
+            value={value.start_date}
+            onChange={e => handleStartChange({ start_date: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="field-label">開始タイミング</label>
+          <select
+            className="field-input rx-input"
+            value={value.start_timing}
+            onChange={e => handleStartChange({ start_timing: e.target.value })}
+          >
+            <option value="朝">朝</option>
+            <option value="昼">昼</option>
+            <option value="夕">夕</option>
+            <option value="眠前">眠前</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label className="field-label">開始タイミング</label>
-        <select
-          className="field-input"
-          value={value.start_timing}
-          onChange={e => handleStartChange({ start_timing: e.target.value })}
-        >
-          <option value="朝">朝</option>
-          <option value="昼">昼</option>
-          <option value="夕">夕</option>
-          <option value="眠前">眠前</option>
-        </select>
+
+      <div className="rx-row">
+        <div>
+          <label className="field-label">終了日</label>
+          <input
+            type="date" className="field-input rx-input"
+            value={value.end_date}
+            onChange={e => handleEndDateChange(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="field-label">終了タイミング</label>
+          <select
+            className="field-input rx-input"
+            value={value.end_timing}
+            onChange={e => onChange({ ...value, end_timing: e.target.value })}
+          >
+            <option value="朝">朝</option>
+            <option value="昼">昼</option>
+            <option value="夕">夕</option>
+            <option value="眠前">眠前</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label className="field-label">終了日</label>
-        <input
-          type="date" className="field-input"
-          value={value.end_date}
-          onChange={e => handleEndDateChange(e.target.value)}
-        />
-      </div>
-      <div>
-        <label className="field-label">終了タイミング</label>
-        <select
-          className="field-input"
-          value={value.end_timing}
-          onChange={e => onChange({ ...value, end_timing: e.target.value })}
-        >
-          <option value="朝">朝</option>
-          <option value="昼">昼</option>
-          <option value="夕">夕</option>
-          <option value="眠前">眠前</option>
-        </select>
-      </div>
-      <div>
+
+      <div className="rx-field-45">
         <label className="field-label">日数</label>
         <input
-          type="number" inputMode="numeric" className="field-input" min="1"
+          type="number" inputMode="numeric" className="field-input rx-input" min="1"
           value={value.days}
           onChange={e => handleDaysChange(e.target.value)}
           placeholder="自動"
         />
       </div>
-      <div className="temp-field-normal">
+      <div>
         <label className="field-label">薬剤名・用法等</label>
         <input
-          type="text" className="field-input"
+          type="text" className="field-input rx-input"
           value={value.drug_name}
           onChange={e => onChange({ ...value, drug_name: e.target.value })}
           placeholder="例：ロキソプロフェン60mg 飲み切り / ムコスタ100mg 2錠 飲み切り"
@@ -825,10 +832,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
         {/* 入力フォーム：臨時薬 */}
         {addMode === 'temporary' && (
-          <div style={{
-            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
-            borderRadius: 8, padding: 12, marginBottom: 12,
-          }}>
+          <div className="rx-form-box">
             <div className="log-form-grid temp-log-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
               <TemporaryLogFields value={tempForm} onChange={setTempForm} />
             </div>
