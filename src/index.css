@@ -328,10 +328,10 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* 臨時薬フォーム：2カラム構成を維持（指示日・症状理由・プレビューは全幅） */
+  /* 臨時薬フォーム：2カラム構成を維持（指示日・症状理由・プレビューは全幅）／幅比率は左55%:右35%+gap */
   .temp-log-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
+    grid-template-columns: 55fr 35fr !important;
+    gap: 8px !important;
   }
   .temp-log-grid .temp-field-full {
     grid-column: 1 / -1;
@@ -354,9 +354,10 @@ body {
     max-width: 60px;
   }
 
-  /* 他科受診フォームグリッド：2カラム構成を維持し、gapのみ詰める */
+  /* 他科受診フォームグリッド：2カラム構成（左55%:右35%+gap）に統一 */
   .visit-form-grid {
-    gap: 6px !important;
+    grid-template-columns: 55fr 35fr !important;
+    gap: 8px !important;
   }
 
   /* 他科受診フォーム：入力欄の縦幅を統一し、開始日・終了日は日数欄と同じ幅に */
