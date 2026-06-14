@@ -481,12 +481,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   }
 
   const add = async () => {
-    if (!content.trim()) return
+    if (!instrDate) return
     setAdding(true)
     await db.addLog(patient.id, {
       changed_at: instrDate,
       reason:     reason.trim(),
-      start_date: startDate || instrDate,
+      start_date: startDate || null,
       content:    content.trim(),
     })
     resetForm()
@@ -612,6 +612,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     const instrD       = fmtMMDD(log.changed_at)
     const hasStartDate = !!log.start_date
     const startD       = hasStartDate ? fmtMMDD(log.start_date) : null
+    const hasContent   = !!log.content?.trim()
 
     const actions = archived
       ? [
@@ -697,7 +698,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                     　{log.drug_name}
                   </div>
                 </>
-              ) : hasStartDate ? (
+              ) : hasContent && hasStartDate ? (
                 <>
                   <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
                     <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
@@ -708,10 +709,15 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                     　{log.content}
                   </div>
                 </>
-              ) : (
+              ) : hasContent ? (
                 <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
                   <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
                   　{log.content}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
+                  <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                  　{displayReason}
                 </div>
               )}
             </div>
@@ -823,7 +829,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
               <button className="btn btn-outline btn-sm" onClick={closeAddForm}>キャンセル</button>
-              <button className="btn btn-primary btn-sm" onClick={add} disabled={adding || !content.trim()}>
+              <button className="btn btn-primary btn-sm" onClick={add} disabled={adding || !instrDate}>
                 {adding ? '…' : '追加'}
               </button>
             </div>

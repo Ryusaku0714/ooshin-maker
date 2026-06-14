@@ -51,10 +51,14 @@ export function formatChangeLogText(log) {
   }
   const reason = log.reason?.trim() || '指示受け'
   const instrDate = fmtMMDD(log.changed_at)
+  const content = log.content?.trim()
+  if (!content) {
+    return `${instrDate}　${reason}`
+  }
   if (log.start_date) {
     const startDate = fmtMMDD(log.start_date)
-    return `${instrDate}　${reason}\n${startDate}〜${log.content}`
+    return `${instrDate}　${reason}\n${startDate}〜${content}`
   }
   // 旧形式（start_date なし）のバックワード互換
-  return `${instrDate}　${log.content}`
+  return `${instrDate}　${content}`
 }
