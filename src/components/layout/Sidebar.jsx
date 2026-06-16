@@ -3,9 +3,11 @@ import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
 import MemoModal from '../modals/MemoModal'
+import ImportModal from '../modals/ImportModal'
 import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
 import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
+import { exportTeamData } from '../../lib/teamExportImport'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -289,6 +291,7 @@ export default function Sidebar({
   const [showAddFacility, setShowAddFacility] = useState(false)
   const [addTeamFacilityId, setAddTeamFacilityId] = useState(null)
   const [addPatientTeamId, setAddPatientTeamId] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   // 施設名インライン編集
   const [editFacId,   setEditFacId]   = useState(null)
@@ -687,6 +690,11 @@ export default function Sidebar({
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
                                 <button
+                                  onClick={() => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message))}
+                                  title="チームデータをエクスポート"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >📤</button>
+                                <button
                                   onClick={() => printTeamLogs(team, facility.name)}
                                   title="変更記録一括印刷"
                                   style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
@@ -786,6 +794,11 @@ export default function Sidebar({
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
                                 <button
+                                  onClick={() => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message))}
+                                  title="チームデータをエクスポート"
+                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                >📤</button>
+                                <button
                                   onClick={() => printTeamLogs(team, facility.name)}
                                   title="変更記録一括印刷"
                                   style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
@@ -861,6 +874,14 @@ export default function Sidebar({
             🏠 ＋ 施設 / 個人在宅を追加
           </div>
 
+          <div
+            onClick={() => setShowImport(true)}
+            className="add-link"
+            style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            📥 ＋ インポート
+          </div>
+
           <LegalFooter />
         </div>
       </div>
@@ -895,6 +916,12 @@ export default function Sidebar({
             onRefetch()
           }}
           onClose={() => setMemoTarget(null)}
+        />
+      )}
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onImported={() => { setShowImport(false); onRefetch() }}
         />
       )}
     </>
