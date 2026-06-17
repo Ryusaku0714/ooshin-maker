@@ -8,6 +8,7 @@ import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
 import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
 import { exportTeamData } from '../../lib/teamExportImport'
+import TeamHeaderMenu from './TeamHeaderMenu'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -393,6 +394,38 @@ export default function Sidebar({
     setOpenFacilities(prev => ({ ...prev, [facilityId]: !prev[facilityId] }))
   }
 
+  // チームヘッダーのボタン（印刷・チームメモ・編集・エクスポート・削除）の項目＋説明文
+  // スマホ版の「…」メニューとPC版のツールチップで共通利用する
+  const teamMenuActions = (team, facility, isHomeCare) => [
+    {
+      key: 'export', icon: '📤', label: 'エクスポート', description: '患者データをJSON出力',
+      onClick: () => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message)),
+    },
+    {
+      key: 'print', icon: '🖨️', label: '印刷', description: 'チーム全患者を印刷',
+      onClick: () => printTeamLogs(team, facility.name),
+    },
+    {
+      key: 'memo', icon: '📝', label: 'チームメモ', description: 'チーム共有メモを編集',
+      onClick: () => setMemoTarget({
+        type: 'team', id: team.id,
+        name: isHomeCare ? '在宅患者' : [team.clinic_name, team.team_name].filter(Boolean).join(' '),
+        memo: team.memo ?? '',
+      }),
+    },
+    {
+      key: 'edit', icon: isHomeCare ? '⚙️' : '✏️', label: '編集',
+      description: isHomeCare ? '処方設定を変更' : 'チーム名・設定を変更',
+      onClick: e => startEditTeam(e, team, isHomeCare),
+    },
+    {
+      key: 'delete', icon: '🗑️', label: '削除', description: 'このチームを削除',
+      onClick: e => deleteTeam(e, team),
+    },
+  ]
+
+  const teamMenuTip = a => `${a.icon} ${a.label}　${a.description}`
+
   // 在宅処方設定フォームの派生値（editTeamVisitDate / editTeamGraceDays / editTeamRxDays から計算）
   const editRxStartDate = (() => {
     if (!editTeamVisitDate) return ''
@@ -564,6 +597,8 @@ export default function Sidebar({
                     const isOpen = openTeams[team.id] !== false
                     const patients = sortPatients(team.om_patients, sort)
                     const hasPatients = patients.length > 0
+                    const menuActions = teamMenuActions(team, facility, isHomeCare)
+                    const [expA, printA, memoA, editA, delA] = menuActions
 
                     return (
                       <div
@@ -689,31 +724,34 @@ export default function Sidebar({
                                 onClick={e => e.stopPropagation()}
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
-                                <button
-                                  onClick={() => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message))}
-                                  title="チームデータをエクスポート"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >📤</button>
-                                <button
-                                  onClick={() => printTeamLogs(team, facility.name)}
-                                  title="変更記録一括印刷"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >🖨️</button>
-                                <button
-                                  onClick={() => setMemoTarget({ type: 'team', id: team.id, name: '在宅患者', memo: team.memo ?? '' })}
-                                  title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid #86efac', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >📝</button>
-                                <button
-                                  onClick={e => startEditTeam(e, team, true)}
-                                  title="処方設定を編集"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >⚙️</button>
-                                <button
-                                  onClick={e => deleteTeam(e, team)}
-                                  title="在宅を削除"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >🗑️</button>
+                                <div className="row-actions-desktop" style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                  <button
+                                    onClick={expA.onClick}
+                                    title={teamMenuTip(expA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >📤</button>
+                                  <button
+                                    onClick={printA.onClick}
+                                    title={teamMenuTip(printA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >🖨️</button>
+                                  <button
+                                    onClick={memoA.onClick}
+                                    title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid #86efac', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >📝</button>
+                                  <button
+                                    onClick={editA.onClick}
+                                    title={teamMenuTip(editA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >⚙️</button>
+                                  <button
+                                    onClick={delA.onClick}
+                                    title={teamMenuTip(delA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >🗑️</button>
+                                </div>
+                                <TeamHeaderMenu actions={menuActions} triggerStyle={{ border: '1px solid #86efac', background: 'white', color: '#16a34a' }} />
                               </div>
                             </div>
                           )
@@ -793,31 +831,34 @@ export default function Sidebar({
                                 onClick={e => e.stopPropagation()}
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
-                                <button
-                                  onClick={() => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message))}
-                                  title="チームデータをエクスポート"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >📤</button>
-                                <button
-                                  onClick={() => printTeamLogs(team, facility.name)}
-                                  title="変更記録一括印刷"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >🖨️</button>
-                                <button
-                                  onClick={() => setMemoTarget({ type: 'team', id: team.id, name: [team.clinic_name, team.team_name].filter(Boolean).join(' '), memo: team.memo ?? '' })}
-                                  title={team.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid var(--sky-200)', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >📝</button>
-                                <button
-                                  onClick={e => startEditTeam(e, team, false)}
-                                  title="チームを編集"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >✏️</button>
-                                <button
-                                  onClick={e => deleteTeam(e, team)}
-                                  title="チームを削除"
-                                  style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                >🗑️</button>
+                                <div className="row-actions-desktop" style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                  <button
+                                    onClick={expA.onClick}
+                                    title={teamMenuTip(expA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >📤</button>
+                                  <button
+                                    onClick={printA.onClick}
+                                    title={teamMenuTip(printA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >🖨️</button>
+                                  <button
+                                    onClick={memoA.onClick}
+                                    title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid var(--sky-200)', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >📝</button>
+                                  <button
+                                    onClick={editA.onClick}
+                                    title={teamMenuTip(editA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >✏️</button>
+                                  <button
+                                    onClick={delA.onClick}
+                                    title={teamMenuTip(delA)}
+                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                                  >🗑️</button>
+                                </div>
+                                <TeamHeaderMenu actions={menuActions} triggerStyle={{ border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)' }} />
                               </div>
                             </div>
                           )
