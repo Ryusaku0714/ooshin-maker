@@ -17,20 +17,22 @@ const EMPTY_VISIT = {
 }
 
 // 日数入力 → 終了日・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
+// 開始タイミング未選択時は朝開始扱い（末日+0日）で計算し、終了タイミングは表示しない
 function recalcFromDays(next) {
   const n = parseInt(next.days)
-  if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.dispensing_from && next.medication_timing) {
-    const { endDate, endTiming } = computeTemporaryEnd(next.dispensing_from, next.medication_timing, n)
-    return { ...next, dispensing_to: endDate, medication_timing_end: endTiming }
+  if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.dispensing_from) {
+    const { endDate, endTiming } = computeTemporaryEnd(next.dispensing_from, next.medication_timing || '朝', n)
+    return { ...next, dispensing_to: endDate, medication_timing_end: next.medication_timing ? endTiming : '' }
   }
   return next
 }
 
 // 終了日入力 → 日数・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
+// 開始タイミング未選択時は朝開始扱い（末日+0日）で計算し、終了タイミングは表示しない
 function recalcFromEndDate(next) {
-  if (next.dispensing_to && next.dispensing_from && next.medication_timing) {
-    const { days, endTiming } = computeTemporaryDays(next.dispensing_from, next.medication_timing, next.dispensing_to)
-    if (days > 0) return { ...next, days: String(days), medication_timing_end: endTiming }
+  if (next.dispensing_to && next.dispensing_from) {
+    const { days, endTiming } = computeTemporaryDays(next.dispensing_from, next.medication_timing || '朝', next.dispensing_to)
+    if (days > 0) return { ...next, days: String(days), medication_timing_end: next.medication_timing ? endTiming : '' }
   }
   return next
 }
@@ -40,8 +42,8 @@ function toFormData(v) {
   const from   = v.dispensing_from   ?? v.dispensing_date ?? ''
   const to     = v.dispensing_to     ?? ''
   let days = (v.days != null && v.days !== '') ? String(v.days) : ''
-  if (!days && from && to && startT) {
-    const computed = computeTemporaryDays(from, startT, to)
+  if (!days && from && to) {
+    const computed = computeTemporaryDays(from, startT || '朝', to)
     if (computed.days > 0) days = String(computed.days)
   }
   return {
