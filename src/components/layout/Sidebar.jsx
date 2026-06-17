@@ -699,6 +699,7 @@ export default function Sidebar({
                             /* 個人在宅 コンパクト操作行 */
                             <div
                               onClick={() => toggleTeam(team.id)}
+                              className="team-row"
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
                                 padding: '5px 8px',
@@ -706,21 +707,23 @@ export default function Sidebar({
                                 borderBottom: (isOpen && hasPatients) ? `1px solid ${cs.teamBorder}` : 'none',
                                 cursor: 'pointer',
                               }}>
-                              {/* 開閉アイコン */}
-                              <span style={{ fontSize: 9, color: '#16a34a', flexShrink: 0, width: 11, textAlign: 'center' }}>
-                                {isOpen ? '▼' : '▶'}
-                              </span>
-                              {/* 在宅患者ラベル */}
-                              <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0 }}>
-                                🏠 在宅患者
-                                {team.pharmacist_name && (
-                                  <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 400, marginLeft: 6 }}>
-                                    👤 {team.pharmacist_name}
-                                  </span>
-                                )}
-                              </span>
+                              {/* チーム名（開閉アイコン＋在宅患者ラベル） */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: 9, color: '#16a34a', flexShrink: 0, width: 11, textAlign: 'center' }}>
+                                  {isOpen ? '▼' : '▶'}
+                                </span>
+                                <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0 }}>
+                                  🏠 在宅患者
+                                  {team.pharmacist_name && (
+                                    <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 400, marginLeft: 6 }}>
+                                      👤 {team.pharmacist_name}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
                               {/* 1行ボタングループ */}
                               <div
+                                className="team-row-actions"
                                 onClick={e => e.stopPropagation()}
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >
@@ -800,6 +803,7 @@ export default function Sidebar({
                           ) : (
                             <div
                               onClick={() => toggleTeam(team.id)}
+                              className="team-row"
                               style={{
                                 fontSize: 10, fontWeight: 700,
                                 color: selectedTeamId === team.id ? 'var(--sky-800)' : 'var(--sky-700)',
@@ -828,6 +832,7 @@ export default function Sidebar({
                               </div>
                               {/* 1行ボタングループ */}
                               <div
+                                className="team-row-actions"
                                 onClick={e => e.stopPropagation()}
                                 style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
                               >

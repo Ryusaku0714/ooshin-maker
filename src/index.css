@@ -200,6 +200,18 @@ body {
   white-space: nowrap;
 }
 
+/* ── チームヘッダー：PC版（769px以上）は2行構成（1行目チーム名／2行目操作ボタン）に ── */
+@media (min-width: 769px) {
+  .team-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .team-row-actions {
+    justify-content: flex-end !important;
+    margin-top: 4px;
+  }
+}
+
 /* ── 変更記録：「＋追加」の定期変更／臨時薬 選択メニュー ── */
 .add-menu-overlay {
   position: fixed;
