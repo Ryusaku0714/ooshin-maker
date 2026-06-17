@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
 import RowActionsMenu from '../common/RowActionsMenu'
@@ -90,11 +90,22 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
   const [visitForm,     setVisitForm]     = useState({ ...EMPTY_VISIT })
   const [savingVisit,   setSavingVisit]   = useState(false)
   const [showArchived,  setShowArchived]  = useState(false)
+  const notesRef = useRef(null)
 
   // patient 更新時に visits を同期
   useEffect(() => {
     setVisits(patient?.other_visits ?? [])
   }, [patient?.other_visits])
+
+  // 備考欄：入力内容に応じて高さを自動調整（最小1行、最大は制限なし）
+  const resizeNotes = (el) => {
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = el.scrollHeight + 'px'
+  }
+  useEffect(() => {
+    if (showVisitForm) resizeNotes(notesRef.current)
+  }, [showVisitForm, editingId])
 
   const activeVisits   = visits.filter(v => !(v.is_archived ?? false))
   const archivedVisits = visits.filter(v =>   v.is_archived ?? false)
@@ -120,6 +131,11 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
   const handleEndDateChange = (val) => {
     setVisitForm(f => recalcFromEndDate({ ...f, dispensing_to: val }))
+  }
+
+  const handleNotesChange = (e) => {
+    setVisitForm(f => ({ ...f, notes: e.target.value }))
+    resizeNotes(e.target)
   }
 
   const openAddVisit = () => {
@@ -290,9 +306,14 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
             <div style={{ gridColumn: '1/-1' }}>
               <label className="field-label">備考</label>
-              <input
-                className="field-input rx-input" value={visitForm.notes}
-                onChange={upV('notes')} placeholder="メモなど"
+              <textarea
+                ref={notesRef}
+                className="field-input rx-input"
+                rows={1}
+                style={{ resize: 'none', overflowY: 'hidden' }}
+                value={visitForm.notes}
+                onChange={handleNotesChange}
+                placeholder="メモなど"
               />
             </div>
           </div>

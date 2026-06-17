@@ -17,7 +17,7 @@ function fmtWithDay(dateStr) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}（${DAY_LABELS[d.getDay()]}）`
 }
 
-function CalcTool({ visitCalc }) {
+function CalcTool({ visitCalc, onUseForTemp }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
   const [startTiming, setStartTiming] = useState('朝')
   const [manualDays,  setManualDays]  = useState('')
@@ -50,6 +50,8 @@ function CalcTool({ visitCalc }) {
   let periodText = ''
   let daysText   = ''
   let periodCopyDays = ''
+  let periodEndDate   = ''
+  let periodEndTiming = ''
 
   if (addStart) {
     if (isManual) {
@@ -60,6 +62,8 @@ function CalcTool({ visitCalc }) {
       periodText     = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       daysText       = `${days}日分`
       periodCopyDays = `${days}日分`
+      periodEndDate   = endStr
+      periodEndTiming = endTiming
     } else if (rxEnd) {
       const start = new Date(addStart + 'T00:00:00')
       const end   = new Date(rxEnd    + 'T00:00:00')
@@ -78,6 +82,8 @@ function CalcTool({ visitCalc }) {
   // 指定末日計算：指定末日の眠前を必ず含む日数・終了タイミングを求める
   let targetPeriodText = ''
   let targetDaysText   = ''
+  let targetEndDate    = ''
+  let targetEndTiming  = ''
   if (addStart && targetDate) {
     const start    = new Date(addStart   + 'T00:00:00')
     const end      = new Date(targetDate + 'T00:00:00')
@@ -89,6 +95,8 @@ function CalcTool({ visitCalc }) {
       const endStr = addDaysToStr(addStart, daysOffset)
       targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       targetDaysText   = `${tDays}日分`
+      targetEndDate    = endStr
+      targetEndTiming  = endTiming
     }
   }
 
@@ -110,6 +118,16 @@ function CalcTool({ visitCalc }) {
     await navigator.clipboard.writeText(text)
     setCopiedTarget(true)
     setTimeout(() => setCopiedTarget(false), 1500)
+  }
+
+  const handleUseForTempPeriod = () => {
+    if (!periodEndDate || !periodEndTiming) return
+    onUseForTemp?.({ startDate: addStart, startTiming, endDate: periodEndDate, endTiming: periodEndTiming })
+  }
+
+  const handleUseForTempTarget = () => {
+    if (!targetEndDate || !targetEndTiming) return
+    onUseForTemp?.({ startDate: addStart, startTiming, endDate: targetEndDate, endTiming: targetEndTiming })
   }
 
   return (
@@ -206,9 +224,16 @@ function CalcTool({ visitCalc }) {
                     {daysText}
                   </div>
                 </div>
-                <button type="button" onClick={handleCopyPeriod} style={calcCopyBtnStyle}>
-                  {copiedPeriod ? '✅' : '日付コピー'}
-                </button>
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}>
+                  <button type="button" onClick={handleCopyPeriod} style={calcCopyBtnStyle}>
+                    {copiedPeriod ? '✅' : '日付コピー'}
+                  </button>
+                  {isManual && (
+                    <button type="button" onClick={handleUseForTempPeriod} style={calcCopyBtnStyle}>
+                      臨時薬に使う
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -228,9 +253,14 @@ function CalcTool({ visitCalc }) {
                     {targetDaysText}
                   </div>
                 </div>
-                <button type="button" onClick={handleCopyTarget} style={calcCopyBtnStyle}>
-                  {copiedTarget ? '✅' : '日付コピー'}
-                </button>
+                <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}>
+                  <button type="button" onClick={handleCopyTarget} style={calcCopyBtnStyle}>
+                    {copiedTarget ? '✅' : '日付コピー'}
+                  </button>
+                  <button type="button" onClick={handleUseForTempTarget} style={calcCopyBtnStyle}>
+                    臨時薬に使う
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -473,6 +503,21 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   }
 
   const resetTempForm = () => setTempForm(blankTempForm(instrDate))
+
+  // 日数計算ツールの結果を臨時薬追加フォームに反映
+  const useCalcResultForTemp = ({ startDate, startTiming, endDate, endTiming }) => {
+    const computed = computeTemporaryDays(startDate, startTiming, endDate)
+    setTempForm({
+      ...blankTempForm(instrDate),
+      start_date:   startDate,
+      start_timing: startTiming,
+      end_date:     endDate,
+      end_timing:   endTiming,
+      days:         computed.days > 0 ? String(computed.days) : '',
+    })
+    setShowAddMenu(false)
+    setAddMode('temporary')
+  }
 
   const closeAddForm = () => {
     setAddMode(null)
@@ -733,7 +778,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
   return (
     <>
-      <CalcTool visitCalc={visitCalc} />
+      <CalcTool visitCalc={visitCalc} onUseForTemp={useCalcResultForTemp} />
 
       <div className="card">
         <div className="card-title">
