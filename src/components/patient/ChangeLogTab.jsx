@@ -671,12 +671,15 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
           { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: () => del(log.id) },
         ]
 
+    const rowBg = i % 2 === 0 ? '#ffffff' : '#f7f8fa'
+
     return (
       <div key={log.id} style={{
         padding: isEditing ? 0 : '8px 0',
         borderBottom: (!isEditing && i < arr.length - 1) ? '1px solid var(--sky-50)' : 'none',
         marginBottom: isEditing ? 8 : 0,
         opacity: archived ? 0.7 : 1,
+        backgroundColor: rowBg,
       }}>
         {isEditing ? (
           <div style={{
@@ -731,13 +734,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             <div style={{ flex: 1, fontSize: 12 }}>
               {log.log_type === 'temporary' ? (
                 <>
-                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                    <span className="log-badge-temp">臨時</span>
-                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{fmtMMDD(log.changed_at)}</span>
+                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{fmtMMDD(log.changed_at)}</span>
                     　{log.reason?.trim() || '変更指示'}
                   </div>
                   <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>
+                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>
                       {fmtMMDD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMMDD(log.end_date)}{log.end_timing}
                     </span>
                     　{log.drug_name}
@@ -745,28 +747,31 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 </>
               ) : hasContent && hasStartDate ? (
                 <>
-                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', fontWeight: 600, lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
                     　{displayReason}
                   </div>
                   <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{startD}〜</span>
+                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{startD}〜</span>
                     　{log.content}
                   </div>
                 </>
               ) : hasContent ? (
                 <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                  <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                  <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
                   　{log.content}
                 </div>
               ) : (
                 <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                  <span className="log-date-span" style={{ fontWeight: 700, color: 'var(--sky-600)' }}>{instrD}</span>
+                  <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
                   　{displayReason}
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
+              {log.log_type === 'temporary' && (
+                <span className="log-badge-temp" style={{ margin: 0, alignSelf: 'center' }}>臨時</span>
+              )}
               <CopyButton title="この記録をコピー" getText={() => formatChangeLogText(log)} />
               <RowActionsMenu actions={actions} />
             </div>
