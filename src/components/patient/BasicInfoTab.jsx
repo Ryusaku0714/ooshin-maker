@@ -105,8 +105,8 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
           <input className="field-input" value={form.room_number} onChange={up('room_number')} />
         </div>
         <div>
-          <label className="field-label">イニシャル（任意）</label>
-          <input className="field-input" value={form.initial} onChange={up('initial')} placeholder="例：SS" />
+          <label className="field-label">略称（任意）</label>
+          <input className="field-input" value={form.initial} onChange={up('initial')} placeholder="例：SS / 鈴 / 山田" />
         </div>
         <div style={{ gridColumn: '1/-1' }}>
           <label className="field-label">病歴・既往歴（任意）</label>
