@@ -8,6 +8,40 @@ import VisitBanner from './components/layout/VisitBanner'
 import PatientDetail from './components/patient/PatientDetail'
 import ZanyakuKasanInfo from './components/modals/ZanyakuKasanInfo'
 
+function InfoModal({ title, onClose, children }) {
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 300, padding: 16,
+      }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{
+        background: 'white', borderRadius: 16, padding: 24,
+        width: '100%', maxWidth: 480, maxHeight: '90vh',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--sky-800)' }}>
+            {title}
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 1 }}
+          >✕</button>
+        </div>
+
+        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
   const { facilities, loading: facLoading, refetch } = useFacilities()
@@ -16,8 +50,8 @@ export default function App() {
   const [selectedTeamId, setSelectedTeamId] = useState(null)
   const [visitCalc, setVisitCalc] = useState(null)
   const [mobileView, setMobileView] = useState('list') // 'list' | 'detail'
-  const [showHelp,   setShowHelp]   = useState(false)
-  const [helpTab,    setHelpTab]    = useState('guide') // 'guide' | 'zanyaku'
+  const [showGuide,   setShowGuide]   = useState(false)
+  const [showZanyaku, setShowZanyaku] = useState(false)
 
   // 未保存変更の追跡（PatientDetail から通知される）
   const isDirtyRef = useRef(false)
@@ -69,7 +103,7 @@ export default function App() {
       <Navbar
         user={user}
         onSignOut={signOut}
-        onOpenZanyaku={() => { setHelpTab('zanyaku'); setShowHelp(true) }}
+        onOpenZanyaku={() => setShowZanyaku(true)}
       />
 
       {/* ④ モバイルタブバー */}
@@ -139,7 +173,7 @@ export default function App() {
 
       {/* ヘルプボタン（固定） */}
       <button
-        onClick={() => setShowHelp(true)}
+        onClick={() => setShowGuide(true)}
         style={{
           position: 'fixed', bottom: 20, right: 20, zIndex: 200,
           width: 44, height: 44, borderRadius: '50%',
@@ -154,107 +188,63 @@ export default function App() {
         title="使い方ガイド"
       >?</button>
 
-      {/* ヘルプモーダル */}
-      {showHelp && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 300, padding: 16,
-          }}
-          onClick={e => e.target === e.currentTarget && setShowHelp(false)}
-        >
-          <div style={{
-            background: 'white', borderRadius: 16, padding: 24,
-            width: '100%', maxWidth: 480, maxHeight: '90vh',
-            display: 'flex', flexDirection: 'column',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--sky-800)' }}>
-                ヘルプ
+      {/* 使い方ガイドモーダル */}
+      {showGuide && (
+        <InfoModal title="📘 使い方ガイド" onClose={() => setShowGuide(false)}>
+          {[
+            {
+              step: 'STEP 1',
+              title: '施設・チームを作る',
+              body: '左の「＋施設を追加」から施設名を入力。続けてチーム名・往診日・処方日数を設定。',
+            },
+            {
+              step: 'STEP 2',
+              title: '患者一覧を作る',
+              body: 'チームの中に「＋患者を追加」で部屋番号・イニシャルだけ入力してOK。詳細は往診しながら少しずつ埋めればOK。',
+            },
+            {
+              step: 'STEP 3',
+              title: '往診当日に記録する',
+              body: '変更があった患者だけ変更記録を入力。コピペボタンで薬歴にそのまま貼れます。',
+            },
+            {
+              step: 'STEP 4',
+              title: '慣れてきたら',
+              body: '外用薬・他科受診も登録していくと往診資料として完成度が上がります。',
+            },
+          ].map(({ step, title, body }) => (
+            <div key={step} style={{
+              display: 'flex', gap: 12, marginBottom: 16, alignItems: 'flex-start',
+            }}>
+              <div style={{
+                flexShrink: 0, width: 56, textAlign: 'center',
+                background: 'var(--sky-600)', color: 'white',
+                borderRadius: 8, padding: '4px 0', fontSize: 10, fontWeight: 700,
+                lineHeight: 1.4,
+              }}>
+                {step}
               </div>
-              <button
-                onClick={() => setShowHelp(false)}
-                style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 1 }}
-              >✕</button>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sky-900)', marginBottom: 3 }}>{title}</div>
+                <div style={{ fontSize: 12, color: 'var(--gray-500)', lineHeight: 1.7 }}>{body}</div>
+              </div>
             </div>
-
-            {/* タブ切り替え */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexShrink: 0 }}>
-              {[
-                { v: 'guide',   l: '📘 使い方ガイド' },
-                { v: 'zanyaku', l: '💊 残薬調整加算' },
-              ].map(o => (
-                <button
-                  key={o.v}
-                  onClick={() => setHelpTab(o.v)}
-                  style={{
-                    flex: 1, padding: '8px 6px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                    border: 'none', fontFamily: 'inherit', cursor: 'pointer',
-                    background: helpTab === o.v ? 'var(--sky-600)' : 'var(--sky-50)',
-                    color: helpTab === o.v ? 'white' : 'var(--sky-800)',
-                  }}
-                >{o.l}</button>
-              ))}
-            </div>
-
-            <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-              {helpTab === 'guide' ? (
-                <>
-                  {[
-                    {
-                      step: 'STEP 1',
-                      title: '施設・チームを作る',
-                      body: '左の「＋施設を追加」から施設名を入力。続けてチーム名・往診日・処方日数を設定。',
-                    },
-                    {
-                      step: 'STEP 2',
-                      title: '患者一覧を作る',
-                      body: 'チームの中に「＋患者を追加」で部屋番号・イニシャルだけ入力してOK。詳細は往診しながら少しずつ埋めればOK。',
-                    },
-                    {
-                      step: 'STEP 3',
-                      title: '往診当日に記録する',
-                      body: '変更があった患者だけ変更記録を入力。コピペボタンで薬歴にそのまま貼れます。',
-                    },
-                    {
-                      step: 'STEP 4',
-                      title: '慣れてきたら',
-                      body: '外用薬・他科受診も登録していくと往診資料として完成度が上がります。',
-                    },
-                  ].map(({ step, title, body }) => (
-                    <div key={step} style={{
-                      display: 'flex', gap: 12, marginBottom: 16, alignItems: 'flex-start',
-                    }}>
-                      <div style={{
-                        flexShrink: 0, width: 56, textAlign: 'center',
-                        background: 'var(--sky-600)', color: 'white',
-                        borderRadius: 8, padding: '4px 0', fontSize: 10, fontWeight: 700,
-                        lineHeight: 1.4,
-                      }}>
-                        {step}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sky-900)', marginBottom: 3 }}>{title}</div>
-                        <div style={{ fontSize: 12, color: 'var(--gray-500)', lineHeight: 1.7 }}>{body}</div>
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{
-                    background: 'var(--sky-50)', border: '1px solid var(--sky-100)',
-                    borderRadius: 10, padding: '10px 14px',
-                    fontSize: 12, color: 'var(--sky-800)', lineHeight: 1.7,
-                  }}>
-                    💡 完璧に埋めなくてOK！まず一覧を作るだけで十分使えます。
-                  </div>
-                </>
-              ) : (
-                <ZanyakuKasanInfo />
-              )}
-            </div>
+          ))}
+          <div style={{
+            background: 'var(--sky-50)', border: '1px solid var(--sky-100)',
+            borderRadius: 10, padding: '10px 14px',
+            fontSize: 12, color: 'var(--sky-800)', lineHeight: 1.7,
+          }}>
+            💡 完璧に埋めなくてOK！まず一覧を作るだけで十分使えます。
           </div>
-        </div>
+        </InfoModal>
+      )}
+
+      {/* 加算確認モーダル */}
+      {showZanyaku && (
+        <InfoModal title="💊 加算確認" onClose={() => setShowZanyaku(false)}>
+          <ZanyakuKasanInfo />
+        </InfoModal>
       )}
 
       {/* ④ モバイル対応スタイル */}
