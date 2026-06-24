@@ -105,4 +105,14 @@ export const db = {
       .order('changed_at', { ascending: false })
     return data ?? []
   },
+
+  // チーム全患者印刷（往診準備用）：患者IDリストの全データ（薬・変更ログ含む）を取得
+  getPatientsFull: async (patientIds) => {
+    if (!patientIds?.length) return []
+    const { data } = await supabase
+      .from('om_patients')
+      .select(`*, om_drugs(*), om_change_logs(*)`)
+      .in('id', patientIds)
+    return data ?? []
+  },
 }

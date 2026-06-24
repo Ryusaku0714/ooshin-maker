@@ -18,6 +18,7 @@
   --gray-700: #334155;
   --gray-900: #0f172a;
   --white: #ffffff;
+  --print-scale: 1;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -519,171 +520,181 @@ body {
 }
 
 /* ⑥ ── Print ── */
-@media print {
-  @page {
-    size: A4;
-    margin: 15mm 15mm 15mm 15mm;
-  }
+/* A4・上下左右15mmマージン（@pageは@media printでなくても印刷時のみ適用される） */
+@page {
+  size: A4;
+  margin: 15mm 15mm 15mm 15mm;
+}
 
-  /* 非表示にする要素 */
-  nav,
-  .sidebar,
-  .patient-actions,
-  .add-link,
-  .drug-actions,
-  .calc-tool,
-  .tabs,
-  .visit-banner,
-  .mobile-tabs-bar,
-  button:not(.print-show),
-  .icon-btn,
-  .row-actions-mobile,
-  .row-menu,
-  .row-menu-overlay {
-    display: none !important;
-  }
+/*
+ * 印刷直前に <body> へ "printing" クラスを付与してから window.print() を呼ぶことで、
+ * 実際の印刷レイアウトを画面上で事前計測できるようにする（@media print だと印刷確定後にしか
+ * レイアウトが確定せず、JSでの事前フォント縮小計算ができないため）。
+ * --print-scale はJSが二分探索的に縮小し、1ページに収まる最大値を都度セットする。
+ */
+body.printing {
+  background: white !important;
+  height: auto !important;
+  overflow: visible !important;
+  font-size: calc(11px * var(--print-scale)) !important;
+  line-height: 1.35 !important;
+}
 
-  /* ページ設定 */
-  body {
-    background: white !important;
-    height: auto !important;
-    overflow: visible !important;
-    font-size: 11px;
-  }
+/* 非表示にする要素 */
+body.printing nav,
+body.printing .sidebar,
+body.printing .patient-actions,
+body.printing .add-link,
+body.printing .drug-actions,
+body.printing .calc-tool,
+body.printing .tabs,
+body.printing .visit-banner,
+body.printing .mobile-tabs-bar,
+body.printing button:not(.print-show),
+body.printing .icon-btn,
+body.printing .row-actions-mobile,
+body.printing .row-menu,
+body.printing .row-menu-overlay {
+  display: none !important;
+}
 
-  .layout {
-    grid-template-columns: 1fr !important;
-    overflow: visible !important;
-  }
+body.printing .layout {
+  grid-template-columns: 1fr !important;
+  overflow: visible !important;
+}
 
-  .main,
-  .main-scroll {
-    overflow: visible !important;
-    padding: 0 !important;
-  }
+body.printing .main,
+body.printing .main-scroll {
+  overflow: visible !important;
+  padding: 0 !important;
+}
 
-  /* 通常のタブコンテンツを非表示 */
-  .tab-content {
-    display: none !important;
-  }
+/* 通常のタブコンテンツを非表示 */
+body.printing .tab-content {
+  display: none !important;
+}
 
-  /* 印刷専用コンテンツを表示 */
-  .print-all-tabs {
-    display: block !important;
-  }
+/* 印刷専用コンテンツを表示。印刷ページ幅に固定し、画面上の事前計測値と実際の印刷結果を一致させる */
+body.printing .print-all-tabs {
+  display: block !important;
+  width: 680px;
+  max-width: 680px;
+  margin: 0 auto;
+}
 
-  .print-section {
-    margin-bottom: 14px;
-  }
+body.printing .print-section {
+  margin-bottom: 8px;
+}
 
-  /* カードのスタイル調整 */
-  .card {
-    border: 1px solid #ddd !important;
-    box-shadow: none !important;
-    page-break-inside: avoid;
-    margin-bottom: 8px;
-  }
+/* カードのスタイル調整（余白を印刷用に最小化） */
+body.printing .card {
+  border: 1px solid #ddd !important;
+  box-shadow: none !important;
+  page-break-inside: avoid;
+  padding: 8px 10px !important;
+  margin-bottom: 6px !important;
+}
 
-  .card-title {
-    font-size: 10px !important;
-  }
+body.printing .card-title {
+  font-size: calc(10px * var(--print-scale)) !important;
+  margin-bottom: 6px !important;
+}
 
-  /* テキストサイズ調整 */
-  .field-input {
-    border: none !important;
-    padding: 2px 0 !important;
-    font-size: 11px !important;
-  }
+/* テキストサイズ調整 */
+body.printing .field-input {
+  border: none !important;
+  padding: 2px 0 !important;
+  font-size: calc(11px * var(--print-scale)) !important;
+}
 
-  /* 長文テキストフィールド：JS固定高さ・overflow隠蔽を解除して全文表示 */
-  textarea.field-input {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    white-space: pre-wrap !important;
-    resize: none !important;
-  }
+/* 長文テキストフィールド：JS固定高さ・overflow隠蔽を解除して全文表示 */
+body.printing textarea.field-input {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  white-space: pre-wrap !important;
+  resize: none !important;
+}
 
-  /* 3ヶ月未確認薬剤：黄色ハイライトを印刷でも維持 */
-  .drug-card.drug-unconfirmed {
-    background: #fffbeb !important;
-    border-bottom-color: #fde68a !important;
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
-  }
+/* 3ヶ月未確認薬剤：黄色ハイライトを印刷でも維持 */
+body.printing .drug-card.drug-unconfirmed {
+  background: #fffbeb !important;
+  border-bottom-color: #fde68a !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+}
 
-  /* 確認ボタンエリアは印刷不要 */
-  .drug-confirm-area {
-    display: none !important;
-  }
+/* 確認ボタンエリアは印刷不要 */
+body.printing .drug-confirm-area {
+  display: none !important;
+}
 
-  /* 印刷時のみ表示する未確認ラベル */
-  .drug-alert-print {
-    display: block !important;
-  }
+/* 印刷時のみ表示する未確認ラベル */
+body.printing .drug-alert-print {
+  display: block !important;
+}
 
-  /* 患者ヘッダー */
-  .patient-header {
-    margin-bottom: 4px;
-  }
+/* 患者ヘッダー */
+body.printing .patient-header {
+  margin-bottom: 4px;
+}
 
-  /* 往診情報行（印刷時のみ表示） */
-  .visit-info-print {
-    display: block !important;
-    font-size: 11px;
-    color: #475569;
-    margin-bottom: 10px;
-  }
+/* 往診情報行（印刷時のみ表示） */
+body.printing .visit-info-print {
+  display: block !important;
+  font-size: calc(11px * var(--print-scale));
+  color: #475569;
+  margin-bottom: 6px;
+}
 
-  /* 外用・頓用薬セクション：コンパクト1行表示 */
-  .drug-card {
-    display: flex !important;
-    padding: 2px 4px !important;
-    margin-bottom: 1px !important;
-    background: white !important;
-    border: none !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-    border-radius: 0 !important;
-    gap: 6px !important;
-    align-items: baseline !important;
-  }
-  .drug-content {
-    flex: 1 !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: baseline !important;
-    column-gap: 6px !important;
-    row-gap: 0 !important;
-  }
-  .drug-content > div {
-    display: inline !important;
-    margin-top: 0 !important;
-  }
-  .drug-content > div > span {
-    margin-right: 4px !important;
-  }
-  .drug-detail {
-    font-size: 9px !important;
-    color: #64748b !important;
-    margin-top: 0 !important;
-  }
-  .drug-badge {
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-  }
+/* 外用・頓用薬セクション：コンパクト1行表示 */
+body.printing .drug-card {
+  display: flex !important;
+  padding: 2px 4px !important;
+  margin-bottom: 1px !important;
+  background: white !important;
+  border: none !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-radius: 0 !important;
+  gap: 6px !important;
+  align-items: baseline !important;
+}
+body.printing .drug-content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  column-gap: 6px !important;
+  row-gap: 0 !important;
+}
+body.printing .drug-content > div {
+  display: inline !important;
+  margin-top: 0 !important;
+}
+body.printing .drug-content > div > span {
+  margin-right: 4px !important;
+}
+body.printing .drug-detail {
+  font-size: calc(9px * var(--print-scale)) !important;
+  color: #64748b !important;
+  margin-top: 0 !important;
+}
+body.printing .drug-badge {
+  font-size: calc(8px * var(--print-scale)) !important;
+  padding: 1px 4px !important;
+}
 
-  /* 変更記録：日付・指示理由テキストを黒・普通字体に統一（見出し .card-title は青のまま） */
-  .log-instr-header {
-    color: #0f172a !important;
-    font-weight: normal !important;
-  }
-  .log-date-span {
-    color: #0f172a !important;
-    font-weight: normal !important;
-  }
+/* 変更記録：日付・指示理由テキストを黒・普通字体に統一（見出し .card-title は青のまま） */
+body.printing .log-instr-header {
+  color: #0f172a !important;
+  font-weight: normal !important;
+}
+body.printing .log-date-span {
+  color: #0f172a !important;
+  font-weight: normal !important;
+}
 
-  /* 外用・頓用薬：数量テキストを黒に統一 */
-  .drug-qty-span {
-    color: #0f172a !important;
-  }
+/* 外用・頓用薬：数量テキストを黒に統一 */
+body.printing .drug-qty-span {
+  color: #0f172a !important;
 }

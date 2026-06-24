@@ -1,3 +1,5 @@
+import { printWithAutoFit } from '../../lib/printFit'
+
 export default function Navbar({ user, onSignOut }) {
   return (
     <nav style={{
@@ -34,7 +36,7 @@ export default function Navbar({ user, onSignOut }) {
             {user.user_metadata?.name ?? user.email}
           </span>
         )}
-        <button className="btn btn-outline btn-sm" onClick={() => window.print()}>🖨️ 印刷</button>
+        <button className="btn btn-outline btn-sm" onClick={() => printWithAutoFit()}>🖨️ 印刷</button>
         {user && (
           <button className="btn btn-outline btn-sm" onClick={onSignOut}>ログアウト</button>
         )}

@@ -6,6 +6,7 @@ import FreeMemoTab     from './FreeMemoTab'
 import OtherVisitsTab  from './OtherVisitsTab'
 import { usePatient }  from '../../hooks/useData'
 import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
+import { printWithAutoFit } from '../../lib/printFit'
 
 // タブ順序：基本情報 → 変更ログ → 外用・頓用薬 → 他科受診 → フリーメモ
 const TABS = [
@@ -98,9 +99,64 @@ function generatePatientMonthHTML(patient, logs, visitCalc) {
 </html>`
 }
 
+// 現在表示中の外用・頓用薬一覧（DrugsTab既定の処方日順）を別ウィンドウで印刷
+function generatePatientDrugsHTML(patient) {
+  const drugs = [...(patient?.om_drugs ?? [])]
+    .filter(d => !d.is_archived)
+    .sort((a, b) => {
+      const aDate = a.prescribed_at ? new Date(a.prescribed_at) : null
+      const bDate = b.prescribed_at ? new Date(b.prescribed_at) : null
+      if (!aDate && !bDate) return 0
+      if (!aDate) return 1
+      if (!bDate) return -1
+      return bDate - aDate
+    })
+
+  const drugsHTML = drugs.map(d => {
+    const type = d.drug_type === 'gaiyou' ? '外用' : '頓用'
+    const cd = sliceDate(d.last_confirmed_at)
+    return `<div class="log-entry">
+      <div class="log-date">${d.drug_name}　<span class="log-badge-temp" style="background:${type === '外用' ? '#e0f2fe' : '#fef3c7'};color:${type === '外用' ? '#0369a1' : '#92400e'};">${type}</span></div>
+      <div>${[
+        d.prescribed_quantity ? `数量：${d.prescribed_quantity}` : '',
+        d.remaining_quantity  ? `残：${d.remaining_quantity}`   : '',
+        d.description         || '',
+        cd                    ? `✅確認：${cd}` : '',
+        isUnconfirmedDrug(d)   ? '⚠️未確認'      : '',
+      ].filter(Boolean).join('　')}</div>
+    </div>`
+  }).join('')
+
+  const title = `外用・頓用薬一覧 - ${patient.room_number}${patient.initial ? '　' + patient.initial : ''}`
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; font-size: 12px; padding: 20px; color: #0f172a; }
+    h1 { font-size: 15px; font-weight: 700; border-bottom: 2px solid #075985; padding-bottom: 8px; margin-bottom: 14px; color: #075985; }
+    .log-entry { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e0f2fe; }
+    .log-date { font-weight: 700; color: #0284c7; margin-bottom: 3px; }
+    .log-badge-temp {
+      display: inline-block; font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 10px;
+      background: #fef3c7; color: #92400e; vertical-align: middle;
+    }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  ${drugsHTML || '<p style="color:#94a3b8;">登録されている外用・頓用薬はありません</p>'}
+</body>
+</html>`
+}
+
 export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [copied, setCopied]       = useState(false)
+  const [showLogMenu, setShowLogMenu] = useState(false)
   const { patient, loading, refetch } = usePatient(patientId)
 
   // 未保存変更の追跡：コンポーネント名をキーに保持し、いずれかが dirty なら親へ通知
@@ -117,6 +173,16 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
     dirtySet.current.clear()
     onDirtyChange?.(false)
   }, [patientId])
+
+  // 全体印刷で付与した印刷用クラス・縮小スケールを、印刷ダイアログを閉じた後に必ず元へ戻す
+  useEffect(() => {
+    const reset = () => {
+      document.body.classList.remove('printing')
+      document.documentElement.style.removeProperty('--print-scale')
+    }
+    window.addEventListener('afterprint', reset)
+    return () => window.removeEventListener('afterprint', reset)
+  }, [])
 
   if (!patientId) {
     return (
@@ -222,6 +288,18 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
     setTimeout(() => { w.focus(); w.print() }, 300)
   }
 
+  // 現在表示中の外用・頓用薬一覧を別ウィンドウで印刷
+  const printPatientDrugs = () => {
+    const html = generatePatientDrugsHTML(patient)
+    const w = window.open('', '_blank', 'width=800,height=600')
+    w.document.write(html)
+    w.document.close()
+    setTimeout(() => { w.focus(); w.print() }, 300)
+  }
+
+  // 1患者の全タブ情報を印刷：1ページに収まるようフォントサイズを自動縮小（最小10px、収まらない場合は自然に改ページ）
+  const printFullPatient = () => printWithAutoFit('.print-all-tabs')
+
   return (
     <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 52px' }}>
       {/* 患者ヘッダー */}
@@ -240,12 +318,25 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             </button>
             <span style={ACTION_CAP_STYLE}>1患者情報全コピー</span>
           </span>
-          <span style={ACTION_WRAP_STYLE}>
-            <button className="btn btn-outline btn-sm" onClick={printPatientMonth}>🖨️ 1ヶ月分</button>
-            <span style={ACTION_CAP_STYLE}>直近1ヶ月変更ログ</span>
+          <span style={{ ...ACTION_WRAP_STYLE, position: 'relative' }}>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowLogMenu(m => !m)}>🖨️ 1ヶ月分</button>
+            <span style={ACTION_CAP_STYLE}>ログ印刷メニュー</span>
+            {showLogMenu && (
+              <>
+                <div className="add-menu-overlay" onClick={() => setShowLogMenu(false)} />
+                <div className="add-menu">
+                  <button className="add-menu-item" onClick={() => { setShowLogMenu(false); printPatientMonth() }}>
+                    📝 変更ログのみ（1ヶ月分）
+                  </button>
+                  <button className="add-menu-item" onClick={() => { setShowLogMenu(false); printPatientDrugs() }}>
+                    💊 外用・頓用薬（表示全部）
+                  </button>
+                </div>
+              </>
+            )}
           </span>
           <span style={ACTION_WRAP_STYLE}>
-            <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ 全体印刷</button>
+            <button className="btn btn-primary btn-sm" onClick={printFullPatient}>🖨️ 全体印刷</button>
             <span style={ACTION_CAP_STYLE}>1患者情報印刷</span>
           </span>
         </div>

@@ -8,7 +8,9 @@ import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
 import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
 import { exportTeamData } from '../../lib/teamExportImport'
+import { fitFontSize, PRINT_PAGE_HEIGHT_PX, PRINT_PAGE_WIDTH_PX } from '../../lib/printFit'
 import TeamHeaderMenu from './TeamHeaderMenu'
+import PrintMenuButton from '../common/PrintMenuButton'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -85,6 +87,133 @@ ${patientsHTML || '<p>変更記録はありません</p>'}
   const w = window.open('', '_blank', 'width=800,height=600')
   w.document.write(html)
   w.document.close()
+  setTimeout(() => { w.focus(); w.print() }, 300)
+}
+
+function sliceDateSidebar(val) { return val ? String(val).slice(0, 10) : '' }
+function isUnconfirmedDrugSidebar(d) {
+  const ninety = new Date()
+  ninety.setDate(ninety.getDate() - 90)
+  const ref = d.last_confirmed_at || d.prescribed_at
+  if (!ref) return true
+  return new Date(sliceDateSidebar(ref)) < ninety
+}
+
+// チーム全患者印刷（往診準備用）：患者ごとに基本情報・変更記録・外用頓用薬・他科受診・フリーメモをまとめて印刷
+// 各患者を1ページ目安で改ページしつつ、収まらない場合は自然に2枚目へ続く
+async function printTeamAllPatients(team, facilityName) {
+  const allPatients = team.om_patients ?? []
+  const patientIds  = allPatients.map(p => p.id)
+  if (patientIds.length === 0) { alert('患者が登録されていません'); return }
+
+  const fullPatients = await db.getPatientsFull(patientIds)
+  const order = new Map(allPatients.map((p, i) => [p.id, i]))
+  fullPatients.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+
+  const sectionsHTML = fullPatients.map(p => {
+    const logs = [...(p.om_change_logs ?? [])]
+      .filter(l => !l.is_archived)
+      .sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at))
+    const drugs  = (p.om_drugs ?? []).filter(d => !d.is_archived)
+    const visits = (p.other_visits ?? []).filter(v => !(v.is_archived ?? false))
+
+    const basicFields = [
+      { label: '病歴・既往歴', value: p.medical_history },
+      { label: 'アレルギー歴', value: p.allergy_history },
+      { label: '入院歴',       value: p.hospitalization_history },
+      { label: '定時薬',       value: p.regular_medication },
+    ].filter(f => f.value?.trim())
+
+    const basicHTML = basicFields.length ? `<div class="sec">
+      <div class="sec-title">🏷️ 患者背景</div>
+      ${basicFields.map(f => `<div class="bf"><b>${f.label}：</b>${f.value}</div>`).join('')}
+    </div>` : ''
+
+    const logsHTML = logs.length ? `<div class="sec">
+      <div class="sec-title">📝 変更記録</div>
+      ${logs.map(log => {
+        if (log.log_type === 'temporary') {
+          return `<div class="le"><span class="bt">臨時</span>${formatChangeLogText(log).replace(/\n/g, '　')}</div>`
+        }
+        const reason = log.reason?.trim() || '指示受け'
+        const instrD = fmtMMDD(log.changed_at)
+        const startD = log.start_date ? fmtMMDD(log.start_date) : null
+        return `<div class="le"><span class="ld">${instrD}　${reason}</span>${startD ? `　<b>${startD}〜</b>　${log.content ?? ''}` : `　${log.content ?? ''}`}</div>`
+      }).join('')}
+    </div>` : ''
+
+    const drugsHTML = drugs.length ? `<div class="sec">
+      <div class="sec-title">💊 外用・頓用薬</div>
+      ${drugs.map(d => {
+        const type = d.drug_type === 'gaiyou' ? '外用' : '頓用'
+        const cd = sliceDateSidebar(d.last_confirmed_at)
+        return `<div class="le">
+          <span class="bt" style="background:${type === '外用' ? '#e0f2fe' : '#fef3c7'};color:${type === '外用' ? '#0369a1' : '#92400e'}">${type}</span>
+          ${d.drug_name}${d.prescribed_quantity ? `　${d.prescribed_quantity}` : ''}${d.remaining_quantity ? `　残：${d.remaining_quantity}` : ''}${d.description ? `　${d.description}` : ''}${cd ? `　確認：${cd}` : ''}${isUnconfirmedDrugSidebar(d) ? '　⚠️未確認' : ''}
+        </div>`
+      }).join('')}
+    </div>` : ''
+
+    const visitsHTML = visits.length ? `<div class="sec">
+      <div class="sec-title">🏥 他科受診</div>
+      ${visits.map(v => {
+        const from = v.dispensing_from ?? v.dispensing_date ?? ''
+        const to = v.dispensing_to ?? ''
+        const period = from && to ? `${from}〜${to}` : from ? `${from}〜` : to ? `〜${to}` : ''
+        return `<div class="le">${v.hospital}${v.department ? `／${v.department}` : ''}${period ? `　調剤：${period}` : ''}${v.next_visit_date ? `　次回：${v.next_visit_date}` : ''}${v.notes ? `　備考：${v.notes}` : ''}</div>`
+      }).join('')}
+    </div>` : ''
+
+    const memoHTML = p.free_memo?.trim() ? `<div class="sec">
+      <div class="sec-title">📄 フリーメモ</div>
+      <div class="bf" style="white-space:pre-wrap">${p.free_memo}</div>
+    </div>` : ''
+
+    const hasContent = basicHTML || logsHTML || drugsHTML || visitsHTML || memoHTML
+
+    return `<div class="ps">
+      <h2>${p.room_number}${p.initial ? '　' + p.initial : ''}</h2>
+      ${basicHTML}${logsHTML}${drugsHTML}${visitsHTML}${memoHTML}
+      ${hasContent ? '' : '<p class="empty">登録情報はありません</p>'}
+    </div>`
+  }).join('')
+
+  const teamLabel = [team.clinic_name, team.team_name].filter(Boolean).join(' ') || '在宅患者'
+  const now = new Date()
+  const today = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
+  const html = `<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>全患者印刷（往診準備用） - ${facilityName} / ${teamLabel}</title>
+<style>
+  * { box-sizing: border-box; }
+  body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;color:#0f172a;padding:16px;width:${PRINT_PAGE_WIDTH_PX}px;margin:0 auto}
+  h1{font-size:15px;font-weight:700;border-bottom:2px solid #075985;padding-bottom:8px;margin-bottom:10px;color:#075985}
+  .ps{font-size:11px;line-height:1.4;margin-bottom:6px;page-break-after:always}
+  .ps:last-child{page-break-after:auto}
+  h2{font-size:1.15em;font-weight:700;margin:0 0 6px;padding:3px 7px;background:#e0f2fe;color:#0369a1;border-radius:4px}
+  .sec{margin-bottom:6px}
+  .sec-title{font-size:1em;font-weight:700;color:#0284c7;margin-bottom:2px}
+  .bf{font-size:0.95em;margin-bottom:2px}
+  .le{font-size:0.95em;margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid #f1f5f9}
+  .ld{font-weight:700;color:#0284c7}
+  .bt{display:inline-block;font-size:0.8em;font-weight:700;padding:1px 5px;border-radius:8px;background:#fef3c7;color:#92400e;margin-right:4px;vertical-align:middle}
+  .empty{color:#94a3b8;font-size:0.9em}
+  @page{size:A4;margin:15mm}
+  @media print{body{padding:0}}
+</style></head><body>
+<h1>📋 全患者印刷（往診準備用） - ${facilityName} / ${teamLabel}　（${today}）</h1>
+${sectionsHTML || '<p>患者が登録されていません</p>'}
+</body></html>`
+
+  const w = window.open('', '_blank', 'width=800,height=600')
+  w.document.write(html)
+  w.document.close()
+
+  // 患者ごとに1ページへ収まるようフォントサイズを自動縮小（最小10px、収まらない場合は自然に改ページ）
+  w.document.querySelectorAll('.ps').forEach(sec => {
+    fitFontSize(sec, { maxFontPx: 11, minFontPx: 10, targetHeightPx: PRINT_PAGE_HEIGHT_PX - 50 })
+  })
+
   setTimeout(() => { w.focus(); w.print() }, 300)
 }
 
@@ -402,8 +531,17 @@ export default function Sidebar({
       onClick: () => exportTeamData(team, facility.name).catch(err => alert('エクスポートに失敗しました: ' + err.message)),
     },
     {
-      key: 'print', icon: '🖨️', label: '印刷', description: 'チーム全患者を印刷',
-      onClick: () => printTeamLogs(team, facility.name),
+      key: 'print', icon: '🖨️', label: '印刷', description: '変更ログ印刷／全患者印刷を選択',
+      options: [
+        {
+          label: '📝 変更ログ印刷（1ヶ月分）', description: '変更記録を一括印刷',
+          onClick: () => printTeamLogs(team, facility.name),
+        },
+        {
+          label: '📋 全患者印刷（往診準備用）', description: 'チーム全患者の情報をまとめて印刷',
+          onClick: () => printTeamAllPatients(team, facility.name),
+        },
+      ],
     },
     {
       key: 'memo', icon: '📝', label: 'チームメモ', description: 'チーム共有メモを編集',
@@ -733,11 +871,12 @@ export default function Sidebar({
                                     title={teamMenuTip(expA)}
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                                   >📤</button>
-                                  <button
-                                    onClick={printA.onClick}
+                                  <PrintMenuButton
+                                    icon="🖨️"
                                     title={teamMenuTip(printA)}
+                                    options={printA.options}
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >🖨️</button>
+                                  />
                                   <button
                                     onClick={memoA.onClick}
                                     title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}
@@ -842,11 +981,12 @@ export default function Sidebar({
                                     title={teamMenuTip(expA)}
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                                   >📤</button>
-                                  <button
-                                    onClick={printA.onClick}
+                                  <PrintMenuButton
+                                    icon="🖨️"
                                     title={teamMenuTip(printA)}
+                                    options={printA.options}
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >🖨️</button>
+                                  />
                                   <button
                                     onClick={memoA.onClick}
                                     title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}

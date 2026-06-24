@@ -4,10 +4,12 @@ import { createPortal } from 'react-dom'
 // チームヘッダーの操作メニュー（スマホ版用）
 // PC・タブレット（769px以上）：呼び出し側で横並びボタンをそのまま表示（本コンポーネントは非表示）
 // スマホ（768px以下）：「…」ボタン1つにまとめ、タップで各項目＋説明文をドロップダウン表示
+// 項目に options（印刷方法の2択など）がある場合は、同じドロップダウン内でサブメニューに切り替える
 // メニューはチームカードの overflow:hidden に見切れないよう document.body へポータル表示する
 export default function TeamHeaderMenu({ actions, triggerStyle }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState(null)
+  const [submenu, setSubmenu] = useState(null)
   const btnRef = useRef(null)
 
   const toggle = () => {
@@ -16,7 +18,10 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
       setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
     }
     setOpen(o => !o)
+    setSubmenu(null)
   }
+
+  const close = () => { setOpen(false); setSubmenu(null) }
 
   return (
     <div className="row-actions-mobile">
@@ -31,19 +36,40 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
       >⋯</button>
       {open && pos && createPortal(
         <>
-          <div className="row-menu-overlay" onClick={() => setOpen(false)} />
+          <div className="row-menu-overlay" onClick={close} />
           <div className="row-menu" style={{ position: 'fixed', top: pos.top, right: pos.right, minWidth: 210 }}>
-            {actions.map(a => (
-              <button
-                key={a.key}
-                type="button"
-                className="team-menu-item"
-                onClick={e => { setOpen(false); a.onClick(e) }}
-              >
-                <span className="team-menu-item-label"><span aria-hidden="true">{a.icon}</span>{a.label}</span>
-                <span className="team-menu-item-desc">{a.description}</span>
-              </button>
-            ))}
+            {submenu ? (
+              <>
+                <button type="button" className="team-menu-item" onClick={() => setSubmenu(null)}>
+                  <span className="team-menu-item-label">←　戻る</span>
+                </button>
+                {submenu.options.map((o, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="team-menu-item"
+                    onClick={() => { close(); o.onClick() }}
+                  >
+                    <span className="team-menu-item-label">{o.label}</span>
+                    {o.description && <span className="team-menu-item-desc">{o.description}</span>}
+                  </button>
+                ))}
+              </>
+            ) : (
+              actions.map(a => (
+                <button
+                  key={a.key}
+                  type="button"
+                  className="team-menu-item"
+                  onClick={e => { a.options ? setSubmenu(a) : (close(), a.onClick(e)) }}
+                >
+                  <span className="team-menu-item-label">
+                    <span aria-hidden="true">{a.icon}</span>{a.label}{a.options ? '　▸' : ''}
+                  </span>
+                  <span className="team-menu-item-desc">{a.description}</span>
+                </button>
+              ))
+            )}
           </div>
         </>,
         document.body
