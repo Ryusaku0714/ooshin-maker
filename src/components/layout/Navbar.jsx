@@ -1,6 +1,27 @@
+import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { printWithAutoFit } from '../../lib/printFit'
 
-export default function Navbar({ user, onSignOut }) {
+const NOTE_URL = 'https://note.com/gentle_pansy1797'
+
+export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
+  const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState(null)
+  const btnRef = useRef(null)
+
+  const displayName = user?.user_metadata?.name ?? user?.email ?? ''
+
+  const toggle = () => {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right })
+    }
+    setOpen(o => !o)
+  }
+  const close = () => setOpen(false)
+
+  const runAndClose = (fn) => () => { close(); fn() }
+
   return (
     <nav style={{
       background: 'rgba(255,255,255,0.92)',
@@ -30,17 +51,49 @@ export default function Navbar({ user, onSignOut }) {
         </svg>
         <span className="nav-title">往診資料メーカー</span>
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-        {user && (
-          <span className="nav-username" style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-            {user.user_metadata?.name ?? user.email}
-          </span>
-        )}
-        <button className="btn btn-outline btn-sm" onClick={() => printWithAutoFit()}>🖨️ 印刷</button>
-        {user && (
-          <button className="btn btn-outline btn-sm" onClick={onSignOut}>ログアウト</button>
-        )}
-      </div>
+
+      {user && (
+        <>
+          <button
+            ref={btnRef}
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={toggle}
+            title="メニュー"
+            aria-label="メニュー"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            style={{ fontSize: 16, lineHeight: 1, padding: '6px 11px' }}
+          >☰</button>
+          {open && pos && createPortal(
+            <>
+              <div className="row-menu-overlay" onClick={close} />
+              <div className="row-menu" style={{ position: 'fixed', top: pos.top, right: pos.right, minWidth: 200 }}>
+                <div className="nav-menu-username">{displayName}</div>
+                <div className="nav-menu-divider" />
+                <button type="button" className="row-menu-item" onClick={runAndClose(() => printWithAutoFit())}>
+                  🖨️ 印刷
+                </button>
+                <button type="button" className="row-menu-item" onClick={runAndClose(() => onOpenZanyaku?.())}>
+                  💊 加算確認
+                </button>
+                <button
+                  type="button"
+                  className="row-menu-item"
+                  onClick={runAndClose(() => window.open(NOTE_URL, '_blank', 'noopener,noreferrer'))}
+                >
+                  📝 公式note
+                </button>
+                <div className="nav-menu-divider" />
+                <button type="button" className="row-menu-item" style={{ color: '#dc2626' }} onClick={runAndClose(onSignOut)}>
+                  🚪 ログアウト
+                </button>
+              </div>
+            </>,
+            document.body
+          )}
+        </>
+      )}
     </nav>
   )
 }

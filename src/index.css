@@ -167,6 +167,22 @@ body {
 .row-menu-item:last-child { border-bottom: none; }
 .row-menu-item:hover { background: var(--sky-50); color: var(--sky-600); }
 
+/* ── ナビバーのハンバーガーメニュー：ユーザー名（タップ不可）・区切り線 ── */
+.nav-menu-username {
+  padding: 10px 12px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sky-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-menu-divider {
+  height: 1px;
+  background: var(--sky-100);
+  flex-shrink: 0;
+}
+
 /* ── チームヘッダーの操作メニュー（スマホ版）：項目＋説明文を縦並び表示 ── */
 .team-menu-item {
   background: white;
@@ -465,9 +481,6 @@ body {
   }
   .nav-title {
     font-size: 13px !important;
-  }
-  .nav-username {
-    display: none !important;
   }
 
   /* 往診設定バナー */

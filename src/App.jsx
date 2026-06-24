@@ -66,7 +66,11 @@ export default function App() {
 
   return (
     <>
-      <Navbar user={user} onSignOut={signOut} />
+      <Navbar
+        user={user}
+        onSignOut={signOut}
+        onOpenZanyaku={() => { setHelpTab('zanyaku'); setShowHelp(true) }}
+      />
 
       {/* ④ モバイルタブバー */}
       <div
