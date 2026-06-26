@@ -301,25 +301,32 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const printFullPatient = () => printWithAutoFit('.print-all-tabs')
 
   return (
-    <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 52px' }}>
+    <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '0 0 52px' }}>
       {/* 患者ヘッダー */}
-      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--sky-900)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          {patient.room_number}
-          {patient.initial && <span style={{ color: 'var(--sky-600)' }}>{patient.initial}</span>}
+      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', borderLeft: '4px solid #0f1f4e', padding: '14px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
+          {patient.initial ? (
+            <>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>{patient.room_number}</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.initial}</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.room_number}</span>
+          )}
         </div>
         <div className="patient-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <span style={ACTION_WRAP_STYLE}>
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-sm"
               onClick={copyPatientText}
+              style={{ background: 'white', color: '#64748b', border: '1.5px solid #dce4f0', borderRadius: 6 }}
             >
               {copied ? '✅ コピー済' : '📋 テキストコピー'}
             </button>
             <span style={ACTION_CAP_STYLE}>1患者情報全コピー</span>
           </span>
           <span style={{ ...ACTION_WRAP_STYLE, position: 'relative' }}>
-            <button className="btn btn-outline btn-sm" onClick={() => setShowLogMenu(m => !m)}>🖨️ 1ヶ月分</button>
+            <button className="btn btn-sm" onClick={() => setShowLogMenu(m => !m)} style={{ background: '#dbeafe', color: '#1e3a8a', border: 'none', borderRadius: 6 }}>🖨️ 1ヶ月分</button>
             <span style={ACTION_CAP_STYLE}>ログ印刷メニュー</span>
             {showLogMenu && (
               <>
@@ -336,7 +343,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             )}
           </span>
           <span style={ACTION_WRAP_STYLE}>
-            <button className="btn btn-primary btn-sm" onClick={printFullPatient}>🖨️ 全体印刷</button>
+            <button className="btn btn-sm" onClick={printFullPatient} style={{ background: '#0f1f4e', color: 'white', border: 'none', borderRadius: 6 }}>🖨️ 全体印刷</button>
             <span style={ACTION_CAP_STYLE}>1患者情報印刷</span>
           </span>
         </div>
@@ -351,8 +358,9 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
 
       {/* タブ */}
       <div className="tabs" style={{
-        display: 'flex', gap: 2, background: 'var(--sky-100)',
-        borderRadius: 10, padding: 3, marginBottom: 16,
+        display: 'flex', background: '#ffffff',
+        borderBottom: '2px solid #dce4f0',
+        padding: '0 20px', marginBottom: 0,
         flexWrap: 'wrap',
       }}>
         {TABS.map(t => (
@@ -360,13 +368,14 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             style={{
-              padding: '7px 10px', borderRadius: 7, fontSize: 11, cursor: 'pointer',
-              border: 'none', fontFamily: 'inherit', transition: 'all 0.15s',
-              background: activeTab === t.key ? 'white' : 'none',
-              color: activeTab === t.key ? 'var(--sky-800)' : 'var(--sky-600)',
-              fontWeight: activeTab === t.key ? 700 : 500,
-              boxShadow: activeTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-              borderBottom: activeTab === t.key ? '2px solid #c9a84c' : 'none',
+              padding: '8px 10px', fontSize: 11, cursor: 'pointer',
+              border: 'none', borderRadius: 0, fontFamily: 'inherit', transition: 'color 0.15s',
+              background: 'transparent',
+              color: activeTab === t.key ? '#0f1f4e' : '#94a3b8',
+              fontWeight: 700,
+              borderBottom: activeTab === t.key ? '3px solid #c9a84c' : '3px solid transparent',
+              marginBottom: '-2px',
+              boxShadow: 'none',
               flex: '1 1 auto', whiteSpace: 'nowrap',
             }}
           >{t.label}</button>

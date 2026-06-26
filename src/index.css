@@ -347,6 +347,11 @@ body.printing .regular-med-highlight {
   background: #eff6ff !important;
 }
 
+/* ── タブコンテンツのパディング（main-scrollのpadding-topを0にしたため） ── */
+.tab-content {
+  padding: 16px 20px 0;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -403,9 +408,18 @@ body.printing .regular-med-highlight {
 
   /* 患者詳細エリア */
   .main-scroll {
-    padding: 10px 12px !important;
+    padding: 0 0 52px !important;
     overflow-y: auto !important;
     min-height: 0;
+  }
+  .tab-content {
+    padding: 10px 12px 0 !important;
+  }
+  .patient-header {
+    padding: 12px 12px !important;
+  }
+  .tabs {
+    padding: 0 12px !important;
   }
 
   /* 変更ログフォームグリッド */
@@ -539,7 +553,16 @@ body.printing .regular-med-highlight {
 
   /* 患者詳細 */
   .main-scroll {
-    padding: 10px 10px !important;
+    padding: 0 0 52px !important;
+  }
+  .tab-content {
+    padding: 10px 10px 0 !important;
+  }
+  .patient-header {
+    padding: 12px 10px !important;
+  }
+  .tabs {
+    padding: 0 10px !important;
   }
 
   /* タブボタン */
@@ -678,6 +701,10 @@ body.printing .drug-alert-print {
 /* 患者ヘッダー */
 body.printing .patient-header {
   margin-bottom: 4px;
+  padding: 6px 0 6px 10px !important;
+  background: white !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
 }
 
 /* 往診情報行（印刷時のみ表示） */
