@@ -1,0 +1,30 @@
+:root {
+  /* カラー */
+  --color-primary: #0f1f4e;
+  --color-primary-mid: #1e3a8a;
+  --color-primary-light: #2563eb;
+  --color-accent: #2563eb;
+  --color-bg: #f1f5fb;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #ffffff;
+  --color-bg-tool: #0f1f4e;
+  --color-border: #dce4f0;
+  --color-text-primary: #0f1f4e;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-white: #e2e8f0;
+  --color-urgent: #dc2626;
+  --color-urgent-bg: #fee2e2;
+
+  /* シャドウ */
+  --shadow-card: 0 1px 4px rgba(15,31,78,0.06);
+  --shadow-app: 0 8px 40px rgba(15,31,78,0.18);
+
+  /* 角丸 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* フォント */
+  --font-base: 'Noto Sans JP', sans-serif;
+}
