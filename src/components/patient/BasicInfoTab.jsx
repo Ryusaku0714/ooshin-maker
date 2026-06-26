@@ -75,7 +75,11 @@ export default function BasicInfoTab({ patient, onSaved, printMode = false, onDi
       <div className="card">
         <div className="card-title">🏷️ 患者背景</div>
         {fields.map(f => (
-          <div key={f.label} style={{ marginBottom: 6 }}>
+          <div
+            key={f.label}
+            className={f.label === '定時薬' ? 'regular-med-highlight' : undefined}
+            style={{ marginBottom: 6 }}
+          >
             <div className="field-label">{f.label}</div>
             <div style={{ fontSize: 11, whiteSpace: 'pre-wrap', lineHeight: 1.7, color: 'var(--gray-900)' }}>{f.value}</div>
           </div>

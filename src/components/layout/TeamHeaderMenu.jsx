@@ -15,11 +15,12 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
   const toggle = () => {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
+      const right = Math.max(4, window.innerWidth - r.right)
       const isLeftSide = r.left + r.width / 2 < window.innerWidth / 2
       setPos(
         isLeftSide
-          ? { top: r.bottom + 4, left: Math.max(4, r.left) }
-          : { top: r.bottom + 4, right: Math.max(4, window.innerWidth - r.right) }
+          ? { top: r.bottom + 4, right, maxWidth: Math.max(160, r.right - 8) }
+          : { top: r.bottom + 4, right }
       )
     }
     setOpen(o => !o)
@@ -47,8 +48,9 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
             style={{
               position: 'fixed',
               top: pos.top,
-              ...('left' in pos ? { left: pos.left } : { right: pos.right }),
+              right: pos.right,
               minWidth: 210,
+              ...(pos.maxWidth && { maxWidth: pos.maxWidth }),
             }}
           >
             {submenu ? (

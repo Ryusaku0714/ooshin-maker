@@ -126,7 +126,7 @@ async function printTeamAllPatients(team, facilityName) {
 
     const basicHTML = basicFields.length ? `<div class="sec">
       <div class="sec-title">🏷️ 患者背景</div>
-      ${basicFields.map(f => `<div class="bf"><b>${f.label}：</b>${f.value}</div>`).join('')}
+      ${basicFields.map(f => `<div class="${f.label === '定時薬' ? 'bf reg-med' : 'bf'}"><b>${f.label}：</b>${f.value}</div>`).join('')}
     </div>` : ''
 
     const logsHTML = logs.length ? `<div class="sec">
@@ -190,16 +190,17 @@ async function printTeamAllPatients(team, facilityName) {
   h1{font-size:15px;font-weight:700;border-bottom:2px solid #075985;padding-bottom:8px;margin-bottom:10px;color:#075985}
   .ps{font-size:11px;line-height:1.4;margin-bottom:6px;page-break-after:always}
   .ps:last-child{page-break-after:auto}
-  h2{font-size:1.15em;font-weight:700;margin:0 0 6px;padding:3px 7px;background:#e0f2fe;color:#0369a1;border-radius:4px}
-  .sec{margin-bottom:6px}
-  .sec-title{font-size:1em;font-weight:700;color:#0284c7;margin-bottom:2px}
+  h2{font-size:1.15em;font-weight:700;margin:0 0 6px;padding:3px 7px;background:#e0f2fe;color:#0369a1;border-radius:4px;break-after:avoid;page-break-after:avoid}
+  .sec{margin-bottom:6px;break-inside:avoid;page-break-inside:avoid}
+  .sec-title{font-size:1em;font-weight:700;color:#0284c7;margin-bottom:2px;break-after:avoid;page-break-after:avoid}
   .bf{font-size:0.95em;margin-bottom:2px}
+  .reg-med{background:#e8f4fb;border-radius:4px;padding:4px 8px;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .le{font-size:0.95em;margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid #f1f5f9}
   .ld{font-weight:700;color:#0284c7}
   .bt{display:inline-block;font-size:0.8em;font-weight:700;padding:1px 5px;border-radius:8px;background:#fef3c7;color:#92400e;margin-right:4px;vertical-align:middle}
   .empty{color:#94a3b8;font-size:0.9em}
   @page{size:A4;margin:15mm}
-  @media print{body{padding:0}}
+  @media print{body{padding:0}.reg-med{background:#e8f4fb !important;print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 </style></head><body>
 <h1>📋 全患者印刷（往診準備用） - ${facilityName} / ${teamLabel}　（${today}）</h1>
 ${sectionsHTML || '<p>患者が登録されていません</p>'}

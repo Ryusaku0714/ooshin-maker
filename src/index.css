@@ -217,6 +217,27 @@ body {
   white-space: nowrap;
 }
 
+/* ── 定時薬ハイライト：画面・印刷共通（print-color-adjust で印刷時も背景色を維持） ── */
+.regular-med-highlight {
+  background: #e8f4fb;
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+@media print {
+  .regular-med-highlight {
+    background: #e8f4fb !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+body.printing .regular-med-highlight {
+  background: #e8f4fb !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+}
+
 /* ── チームヘッダー：PC版（769px以上）は2行構成（1行目チーム名／2行目操作ボタン）に ── */
 @media (min-width: 769px) {
   .team-row {
