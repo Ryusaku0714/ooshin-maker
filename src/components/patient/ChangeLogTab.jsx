@@ -785,7 +785,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     <>
       <CalcTool visitCalc={visitCalc} onUseForTemp={useCalcResultForTemp} />
 
-      <div className="card">
+      <div className="card" style={{ borderTop: '1px solid rgba(201,168,76,0.3)' }}>
         <div className="card-title">
           📝 薬剤変更記録
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>

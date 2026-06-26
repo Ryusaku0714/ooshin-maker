@@ -366,6 +366,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
               color: activeTab === t.key ? 'var(--sky-800)' : 'var(--sky-600)',
               fontWeight: activeTab === t.key ? 700 : 500,
               boxShadow: activeTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              borderBottom: activeTab === t.key ? '2px solid #c9a84c' : 'none',
               flex: '1 1 auto', whiteSpace: 'nowrap',
             }}
           >{t.label}</button>

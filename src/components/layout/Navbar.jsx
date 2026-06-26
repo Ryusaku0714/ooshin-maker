@@ -35,7 +35,8 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 15, color: 'var(--color-text-white)', minWidth: 0 }}>
         <div style={{
-          background: 'var(--color-accent)',
+          background: 'transparent',
+          border: '1.5px solid var(--color-gold)',
           borderRadius: 'var(--radius-sm)',
           padding: '4px',
           display: 'flex',
@@ -58,7 +59,10 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
             </g>
           </svg>
         </div>
-        <span className="nav-title" style={{ fontFamily: 'var(--font-base)', fontWeight: 700, color: 'var(--color-text-white)' }}>往診資料メーカー</span>
+        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+          <span className="nav-title" style={{ fontFamily: 'var(--font-base)', fontWeight: 700, color: 'var(--color-text-white)' }}>往診資料メーカー</span>
+          <span style={{ fontSize: 9, color: 'var(--color-gold)', letterSpacing: '2px', textTransform: 'uppercase', marginTop: 2 }}>Bridgework</span>
+        </div>
       </div>
 
       {user && (
@@ -77,8 +81,8 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
               lineHeight: 1,
               padding: '6px 11px',
               background: 'rgba(255,255,255,0.08)',
-              color: 'var(--color-text-white)',
-              border: 'none',
+              color: 'var(--color-gold)',
+              border: '1px solid var(--color-gold)',
               borderRadius: 'var(--radius-sm)',
             }}
           >☰</button>

@@ -186,7 +186,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
             ? { width: '100%', marginTop: 2 }
             : { flex: '2 1 150px', minWidth: 130 }
           ),
-          background: 'rgba(255,255,255,0.12)', borderLeft: '3px solid #60a5fa',
+          background: 'rgba(255,255,255,0.12)', borderLeft: '2px dashed #c9a84c',
           borderRadius: '0 8px 8px 0', padding: '6px 12px', textAlign: 'center',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>

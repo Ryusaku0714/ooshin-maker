@@ -330,6 +330,7 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           fontWeight: selected ? 600 : 400,
           display: 'flex', alignItems: 'center', gap: 4,
           transition: 'background 0.1s',
+          borderLeft: selected ? '2px solid #c9a84c' : '2px solid transparent',
         }}
       >
         <div
@@ -338,7 +339,7 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
         >
           <span style={{ opacity: 0.6, fontSize: 10, flexShrink: 0 }}>👤</span>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {p.room_number}{p.initial ? `　${p.initial}` : ''}
+            <span style={{ color: selected ? '#c9a84c' : 'inherit' }}>{p.room_number}</span>{p.initial ? `　${p.initial}` : ''}
           </span>
         </div>
 
@@ -653,7 +654,7 @@ export default function Sidebar({
                   onClick={() => { if (!isEditingFacility) toggleFacility(facility.id) }}
                   style={{
                     background: cs.headerBg,
-                    borderLeft: `3px solid ${cs.accentBorder}`,
+                    borderLeft: '2px solid #c9a84c',
                     padding: '5px 8px 5px',
                     cursor: isEditingFacility ? 'default' : 'pointer',
                   }}
