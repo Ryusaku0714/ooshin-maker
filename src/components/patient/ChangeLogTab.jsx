@@ -132,8 +132,9 @@ function CalcTool({ visitCalc, onUseForTemp }) {
 
   return (
     <div className="calc-tool" style={{
-      background: 'linear-gradient(135deg, var(--sky-800), var(--sky-900))',
-      borderRadius: 10, padding: '10px 14px', marginBottom: 10,
+      background: '#0f1f4e',
+      borderRadius: 12, padding: '10px 14px', marginBottom: 10,
+      boxShadow: '0 4px 16px rgba(15,31,78,0.2)',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 8 : 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em' }}>
@@ -207,12 +208,17 @@ function CalcTool({ visitCalc, onUseForTemp }) {
             />
           </div>
 
-          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び・左ボーダー（指定末日入力中はやや薄く表示） */}
+          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び（指定末日入力中はやや薄く表示） */}
           {periodText && (
             <div style={{
               ...(isMobile
-                ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
-                : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }),
+                ? { width: '100%', marginTop: 8 }
+                : { flex: '2 1 160px', minWidth: 140 }),
+              background: '#1e3a8a',
+              border: '1px solid #2563eb',
+              borderLeft: '2px dashed #c9a84c',
+              borderRadius: 10,
+              padding: '8px 10px',
               opacity: targetDate ? 0.4 : 1,
             }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
@@ -240,10 +246,16 @@ function CalcTool({ visitCalc, onUseForTemp }) {
 
           {/* 指定末日の結果 */}
           {targetPeriodText && (
-            <div style={isMobile
-              ? { width: '100%', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)' }
-              : { flex: '2 1 160px', minWidth: 140, paddingBottom: 2, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 10 }
-            }>
+            <div style={{
+              ...(isMobile
+                ? { width: '100%', marginTop: 8 }
+                : { flex: '2 1 160px', minWidth: 140 }),
+              background: '#1e3a8a',
+              border: '1px solid #2563eb',
+              borderLeft: '2px dashed #c9a84c',
+              borderRadius: 10,
+              padding: '8px 10px',
+            }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
@@ -270,20 +282,20 @@ function CalcTool({ visitCalc, onUseForTemp }) {
   )
 }
 
-const calcLabelStyle = { fontSize: 9, color: 'var(--sky-200)', display: 'block', marginBottom: 3 }
+const calcLabelStyle = { fontSize: 9, color: '#64748b', display: 'block', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.5px' }
 
 const calcInputStyle = {
-  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: 6, padding: '6px 8px', fontSize: 12, color: 'white',
+  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: 6, padding: '6px 8px', fontSize: 12, color: '#e2e8f0',
   fontFamily: 'inherit', width: '100%', outline: 'none',
 }
 
 // 日付コピーボタン
 const calcCopyBtnStyle = {
   flexShrink: 0,
-  background: 'rgba(255,255,255,0.15)',
-  border: '1px solid rgba(255,255,255,0.25)',
-  borderRadius: 5,
+  background: '#2563eb',
+  border: 'none',
+  borderRadius: 6,
   color: 'white',
   fontSize: 9,
   fontWeight: 700,
@@ -671,15 +683,15 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
           { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: () => del(log.id) },
         ]
 
-    const rowBg = i % 2 === 0 ? '#ffffff' : '#f7f8fa'
-
     return (
       <div key={log.id} style={{
-        padding: isEditing ? 0 : '8px 0',
-        borderBottom: (!isEditing && i < arr.length - 1) ? '1px solid var(--sky-50)' : 'none',
-        marginBottom: isEditing ? 8 : 0,
+        background: 'white',
+        borderRadius: 10,
+        boxShadow: '0 1px 4px rgba(15,31,78,0.06)',
+        borderLeft: `3px solid ${log.log_type === 'temporary' ? '#dc2626' : '#dce4f0'}`,
+        marginBottom: 8,
+        padding: isEditing ? 0 : '10px 12px',
         opacity: archived ? 0.7 : 1,
-        backgroundColor: rowBg,
       }}>
         {isEditing ? (
           <div style={{
@@ -734,12 +746,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             <div style={{ flex: 1, fontSize: 12 }}>
               {log.log_type === 'temporary' ? (
                 <>
-                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{fmtMMDD(log.changed_at)}</span>
+                  <div className="log-instr-header" style={{ color: '#0f1f4e', fontWeight: 700, lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>{fmtMMDD(log.changed_at)}</span>
                     　{log.reason?.trim() || '変更指示'}
                   </div>
-                  <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>
+                  <div style={{ color: '#1e293b', fontWeight: 500, lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>
                       {fmtMMDD(log.start_date ?? log.changed_at)}{log.start_timing}〜{fmtMMDD(log.end_date)}{log.end_timing}
                     </span>
                     　{log.drug_name}
@@ -747,23 +759,23 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
                 </>
               ) : hasContent && hasStartDate ? (
                 <>
-                  <div className="log-instr-header" style={{ color: 'var(--sky-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
+                  <div className="log-instr-header" style={{ color: '#0f1f4e', fontWeight: 700, lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>{instrD}</span>
                     　{displayReason}
                   </div>
-                  <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                    <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{startD}〜</span>
+                  <div style={{ color: '#1e293b', fontWeight: 500, lineHeight: 1.7 }}>
+                    <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>{startD}〜</span>
                     　{log.content}
                   </div>
                 </>
               ) : hasContent ? (
-                <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                  <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
+                <div style={{ color: '#1e293b', fontWeight: 500, lineHeight: 1.7 }}>
+                  <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>{instrD}</span>
                   　{log.content}
                 </div>
               ) : (
-                <div style={{ color: 'var(--gray-700)', lineHeight: 1.7 }}>
-                  <span className="log-date-span" style={{ color: 'var(--sky-600)' }}>{instrD}</span>
+                <div style={{ color: '#1e293b', fontWeight: 500, lineHeight: 1.7 }}>
+                  <span className="log-date-span" style={{ color: '#0f1f4e', fontWeight: 700 }}>{instrD}</span>
                   　{displayReason}
                 </div>
               )}
@@ -791,32 +803,49 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 2 }}>
               <button
-                className={`btn btn-sm ${sortMode === 'date' ? 'btn-primary' : 'btn-outline'}`}
+                className="btn btn-sm"
                 onClick={() => setSortMode('date')}
+                style={sortMode === 'date'
+                  ? { background: '#dbeafe', color: '#1e3a8a', border: 'none' }
+                  : { background: 'white', color: '#94a3b8', border: '1.5px solid #dce4f0' }}
               >日付順</button>
               <button
-                className={`btn btn-sm ${sortMode === 'input' ? 'btn-primary' : 'btn-outline'}`}
+                className="btn btn-sm"
                 onClick={() => setSortMode('input')}
+                style={sortMode === 'input'
+                  ? { background: '#dbeafe', color: '#1e3a8a', border: 'none' }
+                  : { background: 'white', color: '#94a3b8', border: '1.5px solid #dce4f0' }}
               >入力順</button>
             </div>
             {logs.length > 0 && (
-              <button className="btn btn-outline btn-sm" onClick={copyAll}>
+              <button
+                className="btn btn-sm"
+                onClick={copyAll}
+                style={{ background: 'white', color: '#94a3b8', border: '1.5px solid #dce4f0' }}
+              >
                 {copied ? '✅ コピー済' : '📋 全コピー'}
               </button>
             )}
             {archivedLogs.length > 0 && (
               <button
-                className="btn btn-outline btn-sm"
+                className="btn btn-sm"
                 onClick={() => setShowArchived(s => !s)}
-                style={{ color: showArchived ? 'var(--sky-600)' : 'var(--gray-400)', borderColor: showArchived ? 'var(--sky-200)' : 'var(--gray-200)' }}
+                style={{
+                  background: showArchived ? '#dbeafe' : 'white',
+                  color: showArchived ? '#1e3a8a' : '#94a3b8',
+                  border: showArchived ? 'none' : '1.5px solid #dce4f0',
+                }}
               >
                 {showArchived ? '📂 アーカイブを隠す' : `📂 アーカイブを表示（${archivedLogs.length}件）`}
               </button>
             )}
             <div style={{ position: 'relative' }}>
               <button
-                className="btn btn-outline btn-sm"
+                className="btn btn-sm"
                 onClick={() => addMode ? closeAddForm() : setShowAddMenu(m => !m)}
+                style={addMode
+                  ? { background: 'white', color: '#94a3b8', border: '1.5px solid #dce4f0' }
+                  : { background: '#0f1f4e', color: 'white', border: 'none' }}
               >
                 {addMode ? '✕ 閉じる' : '＋ 追加'}
               </button>

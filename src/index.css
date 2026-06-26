@@ -73,9 +73,10 @@ body {
 .icon-btn {
   min-width: 38px; min-height: 36px;
   padding: 3px 4px;
-  border-radius: 6px;
-  border: 1px solid var(--gray-200);
-  background: white;
+  border-radius: 5px;
+  border: 1px solid #dce4f0;
+  background: #f1f5fb;
+  color: #94a3b8;
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   font-size: 12px;
@@ -84,7 +85,7 @@ body {
   flex-shrink: 0;
   box-sizing: border-box;
 }
-.icon-btn:hover { border-color: var(--sky-400); background: var(--sky-50); }
+.icon-btn:hover { border-color: var(--sky-400); background: var(--sky-50); color: var(--sky-600); }
 
 /* ボタン直下に常時表示する極小の説明ラベル */
 .icon-btn-cap {
@@ -294,9 +295,9 @@ body.printing .regular-med-highlight {
   font-size: 9px;
   font-weight: 700;
   padding: 2px 6px;
-  border-radius: 10px;
-  background: #fef3c7;
-  color: #92400e;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #dc2626;
   margin-right: 4px;
   vertical-align: middle;
   white-space: nowrap;
@@ -347,9 +348,13 @@ body.printing .regular-med-highlight {
   background: #eff6ff !important;
 }
 
-/* ── タブコンテンツのパディング（main-scrollのpadding-topを0にしたため） ── */
+/* ── タブコンテンツ背景・パディング ── */
+.main-scroll {
+  background: #f1f5fb;
+}
 .tab-content {
-  padding: 16px 20px 0;
+  padding: 16px 20px;
+  background: #f1f5fb;
 }
 
 /* ── Scrollbar ── */
@@ -413,7 +418,7 @@ body.printing .regular-med-highlight {
     min-height: 0;
   }
   .tab-content {
-    padding: 10px 12px 0 !important;
+    padding: 10px 12px !important;
   }
   .patient-header {
     padding: 12px 12px !important;
@@ -556,7 +561,7 @@ body.printing .regular-med-highlight {
     padding: 0 0 52px !important;
   }
   .tab-content {
-    padding: 10px 10px 0 !important;
+    padding: 10px 10px !important;
   }
   .patient-header {
     padding: 12px 10px !important;
