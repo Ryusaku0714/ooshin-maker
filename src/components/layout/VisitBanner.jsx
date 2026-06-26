@@ -116,7 +116,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   const mobileFieldStyle = { width: '45%' }
 
   return (
-    <div className="visit-banner" style={{ background: 'var(--sky-800)', padding: '8px 14px', flexShrink: 0 }}>
+    <div className="visit-banner" style={{ background: '#1e3a8a', padding: '8px 14px', flexShrink: 0 }}>
 
       {/* モバイル用折りたたみヘッダー（768px以下のみ表示）：往診日＋処方期間を1行で表示 */}
       <div
@@ -186,14 +186,14 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
             ? { width: '100%', marginTop: 2 }
             : { flex: '2 1 150px', minWidth: 130 }
           ),
-          background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
-          borderRadius: 8, padding: '6px 12px', textAlign: 'center',
+          background: 'rgba(255,255,255,0.12)', borderLeft: '3px solid #60a5fa',
+          borderRadius: '0 8px 8px 0', padding: '6px 12px', textAlign: 'center',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 9, color: 'var(--sky-200)' }}>処方期間</div>
+            <div style={{ fontSize: 9, color: '#93c5fd' }}>処方期間</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{rxPeriod}</div>
-            <div style={{ fontSize: 9, color: 'var(--sky-300)', marginTop: 2 }}>（{effRxDays}日分）　{nextVisit}</div>
+            <div style={{ fontSize: 9, color: '#93c5fd', marginTop: 2 }}>（{effRxDays}日分）　{nextVisit}</div>
           </div>
           {rxPeriod !== '—' && (
             <CopyButton
@@ -286,7 +286,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
 function Field({ label, children, style, className, dow }) {
   return (
     <div style={style} className={className}>
-      <label style={{ fontSize: 9, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em', display: 'block', marginBottom: 3 }}>
+      <label style={{ fontSize: 9, fontWeight: 700, color: '#93c5fd', letterSpacing: '0.8px', textTransform: 'uppercase', display: 'block', marginBottom: 3 }}>
         {label}{dow && <span className="visit-field-dow">{dow}</span>}
       </label>
       {children}
@@ -295,8 +295,8 @@ function Field({ label, children, style, className, dow }) {
 }
 
 const bannerInputStyle = {
-  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: 6, padding: '5px 7px', fontSize: 12, color: 'white',
+  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+  borderRadius: 6, padding: '5px 7px', fontSize: 12, color: '#e2e8f0',
   fontFamily: 'inherit', outline: 'none', width: '100%',
 }
 

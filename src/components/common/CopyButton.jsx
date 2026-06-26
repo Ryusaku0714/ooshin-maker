@@ -43,7 +43,7 @@ const bannerCopyBtnStyle = {
   background: 'rgba(255,255,255,0.15)',
   border: '1px solid rgba(255,255,255,0.25)',
   borderRadius: 6,
-  color: 'white',
+  color: '#bfdbfe',
   fontSize: 13,
   padding: '4px 8px',
   cursor: 'pointer',
