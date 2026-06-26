@@ -319,15 +319,13 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
   }
 
   return (
-    <div style={{ marginBottom: 2 }}>
+    <div style={{ margin: '1px 8px 1px 16px' }}>
       <div
+        className={`patient-row-item${selected ? ' patient-row-selected' : ''}`}
         style={{
-          fontSize: 11,
-          color: selected ? 'white' : 'var(--sky-700)',
-          padding: '4px 6px',
-          borderRadius: 5,
-          background: selected ? 'var(--sky-600)' : 'transparent',
-          fontWeight: selected ? 600 : 400,
+          padding: '5px 8px',
+          borderRadius: 6,
+          background: selected ? '#0f1f4e' : 'transparent',
           display: 'flex', alignItems: 'center', gap: 4,
           transition: 'background 0.1s',
           borderLeft: selected ? '2px solid #c9a84c' : '2px solid transparent',
@@ -335,12 +333,14 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
       >
         <div
           onClick={onSelect}
-          style={{ flex: 1, minWidth: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+          style={{ flex: 1, minWidth: 0, cursor: 'pointer', display: 'flex', alignItems: 'baseline', gap: 6 }}
         >
-          <span style={{ opacity: 0.6, fontSize: 10, flexShrink: 0 }}>👤</span>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            <span style={{ color: selected ? '#c9a84c' : 'inherit' }}>{p.room_number}</span>{p.initial ? `　${p.initial}` : ''}
-          </span>
+          <span style={{ fontSize: 10, color: selected ? '#c9a84c' : '#94a3b8', flexShrink: 0 }}>{p.room_number}</span>
+          {p.initial && (
+            <span style={{ fontSize: 11, fontWeight: selected ? 700 : 500, color: selected ? '#ffffff' : '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {p.initial}
+            </span>
+          )}
         </div>
 
         {/* 個別設定トグル（小さめのスイッチ） */}
@@ -350,7 +350,7 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           style={{
             flexShrink: 0, width: 26, height: 14, borderRadius: 7, border: 'none', padding: 0,
             position: 'relative', cursor: 'pointer',
-            background: isCustom ? '#f59e0b' : (selected ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.15)'),
+            background: isCustom ? '#f59e0b' : (selected ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.12)'),
             transition: 'background 0.15s',
           }}
         >
@@ -608,8 +608,8 @@ export default function Sidebar({
     <>
       <div className="sidebar">
         {/* ヘッダー */}
-        <div style={{ padding: '12px', borderBottom: '1px solid var(--sky-200)', flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--sky-700)', marginBottom: 6 }}>
+        <div style={{ padding: '12px', borderBottom: '1px solid #dce4f0', flexShrink: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
             施設・チーム・患者
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -630,7 +630,7 @@ export default function Sidebar({
         </div>
 
         {/* スクロールエリア */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 12px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0 12px' }}>
           {facilities.map(facility => {
             const isHomeCare = !!facility.is_home_care
             const cs = isHomeCare ? HOME_STYLE : FAC_STYLE
@@ -641,28 +641,25 @@ export default function Sidebar({
               <div
                 key={facility.id}
                 style={{
-                  marginBottom: 10,
-                  borderRadius: 8,
-                  border: `1px solid ${cs.cardBorder}`,
-                  background: cs.cardBg,
-                  overflow: 'hidden',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                  marginBottom: 8,
                 }}
               >
                 {/* ── 施設ヘッダー ── */}
                 <div
                   onClick={() => { if (!isEditingFacility) toggleFacility(facility.id) }}
                   style={{
-                    background: cs.headerBg,
+                    margin: '0 8px 4px',
+                    padding: '7px 10px',
+                    borderRadius: 6,
+                    background: '#eff6ff',
                     borderLeft: '2px solid #c9a84c',
-                    padding: '5px 8px 5px',
                     cursor: isEditingFacility ? 'default' : 'pointer',
                   }}
                 >
                   {/* タイプラベル */}
                   <div style={{
-                    fontSize: 9, fontWeight: 700, color: cs.labelColor,
-                    marginBottom: 3, letterSpacing: '0.06em',
+                    fontSize: 9, fontWeight: 700, color: '#94a3b8',
+                    marginBottom: 3, letterSpacing: '1px', textTransform: 'uppercase',
                   }}>
                     {isHomeCare ? '🏠 個人在宅' : '🏥 施設 / 在宅'}
                   </div>
@@ -697,7 +694,7 @@ export default function Sidebar({
                         {facOpen ? '▼' : '▶'}
                       </span>
                       <span style={{
-                        flex: 1, fontSize: 11, fontWeight: 700, color: cs.nameColor,
+                        flex: 1, fontSize: 11, fontWeight: 700, color: '#0f1f4e',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
                       }}>
                         {facility.name}
@@ -732,7 +729,7 @@ export default function Sidebar({
 
                 {/* ── チーム＆患者エリア ── */}
                 {facOpen && (
-                <div style={{ padding: '5px 6px 4px' }}>
+                <div style={{ padding: '2px 0 4px' }}>
                   {(facility.om_teams ?? []).map(team => {
                     const isOpen = openTeams[team.id] !== false
                     const patients = sortPatients(team.om_patients, sort)
@@ -744,11 +741,7 @@ export default function Sidebar({
                       <div
                         key={team.id}
                         style={{
-                          marginBottom: 4,
-                          borderRadius: 6,
-                          border: `1px solid ${cs.teamBorder}`,
-                          background: 'white',
-                          overflow: 'hidden',
+                          marginBottom: 2,
                         }}
                       >
                         {isHomeCare ? (
@@ -842,9 +835,9 @@ export default function Sidebar({
                               className="team-row"
                               style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
-                                padding: '5px 8px',
-                                background: '#f0fdf4',
-                                borderBottom: (isOpen && hasPatients) ? `1px solid ${cs.teamBorder}` : 'none',
+                                padding: '5px 10px',
+                                background: 'transparent',
+                                borderBottom: 'none',
                                 cursor: 'pointer',
                               }}>
                               {/* チーム名（開閉アイコン＋在宅患者ラベル） */}
@@ -852,7 +845,7 @@ export default function Sidebar({
                                 <span style={{ fontSize: 9, color: '#16a34a', flexShrink: 0, width: 11, textAlign: 'center' }}>
                                   {isOpen ? '▼' : '▶'}
                                 </span>
-                                <span style={{ fontSize: 10, fontWeight: 600, color: '#16a34a', flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b', flex: 1, minWidth: 0 }}>
                                   🏠 在宅患者
                                   {team.pharmacist_name && (
                                     <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 400, marginLeft: 6 }}>
@@ -947,10 +940,10 @@ export default function Sidebar({
                               className="team-row"
                               style={{
                                 fontSize: 10, fontWeight: 700,
-                                color: selectedTeamId === team.id ? 'var(--sky-800)' : 'var(--sky-700)',
-                                padding: '5px 8px',
-                                background: selectedTeamId === team.id ? 'var(--sky-100)' : 'var(--sky-50)',
-                                borderBottom: (isOpen && hasPatients) ? '1px solid var(--sky-100)' : 'none',
+                                color: '#64748b',
+                                padding: '5px 10px',
+                                background: 'transparent',
+                                borderBottom: 'none',
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4,
                                 cursor: 'pointer',
                               }}
@@ -1013,7 +1006,7 @@ export default function Sidebar({
 
                         {/* 患者リスト（チームブロック内にインデント） */}
                         {isOpen && (
-                          <div style={{ padding: '4px 6px 3px 14px' }}>
+                          <div style={{ padding: '2px 0 3px' }}>
                             {patients.map(p => renderPatientRow(p, team))}
                             {!(isHomeCare && hasPatients) && (
                               <div

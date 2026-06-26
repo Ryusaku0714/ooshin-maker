@@ -137,7 +137,7 @@ export default function App() {
         <div
           id="mobileSidebar"
           className="sidebar-wrap"
-          style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--sky-100)', borderRight: '1px solid var(--sky-200)' }}
+          style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#ffffff', borderRight: '1px solid #dce4f0' }}
         >
           {facLoading ? (
             <div style={{ padding: 20, color: 'var(--gray-400)', fontSize: 12 }}>読み込み中…</div>

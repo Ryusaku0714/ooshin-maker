@@ -342,6 +342,11 @@ body.printing .regular-med-highlight {
   min-width: 0;
 }
 
+/* ── Sidebar patient row hover ── */
+.patient-row-item:not(.patient-row-selected):hover {
+  background: #eff6ff !important;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
