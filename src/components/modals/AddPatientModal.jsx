@@ -23,8 +23,11 @@ export default function AddPatientModal({ teamId, onClose, onSaved }) {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        <div className="modal-title">👤 患者を追加</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="modal-header">
+          <div className="modal-title">👤 患者を追加</div>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label className="field-label">部屋番号 *</label>
             <input className="field-input" value={form.room_number} onChange={up('room_number')} placeholder="例：101 / 個人在宅は①など" autoFocus />

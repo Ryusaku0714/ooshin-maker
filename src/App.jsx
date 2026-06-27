@@ -12,29 +12,35 @@ function InfoModal({ title, onClose, children }) {
   return (
     <div
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+        position: 'fixed', inset: 0, background: 'rgba(15,31,78,0.4)',
+        backdropFilter: 'blur(4px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 300, padding: 16,
       }}
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div style={{
-        background: 'white', borderRadius: 16, padding: 24,
-        width: '100%', maxWidth: 480, maxHeight: '90vh',
+        background: 'white', borderRadius: 12, padding: 0,
+        width: '90%', maxWidth: 480, maxHeight: '90vh',
         display: 'flex', flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+        boxShadow: '0 8px 40px rgba(15,31,78,0.2)',
+        overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--sky-800)' }}>
+        <div style={{
+          background: '#0f1f4e', borderBottom: '2px solid #c9a84c',
+          padding: '14px 20px', borderRadius: '12px 12px 0 0',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0,
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>
             {title}
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 1 }}
+            style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#94a3b8', lineHeight: 1, fontFamily: 'inherit' }}
           >✕</button>
         </div>
 
-        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
+        <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, padding: 20 }}>
           {children}
         </div>
       </div>
@@ -218,22 +224,22 @@ export default function App() {
             }}>
               <div style={{
                 flexShrink: 0, width: 56, textAlign: 'center',
-                background: 'var(--sky-600)', color: 'white',
+                background: '#0f1f4e', color: 'white',
                 borderRadius: 8, padding: '4px 0', fontSize: 10, fontWeight: 700,
                 lineHeight: 1.4,
               }}>
                 {step}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sky-900)', marginBottom: 3 }}>{title}</div>
-                <div style={{ fontSize: 12, color: 'var(--gray-500)', lineHeight: 1.7 }}>{body}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#0f1f4e', marginBottom: 3 }}>{title}</div>
+                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>{body}</div>
               </div>
             </div>
           ))}
           <div style={{
-            background: 'var(--sky-50)', border: '1px solid var(--sky-100)',
+            background: '#f1f5fb', border: '1px solid #dce4f0',
             borderRadius: 10, padding: '10px 14px',
-            fontSize: 12, color: 'var(--sky-800)', lineHeight: 1.7,
+            fontSize: 12, color: '#1e3a8a', lineHeight: 1.7,
           }}>
             💡 完璧に埋めなくてOK！まず一覧を作るだけで十分使えます。
           </div>

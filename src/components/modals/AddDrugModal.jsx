@@ -38,8 +38,11 @@ export default function AddDrugModal({ patientId, drug, onClose, onSaved }) {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        <div className="modal-title">{isEdit ? '💊 外用・頓用薬を編集' : '💊 外用・頓用薬を追加'}</div>
-        <div style={{ display: 'grid', gap: 10 }}>
+        <div className="modal-header">
+          <div className="modal-title">{isEdit ? '💊 外用・頓用薬を編集' : '💊 外用・頓用薬を追加'}</div>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body" style={{ display: 'grid', gap: 10 }}>
           <div>
             <label className="field-label">種別 *</label>
             <div style={{ display: 'flex', gap: 8 }}>

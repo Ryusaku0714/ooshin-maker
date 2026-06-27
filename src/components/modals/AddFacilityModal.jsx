@@ -39,48 +39,52 @@ export default function AddFacilityModal({ onClose, onSaved, onHomeCareCreated }
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal-box">
-        <div className="modal-title">🏠 施設を追加</div>
-
-        {/* 種別選択 */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          {[
-            { value: 'facility', label: '🏥 施設' },
-            { value: 'home_care', label: '🏠 個人在宅' },
-          ].map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setType(opt.value)}
-              style={{
-                flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                border: type === opt.value ? 'none' : '1.5px solid var(--sky-200)',
-                background: type === opt.value ? 'var(--sky-600)' : 'white',
-                color: type === opt.value ? 'white' : 'var(--sky-500)',
-                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-              }}
-            >{opt.label}</button>
-          ))}
+        <div className="modal-header">
+          <div className="modal-title">🏠 施設を追加</div>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
-
-        <label className="field-label">施設名</label>
-        <input
-          className="field-input"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder={placeholder}
-          onKeyDown={e => e.key === 'Enter' && save()}
-          autoFocus
-        />
-
-        {type === 'home_care' && (
-          <div style={{
-            fontSize: 11, color: 'var(--sky-700)', background: 'var(--sky-50)',
-            border: '1px solid var(--sky-200)', borderRadius: 6,
-            padding: '7px 10px', marginTop: 10, lineHeight: 1.7,
-          }}>
-            追加後に「在宅①」チームを自動作成し、患者追加画面へ移動します。
+        <div className="modal-body">
+          {/* 種別選択 */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            {[
+              { value: 'facility', label: '🏥 施設' },
+              { value: 'home_care', label: '🏠 個人在宅' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setType(opt.value)}
+                style={{
+                  flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                  border: type === opt.value ? 'none' : '1.5px solid #dce4f0',
+                  background: type === opt.value ? '#1e3a8a' : 'white',
+                  color: type === opt.value ? 'white' : '#64748b',
+                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                }}
+              >{opt.label}</button>
+            ))}
           </div>
-        )}
+
+          <label className="field-label">施設名</label>
+          <input
+            className="field-input"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder={placeholder}
+            onKeyDown={e => e.key === 'Enter' && save()}
+            autoFocus
+          />
+
+          {type === 'home_care' && (
+            <div style={{
+              fontSize: 11, color: '#1e3a8a', background: '#f1f5fb',
+              border: '1px solid #dce4f0', borderRadius: 6,
+              padding: '7px 10px', marginTop: 10, lineHeight: 1.7,
+            }}>
+              追加後に「在宅①」チームを自動作成し、患者追加画面へ移動します。
+            </div>
+          )}
+        </div>
 
         <div className="modal-footer">
           <button className="btn btn-outline" onClick={onClose}>キャンセル</button>

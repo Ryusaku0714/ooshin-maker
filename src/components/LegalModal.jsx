@@ -11,21 +11,12 @@ export default function LegalModal({ type, onClose }) {
     >
       <div
         className="modal-box"
-        style={{ maxWidth: 520, padding: 0, display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}
+        style={{ maxHeight: '85vh', overflow: 'hidden' }}
       >
         {/* ヘッダー */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 20px', borderBottom: '1px solid var(--sky-100)', flexShrink: 0,
-        }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--sky-800)' }}>{title}</div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 18, color: 'var(--gray-400)', lineHeight: 1, padding: 2,
-            }}
-          >✕</button>
+        <div className="modal-header">
+          <div className="modal-title">{title}</div>
+          <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
         {/* コンテンツ */}
@@ -35,7 +26,7 @@ export default function LegalModal({ type, onClose }) {
 
         {/* フッター */}
         <div style={{
-          padding: '12px 20px', borderTop: '1px solid var(--sky-100)',
+          padding: '12px 20px', borderTop: '1px solid #dce4f0',
           display: 'flex', justifyContent: 'flex-end', flexShrink: 0,
         }}>
           <button className="btn btn-primary btn-sm" onClick={onClose}>閉じる</button>

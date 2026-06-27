@@ -24,7 +24,7 @@ const ACCORDION_ITEMS = [
           高額薬による患者負担軽減・薬学的専門的な理由（副作用・服薬状況不良・治療変更予定など）
         </p>
         <div>
-          <p style={{ margin: 0, fontWeight: 700, color: 'var(--sky-800)' }}>必須対応</p>
+          <p style={{ margin: 0, fontWeight: 700, color: '#0f1f4e' }}>必須対応</p>
           <ul style={{ margin: '4px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <li>理由を調剤録明細書に記載</li>
             <li>次回受診日確認</li>
@@ -51,28 +51,28 @@ const ACCORDION_ITEMS = [
 function AccordionItem({ icon, title, render, isOpen, onToggle }) {
   return (
     <div style={{
-      border: '1.5px solid var(--sky-100)', borderRadius: 12,
+      border: '1px solid #dce4f0', borderRadius: 8,
       marginBottom: 10, overflow: 'hidden', background: 'white',
     }}>
       <button
         onClick={onToggle}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 8, padding: '12px 14px', background: 'none', border: 'none',
+          gap: 8, padding: '12px 14px', background: '#f8fafc', border: 'none',
           cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--sky-800)' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#0f1f4e' }}>
           {icon} {title}
         </span>
         <span style={{
-          fontSize: 12, color: 'var(--gray-400)', flexShrink: 0,
+          fontSize: 12, color: '#c9a84c', flexShrink: 0,
           transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
         }}>▼</span>
       </button>
       {isOpen && (
         <div style={{
-          padding: '0 14px 14px', fontSize: 12, color: 'var(--gray-700)', lineHeight: 1.8,
+          padding: '0 14px 14px', fontSize: 12, color: '#334155', lineHeight: 1.8,
         }}>
           {render()}
         </div>
@@ -86,14 +86,14 @@ export default function ZanyakuKasanInfo() {
 
   return (
     <div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--sky-900)', marginBottom: 14 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#0f1f4e', marginBottom: 14 }}>
         💊 調剤時残薬調整加算（令和8年度）
       </div>
 
       {/* 点数カード① イ・ロ・ハ 50点 */}
       <div style={{
-        background: 'var(--sky-900)', color: 'white',
-        borderRadius: 12, padding: '14px 16px', marginBottom: 10,
+        background: '#0f1f4e', color: 'white',
+        borderRadius: 10, padding: '14px 16px', marginBottom: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 700 }}>イ・ロ・ハ</span>
@@ -108,8 +108,8 @@ export default function ZanyakuKasanInfo() {
 
       {/* 点数カード② ニ 30点 */}
       <div style={{
-        background: 'var(--sky-100)', color: 'var(--sky-900)',
-        borderRadius: 12, padding: '14px 16px', marginBottom: 10,
+        background: '#eff6ff', border: '1.5px solid #dce4f0', color: '#0f1f4e',
+        borderRadius: 10, padding: '14px 16px', marginBottom: 10,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 700 }}>ニ</span>
@@ -120,7 +120,7 @@ export default function ZanyakuKasanInfo() {
         </p>
       </div>
 
-      <p style={{ fontSize: 11, color: 'var(--gray-500)', marginBottom: 18 }}>
+      <p style={{ fontSize: 11, color: '#64748b', marginBottom: 18 }}>
         ※処方箋受付1回につき1回のみ算定（複数処方でも1回）
       </p>
 
