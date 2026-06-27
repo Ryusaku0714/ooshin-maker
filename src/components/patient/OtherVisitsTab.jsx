@@ -388,23 +388,27 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
 
   return (
     <div style={{
-      background: '#f8fafc',
-      border: '1px solid #dce4f0',
-      borderRadius: 8, padding: '10px 12px', marginBottom: 6,
+      background: 'white',
+      borderLeft: '3px solid #c9a84c',
+      borderRadius: 10, padding: '10px 12px', marginBottom: 6,
+      boxShadow: '0 1px 4px rgba(15,31,78,0.06)',
       display: 'flex', gap: 10, alignItems: 'flex-start',
       opacity: archived ? 0.7 : 1,
     }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: archived ? 'var(--gray-400)' : 'var(--gray-900)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          {v.hospital}{v.department ? ` / ${v.department}` : ''}
+        <div style={{ fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ color: archived ? '#94a3b8' : '#0f1f4e' }}>{v.hospital}</span>
+          {v.department && (
+            <span style={{ color: '#64748b', fontWeight: 400, fontSize: 11 }}>/ {v.department}</span>
+          )}
           {archived && (
-            <span style={{ fontSize: 9, color: 'var(--gray-400)', fontStyle: 'italic', fontWeight: 400 }}>終了</span>
+            <span style={{ fontSize: 9, color: '#94a3b8', fontStyle: 'italic', fontWeight: 400 }}>終了</span>
           )}
         </div>
-        <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+        <div style={{ fontSize: 11, color: '#64748b', marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
           {period              && <span>📅 調剤：{period}</span>}
           {v.medication_timing && <span>💊 服用：{v.medication_timing}〜{endT}</span>}
-          {v.next_visit_date   && <span>🔄 次回：{v.next_visit_date}</span>}
+          {v.next_visit_date   && <span style={{ color: '#1e3a8a', fontWeight: 500 }}>🔄 次回：{v.next_visit_date}</span>}
           {v.notes             && <span>📝 備考：{v.notes}</span>}
         </div>
       </div>

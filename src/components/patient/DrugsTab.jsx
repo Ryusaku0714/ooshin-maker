@@ -30,12 +30,14 @@ function formatDrugText(drug) {
   return line
 }
 
-// 「確認する」「コピー」共通のチェックボックス風ボタンスタイル
+// 「確認する」「コピー」共通のバッジ風ボタンスタイル
 function checkboxBtnStyle(active) {
   return {
-    background: 'none', border: 'none', cursor: 'pointer',
-    fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
-    color: active ? '#1e3a8a' : '#94a3b8',
+    border: 'none', cursor: 'pointer',
+    fontSize: 10, fontFamily: 'inherit',
+    padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+    background: active ? '#dcfce7' : '#f1f5fb',
+    color: active ? '#15803d' : '#94a3b8',
   }
 }
 
@@ -200,17 +202,18 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
   const badgeBg    = archived ? '#f1f5f9' : (drug.drug_type === 'gaiyou' ? '#dbeafe' : '#fef3c7')
   const badgeColor = archived ? '#94a3b8' : (drug.drug_type === 'gaiyou' ? '#1e3a8a' : '#92400e')
 
-  const cardBg     = archived ? '#f8fafc' : (needsAlert ? '#fffbeb' : '#f8fafc')
-  const cardBorder = archived ? '#dce4f0' : (needsAlert ? '#fcd34d' : '#dce4f0')
+  const cardBg         = needsAlert ? '#fffbeb' : 'white'
+  const cardBorderLeft = needsAlert ? '3px solid #f59e0b' : '3px solid #dce4f0'
 
   return (
     <div
       className={`drug-card${needsAlert ? ' drug-unconfirmed' : ''}`}
       style={{
         background: cardBg,
-        border: `1.5px solid ${cardBorder}`,
-        borderRadius: 8,
-        padding: '8px 10px', marginBottom: 5,
+        borderLeft: cardBorderLeft,
+        borderRadius: 10,
+        boxShadow: '0 1px 4px rgba(15,31,78,0.06)',
+        padding: '10px 12px', marginBottom: 6,
         display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 8, alignItems: 'start',
         opacity: archived ? 0.7 : 1,
       }}
@@ -227,7 +230,7 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
       {/* 薬剤情報 */}
       <div className="drug-content">
         <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: archived ? 'var(--gray-400)' : 'var(--gray-900)' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: archived ? '#94a3b8' : '#0f1f4e' }}>
             {drug.drug_name}
           </span>
           {drug.prescribed_quantity && (
@@ -236,16 +239,16 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
             </span>
           )}
           {drug.remaining_quantity && (
-            <span style={{ fontSize: 10, color: archived ? 'var(--gray-400)' : '#d97706', fontWeight: 600 }}>
+            <span style={{ fontSize: 10, color: archived ? '#94a3b8' : '#d97706', fontWeight: 600 }}>
               残：{drug.remaining_quantity}
             </span>
           )}
           {archived && (
-            <span style={{ fontSize: 9, color: 'var(--gray-400)', fontStyle: 'italic' }}>終了</span>
+            <span style={{ fontSize: 9, color: '#94a3b8', fontStyle: 'italic' }}>終了</span>
           )}
         </div>
         {detailParts.length > 0 && (
-          <div className="drug-detail" style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+          <div className="drug-detail" style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
             {detailParts.join('　')}
           </div>
         )}

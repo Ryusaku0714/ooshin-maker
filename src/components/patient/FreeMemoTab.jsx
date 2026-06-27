@@ -47,7 +47,7 @@ export default function FreeMemoTab({ patient, onRefetch, printMode = false, onD
       </div>
       <textarea
         className="field-input"
-        style={{ minHeight: 200, lineHeight: 1.8 }}
+        style={{ minHeight: 120, lineHeight: 1.8 }}
         value={memo}
         onChange={e => { setMemo(e.target.value); onDirtyChange?.(true) }}
         placeholder="Nsからの報告、往診時の気づき、次回確認事項など"
