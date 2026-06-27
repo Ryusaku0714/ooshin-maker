@@ -392,13 +392,18 @@ body.printing .regular-med-highlight {
   color: #64748b;
 }
 
-/* ── タブコンテンツ背景・パディング ── */
-.main-scroll {
-  background: #f1f5fb;
+/* ── メインコンテンツエリア・タブコンテンツ：グリッドパターン背景 ── */
+.main,
+.main-scroll,
+.tab-content {
+  background-color: #f1f5fb;
+  background-image:
+    linear-gradient(rgba(30,58,138,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,58,138,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 .tab-content {
   padding: 16px 20px;
-  background: #f1f5fb;
 }
 
 /* ── Scrollbar ── */
@@ -743,6 +748,7 @@ body.printing .main,
 body.printing .main-scroll {
   overflow: visible !important;
   padding: 0 !important;
+  background: white !important;
 }
 
 /* 通常のタブコンテンツを非表示 */
@@ -919,7 +925,7 @@ body.printing .drug-qty-span {
 
   /* レイアウト */
   .layout { grid-template-columns: 1fr !important; overflow: visible !important; }
-  .main, .main-scroll { overflow: visible !important; padding: 0 !important; }
+  .main, .main-scroll { overflow: visible !important; padding: 0 !important; background: white !important; }
   .print-all-tabs { display: block !important; width: 680px; max-width: 680px; margin: 0 auto; }
   .print-section { margin-bottom: 12px; }
 
