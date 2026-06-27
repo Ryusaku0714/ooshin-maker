@@ -612,17 +612,19 @@ export default function Sidebar({
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
             施設・チーム・患者
           </div>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 2, background: '#f1f5fb', borderRadius: 8, padding: 3 }}>
             {SORT_OPTIONS.map(o => (
               <button
                 key={o.key}
                 onClick={() => setSort(o.key)}
                 style={{
-                  fontSize: 10, padding: '3px 8px', borderRadius: 6,
-                  border: '1px solid var(--sky-200)',
-                  background: sort === o.key ? 'var(--sky-600)' : 'white',
-                  color: sort === o.key ? 'white' : 'var(--sky-600)',
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  flex: 1, fontSize: 11, padding: '3px 8px', borderRadius: 6,
+                  border: 'none',
+                  background: sort === o.key ? 'white' : 'transparent',
+                  color: sort === o.key ? '#0f1f4e' : '#94a3b8',
+                  fontWeight: sort === o.key ? 700 : 500,
+                  boxShadow: sort === o.key ? '0 1px 3px rgba(15,31,78,0.08)' : 'none',
+                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
                 }}
               >{o.label}</button>
             ))}
@@ -741,7 +743,8 @@ export default function Sidebar({
                       <div
                         key={team.id}
                         style={{
-                          marginBottom: 2,
+                          marginBottom: 4,
+                          marginLeft: 8,
                         }}
                       >
                         {isHomeCare ? (
@@ -838,6 +841,7 @@ export default function Sidebar({
                                 padding: '5px 10px',
                                 background: 'transparent',
                                 borderBottom: 'none',
+                                borderLeft: '2px solid #c9a84c',
                                 cursor: 'pointer',
                               }}>
                               {/* チーム名（開閉アイコン＋在宅患者ラベル） */}
@@ -944,6 +948,7 @@ export default function Sidebar({
                                 padding: '5px 10px',
                                 background: 'transparent',
                                 borderBottom: 'none',
+                                borderLeft: '2px solid #c9a84c',
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4,
                                 cursor: 'pointer',
                               }}
@@ -1006,7 +1011,7 @@ export default function Sidebar({
 
                         {/* 患者リスト（チームブロック内にインデント） */}
                         {isOpen && (
-                          <div style={{ padding: '2px 0 3px' }}>
+                          <div style={{ padding: '2px 0 3px', borderLeft: '2px solid rgba(201,168,76,0.25)' }}>
                             {patients.map(p => renderPatientRow(p, team))}
                             {!(isHomeCare && hasPatients) && (
                               <div

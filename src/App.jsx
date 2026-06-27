@@ -183,14 +183,14 @@ export default function App() {
         style={{
           position: 'fixed', bottom: 20, right: 20, zIndex: 200,
           width: 44, height: 44, borderRadius: '50%',
-          background: 'var(--sky-600)', color: 'white',
-          border: 'none', fontSize: 20, fontWeight: 700,
-          cursor: 'pointer', boxShadow: '0 4px 16px rgba(2,132,199,0.4)',
+          background: '#0f1f4e', color: 'white',
+          border: '1.5px solid #c9a84c', fontSize: 20, fontWeight: 700,
+          cursor: 'pointer', boxShadow: '0 2px 8px rgba(15,31,78,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'inherit', transition: 'background 0.15s',
         }}
-        onMouseOver={e => e.currentTarget.style.background = 'var(--sky-800)'}
-        onMouseOut={e => e.currentTarget.style.background = 'var(--sky-600)'}
+        onMouseOver={e => e.currentTarget.style.background = '#1e3a8a'}
+        onMouseOut={e => e.currentTarget.style.background = '#0f1f4e'}
         title="使い方ガイド"
       >?</button>
 
