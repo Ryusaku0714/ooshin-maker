@@ -62,10 +62,10 @@ body {
   align-items: center;
   gap: 5px;
 }
-.btn-primary  { background: var(--sky-600); color: white; }
-.btn-primary:hover  { background: var(--sky-800); }
-.btn-outline  { background: white; color: var(--sky-600); border: 1.5px solid var(--sky-200); }
-.btn-outline:hover  { border-color: var(--sky-400); }
+.btn-primary  { background: #2563eb; color: white; }
+.btn-primary:hover  { background: #1e3a8a; }
+.btn-outline  { background: white; color: #1e3a8a; border: 1.5px solid #dce4f0; }
+.btn-outline:hover  { border-color: #2563eb; }
 .btn-danger   { background: #fee2e2; color: #dc2626; border: 1.5px solid #fecaca; }
 .btn-danger:hover   { background: #fecaca; }
 .btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
@@ -85,7 +85,7 @@ body {
   flex-shrink: 0;
   box-sizing: border-box;
 }
-.icon-btn:hover { border-color: var(--sky-400); background: var(--sky-50); color: var(--sky-600); }
+.icon-btn:hover { border-color: #2563eb; background: #f1f5fb; color: #1e3a8a; }
 
 /* ボタン直下に常時表示する極小の説明ラベル */
 .icon-btn-cap {
@@ -100,14 +100,15 @@ body {
 .card {
   background: white;
   border-radius: 12px;
-  border: 1.5px solid var(--sky-100);
+  border: 1px solid #dce4f0;
+  box-shadow: 0 1px 4px rgba(15,31,78,0.06);
   padding: 14px 18px;
   margin-bottom: 10px;
 }
 .card-title {
   font-size: 11px;
   font-weight: 700;
-  color: var(--sky-600);
+  color: #1e3a8a;
   letter-spacing: 0.08em;
   margin-bottom: 10px;
   display: flex;
@@ -142,9 +143,9 @@ body {
   top: calc(100% + 4px);
   right: 0;
   background: white;
-  border: 1.5px solid var(--sky-100);
+  border: 1px solid #dce4f0;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(15,31,78,0.12);
   display: flex;
   flex-direction: column;
   min-width: 120px;
@@ -154,12 +155,12 @@ body {
 .row-menu-item {
   background: white;
   border: none;
-  border-bottom: 1px solid var(--sky-50);
+  border-bottom: 1px solid #f1f5fb;
   text-align: left;
   padding: 9px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--gray-700);
+  color: #334155;
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
@@ -168,7 +169,7 @@ body {
   gap: 6px;
 }
 .row-menu-item:last-child { border-bottom: none; }
-.row-menu-item:hover { background: var(--sky-50); color: var(--sky-600); }
+.row-menu-item:hover { background: #f1f5fb; color: #1e3a8a; }
 
 /* ── ナビバーのハンバーガーメニュー：ユーザー名（タップ不可）・区切り線 ── */
 .nav-menu-username {
@@ -264,9 +265,9 @@ body.printing .regular-med-highlight {
   top: calc(100% + 4px);
   right: 0;
   background: white;
-  border: 1.5px solid var(--sky-100);
+  border: 1px solid #dce4f0;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(15,31,78,0.12);
   display: flex;
   flex-direction: column;
   min-width: 130px;
@@ -276,18 +277,18 @@ body.printing .regular-med-highlight {
 .add-menu-item {
   background: white;
   border: none;
-  border-bottom: 1px solid var(--sky-50);
+  border-bottom: 1px solid #f1f5fb;
   text-align: left;
   padding: 9px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--gray-700);
+  color: #334155;
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
 }
 .add-menu-item:last-child { border-bottom: none; }
-.add-menu-item:hover { background: var(--sky-50); color: var(--sky-600); }
+.add-menu-item:hover { background: #f1f5fb; color: #1e3a8a; }
 
 /* ── 変更記録：「臨時」バッジ ── */
 .log-badge-temp {
@@ -324,12 +325,12 @@ body.printing .regular-med-highlight {
   transition: border-color 0.15s;
   background: white;
 }
-.field-input:focus { border-color: var(--sky-400); }
+.field-input:focus { border-color: #2563eb; }
 
 /* ── 臨時薬・他科受診フォーム：共通レイアウト（rx-*） ── */
 .rx-form-box {
-  background: var(--sky-50);
-  border: 1.5px solid var(--sky-100);
+  background: #f1f5fb;
+  border: 1px solid #dce4f0;
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 12px;

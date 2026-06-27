@@ -695,7 +695,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
       }}>
         {isEditing ? (
           <div style={{
-            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+            background: '#f1f5fb', border: '1px solid #dce4f0',
             borderRadius: 8, padding: 12,
           }}>
             <div
@@ -869,7 +869,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
         {/* 入力フォーム：定期変更 */}
         {addMode === 'regular' && (
           <div style={{
-            background: 'var(--sky-50)', border: '1.5px solid var(--sky-100)',
+            background: '#f1f5fb', border: '1px solid #dce4f0',
             borderRadius: 8, padding: 12, marginBottom: 12,
           }}>
             <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
