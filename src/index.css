@@ -231,13 +231,19 @@ body {
 }
 @media print {
   .regular-med-highlight {
-    background: #e8f4fb !important;
+    background: #f8fafc !important;
+    border-left: 3px solid #0f1f4e !important;
+    padding: 8px !important;
+    font-weight: 700 !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 }
 body.printing .regular-med-highlight {
-  background: #e8f4fb !important;
+  background: #f8fafc !important;
+  border-left: 3px solid #0f1f4e !important;
+  padding: 8px !important;
+  font-weight: 700 !important;
   print-color-adjust: exact !important;
   -webkit-print-color-adjust: exact !important;
 }
@@ -690,7 +696,7 @@ body.printing .regular-med-highlight {
 /* A4・上下左右15mmマージン（@pageは@media printでなくても印刷時のみ適用される） */
 @page {
   size: A4;
-  margin: 15mm 15mm 15mm 15mm;
+  margin: 10mm;
 }
 
 /*
@@ -704,7 +710,10 @@ body.printing {
   height: auto !important;
   overflow: visible !important;
   font-size: calc(11px * var(--print-scale)) !important;
-  line-height: 1.35 !important;
+  line-height: 1.5 !important;
+  font-family: 'Noto Sans JP', sans-serif !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 
 /* 非表示にする要素 */
@@ -750,21 +759,27 @@ body.printing .print-all-tabs {
 }
 
 body.printing .print-section {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 /* カードのスタイル調整（余白を印刷用に最小化） */
 body.printing .card {
-  border: 1px solid #ddd !important;
+  border: 1px solid #dce4f0 !important;
   box-shadow: none !important;
   page-break-inside: avoid;
   padding: 8px 10px !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 12px !important;
 }
 
 body.printing .card-title {
-  font-size: calc(10px * var(--print-scale)) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  border-left: 3px solid #c9a84c !important;
+  padding-left: 6px !important;
   margin-bottom: 6px !important;
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
 }
 
 /* テキストサイズ調整 */
@@ -803,11 +818,19 @@ body.printing .drug-alert-print {
 
 /* 患者ヘッダー */
 body.printing .patient-header {
-  margin-bottom: 4px;
-  padding: 6px 0 6px 10px !important;
+  border-left: none !important;
+  border-bottom: 2px solid #c9a84c !important;
+  margin-bottom: 12px !important;
+  padding: 4px 0 10px !important;
   background: white !important;
+  display: block !important;
   print-color-adjust: exact !important;
   -webkit-print-color-adjust: exact !important;
+}
+body.printing .patient-header > div:first-child span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #0f1f4e !important;
 }
 
 /* 往診情報行（印刷時のみ表示） */
@@ -821,8 +844,9 @@ body.printing .visit-info-print {
 /* 外用・頓用薬セクション：コンパクト1行表示 */
 body.printing .drug-card {
   display: flex !important;
-  padding: 2px 4px !important;
-  margin-bottom: 1px !important;
+  font-size: 11px !important;
+  padding: 3px 4px !important;
+  margin-bottom: 2px !important;
   background: white !important;
   border: none !important;
   border-bottom: 1px solid #f1f5f9 !important;
@@ -855,10 +879,12 @@ body.printing .drug-badge {
   padding: 1px 4px !important;
 }
 
-/* 変更記録：日付・指示理由テキストを黒・普通字体に統一（見出し .card-title は青のまま） */
+/* 変更記録：日付・指示理由テキストを統一（臨時薬の赤左ラインはJSインラインstyleで維持） */
 body.printing .log-instr-header {
   color: #0f172a !important;
   font-weight: normal !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
 }
 body.printing .log-date-span {
   color: #0f172a !important;
@@ -868,4 +894,135 @@ body.printing .log-date-span {
 /* 外用・頓用薬：数量テキストを黒に統一 */
 body.printing .drug-qty-span {
   color: #0f172a !important;
+}
+
+/* ⑦ ── @media print（ブラウザ印刷ダイアログ対応） ── */
+@media print {
+  @page { margin: 10mm; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 非表示要素 */
+  nav, .sidebar, .patient-actions, .add-link, .drug-actions,
+  .calc-tool, .tabs, .visit-banner, .mobile-tabs-bar,
+  .icon-btn, .row-actions-mobile, .row-menu, .row-menu-overlay,
+  .tab-content, .drug-confirm-area, button:not(.print-show) {
+    display: none !important;
+  }
+
+  /* レイアウト */
+  .layout { grid-template-columns: 1fr !important; overflow: visible !important; }
+  .main, .main-scroll { overflow: visible !important; padding: 0 !important; }
+  .print-all-tabs { display: block !important; width: 680px; max-width: 680px; margin: 0 auto; }
+  .print-section { margin-bottom: 12px; }
+
+  /* 患者ヘッダー */
+  .patient-header {
+    border-left: none !important;
+    border-bottom: 2px solid #c9a84c !important;
+    margin-bottom: 12px !important;
+    padding: 4px 0 10px !important;
+    background: white !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .patient-header > div:first-child span {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #0f1f4e !important;
+  }
+
+  /* 往診情報行 */
+  .visit-info-print { display: block !important; font-size: 11px; color: #475569; margin-bottom: 6px; }
+
+  /* カード */
+  .card {
+    border: 1px solid #dce4f0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    padding: 8px 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* セクションタイトル */
+  .card-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    border-left: 3px solid #c9a84c !important;
+    padding-left: 6px !important;
+    margin-bottom: 6px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 定時薬ハイライト */
+  .regular-med-highlight {
+    background: #f8fafc !important;
+    border-left: 3px solid #0f1f4e !important;
+    padding: 8px !important;
+    font-weight: 700 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 外用・頓用薬：コンパクトリスト表示 */
+  .drug-card {
+    display: flex !important;
+    font-size: 11px !important;
+    padding: 3px 4px !important;
+    margin-bottom: 2px !important;
+    background: white !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    gap: 6px !important;
+    align-items: baseline !important;
+  }
+  .drug-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    column-gap: 6px !important;
+    row-gap: 0 !important;
+  }
+  .drug-content > div { display: inline !important; margin-top: 0 !important; }
+  .drug-content > div > span { margin-right: 4px !important; }
+  .drug-detail { font-size: 9px !important; color: #64748b !important; margin-top: 0 !important; }
+  .drug-badge { font-size: 8px !important; padding: 1px 4px !important; }
+  .drug-qty-span { color: #0f172a !important; }
+  .drug-alert-print { display: block !important; }
+  .drug-card.drug-unconfirmed {
+    background: #fffbeb !important;
+    border-bottom-color: #fde68a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 変更記録 */
+  .log-instr-header { color: #0f172a !important; font-weight: normal !important; font-size: 11px !important; line-height: 1.6 !important; }
+  .log-date-span { color: #0f172a !important; font-weight: normal !important; }
+
+  /* テキストフィールド */
+  .field-input {
+    border: none !important;
+    padding: 2px 0 !important;
+    font-size: 11px !important;
+  }
+  textarea.field-input {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+    resize: none !important;
+  }
 }
