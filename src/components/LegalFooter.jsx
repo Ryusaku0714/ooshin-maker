@@ -8,7 +8,7 @@ export default function LegalFooter() {
     <>
       <div
         style={{
-          borderTop: '1px solid #e0f2fe',
+          borderTop: '1px solid #dce4f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -19,22 +19,14 @@ export default function LegalFooter() {
       >
         <button
           onClick={() => setLegal('privacy')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 11, color: '#64748b', fontFamily: 'inherit',
-            padding: '4px 4px',
-          }}
+          className="legal-link"
         >
           プライバシーポリシー
         </button>
-        <span style={{ fontSize: 11, color: '#94a3b8' }}>|</span>
+        <span style={{ fontSize: 10, color: '#dce4f0' }}>｜</span>
         <button
           onClick={() => setLegal('terms')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 11, color: '#64748b', fontFamily: 'inherit',
-            padding: '4px 4px',
-          }}
+          className="legal-link"
         >
           利用規約
         </button>

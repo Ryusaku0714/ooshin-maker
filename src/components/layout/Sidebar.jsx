@@ -1012,13 +1012,8 @@ export default function Sidebar({
                               <div
                                 onClick={() => setAddPatientTeamId(team.id)}
                                 className="add-link"
-                                style={{
-                                  fontSize: 10, color: cs.patientAddColor,
-                                  padding: '3px 4px', cursor: 'pointer',
-                                  display: 'flex', alignItems: 'center', gap: 4,
-                                }}
                               >
-                                ＋ 患者を追加
+                                <span className="add-link-plus">＋</span> 患者を追加
                               </div>
                             )}
                           </div>
@@ -1032,13 +1027,8 @@ export default function Sidebar({
                     <div
                       onClick={() => setAddTeamFacilityId(facility.id)}
                       className="add-link"
-                      style={{
-                        fontSize: 10, color: cs.addLinkColor,
-                        padding: '3px 6px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4,
-                      }}
                     >
-                      ＋ チームを追加
+                      <span className="add-link-plus">＋</span> チームを追加
                     </div>
                   )}
                 </div>
@@ -1050,17 +1040,15 @@ export default function Sidebar({
           <div
             onClick={() => setShowAddFacility(true)}
             className="add-link"
-            style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            🏠 ＋ 施設 / 個人在宅を追加
+            🏠 <span className="add-link-plus">＋</span> 施設 / 個人在宅を追加
           </div>
 
           <div
             onClick={() => setShowImport(true)}
             className="add-link"
-            style={{ fontSize: 10, color: 'var(--sky-400)', padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            📥 ＋ インポート
+            📥 <span className="add-link-plus">＋</span> インポート
           </div>
 
           <LegalFooter />

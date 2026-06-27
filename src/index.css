@@ -349,6 +349,43 @@ body.printing .regular-med-highlight {
   background: #eff6ff !important;
 }
 
+/* ── Sidebar: 追加系リンク ── */
+.add-link {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  padding: 5px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.add-link:hover {
+  color: #0f1f4e;
+  background: #eff6ff;
+}
+.add-link-plus {
+  color: #c9a84c;
+  font-weight: 700;
+}
+
+/* ── Sidebar: フッターリンク ── */
+.legal-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  color: #94a3b8;
+  font-family: inherit;
+  padding: 4px 4px;
+  transition: color 0.15s;
+}
+.legal-link:hover {
+  color: #64748b;
+}
+
 /* ── タブコンテンツ背景・パディング ── */
 .main-scroll {
   background: #f1f5fb;
