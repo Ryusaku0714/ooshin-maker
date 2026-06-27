@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import LegalFooter from '../LegalFooter'
 
 export default function Login({ onLogin }) {
+  const [hovered, setHovered] = useState(false)
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -8,36 +11,96 @@ export default function Login({ onLogin }) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--sky-50)',
+      backgroundColor: '#f1f5fb',
+      backgroundImage: [
+        'linear-gradient(rgba(30,58,138,0.06) 1px, transparent 1px)',
+        'linear-gradient(90deg, rgba(30,58,138,0.06) 1px, transparent 1px)',
+      ].join(', '),
+      backgroundSize: '20px 20px',
       padding: '20px 16px 34px',
       boxSizing: 'border-box',
     }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
         <div style={{
           background: 'white',
-          borderRadius: 16,
-          padding: '40px 36px',
-          boxShadow: '0 8px 40px rgba(7,89,133,0.12)',
+          borderRadius: 12,
+          padding: '40px 32px',
+          boxShadow: '0 8px 40px rgba(15,31,78,0.15)',
+          border: '1px solid #dce4f0',
           textAlign: 'center',
         }}>
-          {/* Logo */}
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" style={{ marginBottom: 12 }}>
-            <rect x="4" y="4" width="24" height="28" rx="4" fill="#e0f2fe" stroke="#38bdf8" strokeWidth="1.5"/>
-            <rect x="4" y="4" width="7" height="28" rx="3" fill="#38bdf8"/>
-            <line x1="14" y1="12" x2="24" y2="12" stroke="#bae6fd" strokeWidth="1.5"/>
-            <line x1="14" y1="17" x2="24" y2="17" stroke="#bae6fd" strokeWidth="1.5"/>
-            <line x1="14" y1="22" x2="21" y2="22" stroke="#bae6fd" strokeWidth="1.5"/>
-          </svg>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--sky-800)', marginBottom: 4 }}>
+          {/* アイコン枠 */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1.5px solid #c9a84c',
+            borderRadius: 8,
+            padding: 8,
+            marginBottom: 14,
+          }}>
+            <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="4" width="24" height="28" rx="4" fill="#e8eef8" stroke="#1e3a8a" strokeWidth="1.5"/>
+              <rect x="4" y="4" width="7" height="28" rx="3" fill="#1e3a8a"/>
+              <line x1="14" y1="12" x2="24" y2="12" stroke="#93c5fd" strokeWidth="1.5"/>
+              <line x1="14" y1="17" x2="24" y2="17" stroke="#93c5fd" strokeWidth="1.5"/>
+              <line x1="14" y1="22" x2="21" y2="22" stroke="#93c5fd" strokeWidth="1.5"/>
+            </svg>
+          </div>
+
+          {/* タイトル */}
+          <h1 style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: '#0f1f4e',
+            fontFamily: "'Noto Sans JP', sans-serif",
+            marginBottom: 4,
+          }}>
             往診資料メーカー
           </h1>
-          <p style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 28 }}>
+
+          {/* サブテキスト BRIDGEWORK */}
+          <p style={{
+            color: '#c9a84c',
+            fontSize: 10,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            marginBottom: 10,
+          }}>
+            BRIDGEWORK
+          </p>
+
+          {/* 説明テキスト */}
+          <p style={{
+            fontSize: 13,
+            color: '#64748b',
+            marginBottom: 28,
+          }}>
             施設薬剤師の往診をスマートに
           </p>
+
+          {/* Googleログインボタン */}
           <button
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '11px 0', fontSize: 14 }}
             onClick={onLogin}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+              width: '100%',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              background: hovered ? '#1e3a8a' : '#0f1f4e',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '12px 24px',
+              fontSize: 14,
+              fontWeight: 700,
+              fontFamily: "'Noto Sans JP', sans-serif",
+              cursor: 'pointer',
+              transition: 'background 0.15s',
+            }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -47,10 +110,13 @@ export default function Login({ onLogin }) {
             </svg>
             Google でログイン
           </button>
-          <p style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 20 }}>
+
+          {/* 注記テキスト */}
+          <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 20 }}>
             個人情報は保護され、第三者に共有されません
           </p>
         </div>
+
         <LegalFooter />
       </div>
     </div>
