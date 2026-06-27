@@ -392,9 +392,17 @@ body.printing .regular-med-highlight {
   color: #64748b;
 }
 
+/* ── 患者ヘッダー：スマホ用アクションメニュー ── */
+.patient-actions-mobile { display: none; }
+@media (max-width: 768px) {
+  .patient-actions { display: none !important; }
+  .patient-actions-mobile { display: block; }
+}
+
 /* ── メインコンテンツエリア・タブコンテンツ：グリッドパターン背景 ── */
 .main,
 .main-scroll,
+.tab-scroll-area,
 .tab-content {
   background-color: #f1f5fb;
   background-image:
@@ -509,8 +517,13 @@ body.printing .regular-med-highlight {
 
   /* 患者詳細エリア */
   .main-scroll {
-    padding: 0 0 52px !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .tab-scroll-area {
+    flex: 1;
     overflow-y: auto !important;
+    padding: 0 0 52px !important;
     min-height: 0;
   }
   .tab-content {
@@ -666,7 +679,7 @@ body.printing .regular-med-highlight {
   }
 
   /* 患者詳細 */
-  .main-scroll {
+  .tab-scroll-area {
     padding: 0 0 52px !important;
   }
   .tab-content {
@@ -725,6 +738,7 @@ body.printing {
 body.printing nav,
 body.printing .sidebar,
 body.printing .patient-actions,
+body.printing .patient-actions-mobile,
 body.printing .add-link,
 body.printing .drug-actions,
 body.printing .calc-tool,
@@ -745,7 +759,8 @@ body.printing .layout {
 }
 
 body.printing .main,
-body.printing .main-scroll {
+body.printing .main-scroll,
+body.printing .tab-scroll-area {
   overflow: visible !important;
   padding: 0 !important;
   background: white !important;
@@ -916,7 +931,7 @@ body.printing .drug-qty-span {
   }
 
   /* 非表示要素 */
-  nav, .sidebar, .patient-actions, .add-link, .drug-actions,
+  nav, .sidebar, .patient-actions, .patient-actions-mobile, .add-link, .drug-actions,
   .calc-tool, .tabs, .visit-banner, .mobile-tabs-bar,
   .icon-btn, .row-actions-mobile, .row-menu, .row-menu-overlay,
   .tab-content, .drug-confirm-area, button:not(.print-show) {
@@ -925,7 +940,7 @@ body.printing .drug-qty-span {
 
   /* レイアウト */
   .layout { grid-template-columns: 1fr !important; overflow: visible !important; }
-  .main, .main-scroll { overflow: visible !important; padding: 0 !important; background: white !important; }
+  .main, .main-scroll, .tab-scroll-area { overflow: visible !important; padding: 0 !important; background: white !important; }
   .print-all-tabs { display: block !important; width: 680px; max-width: 680px; margin: 0 auto; }
   .print-section { margin-bottom: 12px; }
 
