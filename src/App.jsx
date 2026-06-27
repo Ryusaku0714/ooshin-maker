@@ -114,7 +114,7 @@ export default function App() {
 
       {/* ④ モバイルタブバー */}
       <div
-        style={{ display: 'none', background: 'var(--sky-800)', padding: '8px 12px', gap: 6, flexShrink: 0 }}
+        style={{ display: 'none', background: '#0f1f4e', padding: '8px 12px', gap: 6, flexShrink: 0 }}
         className="mobile-tabs-bar"
       >
         {[
@@ -125,10 +125,10 @@ export default function App() {
             key={o.v}
             onClick={() => setMobileView(o.v)}
             style={{
-              flex: 1, padding: 8, borderRadius: 8, fontSize: 12, fontWeight: 600,
+              flex: 1, padding: 8, borderRadius: 6, fontSize: 12, fontWeight: 600,
               border: 'none', fontFamily: 'inherit', cursor: 'pointer',
-              background: mobileView === o.v ? 'white' : 'rgba(255,255,255,0.15)',
-              color: mobileView === o.v ? 'var(--sky-800)' : 'white',
+              background: mobileView === o.v ? 'white' : 'transparent',
+              color: mobileView === o.v ? '#0f1f4e' : '#93c5fd',
             }}
           >{o.l}</button>
         ))}

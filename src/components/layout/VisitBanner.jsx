@@ -116,7 +116,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   const mobileFieldStyle = { width: '45%' }
 
   return (
-    <div className="visit-banner" style={{ background: '#1e3a8a', padding: '8px 14px', flexShrink: 0 }}>
+    <div className="visit-banner" style={{ background: '#0f1f4e', padding: '8px 14px', flexShrink: 0 }}>
 
       {/* モバイル用折りたたみヘッダー（768px以下のみ表示）：往診日＋処方期間を1行で表示 */}
       <div
@@ -254,7 +254,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
           }
           .visit-banner-chevron {
             font-size: 11px;
-            opacity: 0.8;
+            color: #c9a84c;
             flex-shrink: 0;
             margin-left: 6px;
           }

@@ -144,7 +144,7 @@ body {
   right: 0;
   background: white;
   border: 1px solid #dce4f0;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 4px 16px rgba(15,31,78,0.12);
   display: flex;
   flex-direction: column;
@@ -157,7 +157,7 @@ body {
   border: none;
   border-bottom: 1px solid #f1f5fb;
   text-align: left;
-  padding: 9px 12px;
+  padding: 10px 14px;
   font-size: 12px;
   font-weight: 600;
   color: #334155;
@@ -557,9 +557,22 @@ body.printing .regular-med-highlight {
     appearance: none;
   }
 
-  /* タブ */
+  /* タブ：横スクロール */
   .tabs {
     width: 100% !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  /* 3点メニューボタン（スマホ版）*/
+  .row-actions-mobile .icon-btn {
+    background: #f1f5fb;
+    border: 1px solid #dce4f0;
+    border-radius: 6px;
+    color: #64748b;
+  }
+  .row-actions-mobile .icon-btn:hover {
+    color: #0f1f4e;
   }
 
   /* カードのpadding調整 */
