@@ -102,7 +102,7 @@ body {
   border-radius: 12px;
   border: 1px solid #dce4f0;
   box-shadow: 0 1px 4px rgba(15,31,78,0.06);
-  padding: 14px 18px;
+  padding: 16px;
   margin-bottom: 10px;
 }
 .card-title {
@@ -306,26 +306,26 @@ body.printing .regular-med-highlight {
 
 /* ── Form fields ── */
 .field-label {
-  font-size: 10px;
-  color: var(--gray-500);
+  font-size: 11px;
+  color: #64748b;
   display: block;
-  margin-bottom: 3px;
-  font-weight: 500;
+  margin-bottom: 4px;
+  font-weight: 700;
 }
 .field-input {
   width: 100%;
-  border: 1.5px solid var(--gray-200);
-  border-radius: 6px;
-  padding: 6px 9px;
+  border: 1.5px solid #dce4f0;
+  border-radius: 8px;
+  padding: 8px 12px;
   font-size: 12px;
-  font-family: inherit;
-  color: var(--gray-900);
+  font-family: 'Noto Sans JP', sans-serif;
+  color: #1e293b;
   outline: none;
   resize: vertical;
   transition: border-color 0.15s;
-  background: white;
+  background: #f8fafc;
 }
-.field-input:focus { border-color: #2563eb; }
+.field-input:focus { border-color: #1e3a8a; outline: none; }
 
 /* ── 臨時薬・他科受診フォーム：共通レイアウト（rx-*） ── */
 .rx-form-box {
@@ -462,7 +462,7 @@ body.printing .regular-med-highlight {
   .rx-input {
     height: 40px;
     line-height: 40px;
-    padding: 0 8px;
+    padding: 0 12px;
     font-size: 12px;
     box-sizing: border-box;
     width: 100%;

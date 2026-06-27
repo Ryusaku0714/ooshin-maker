@@ -52,8 +52,8 @@ export default function AddDrugModal({ patientId, drug, onClose, onSaved }) {
                   />
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 10,
-                    background: o.v === 'gaiyou' ? 'var(--sky-100)' : '#fef3c7',
-                    color: o.v === 'gaiyou' ? 'var(--sky-700)' : '#92400e',
+                    background: o.v === 'gaiyou' ? '#dbeafe' : '#fef3c7',
+                    color: o.v === 'gaiyou' ? '#1e3a8a' : '#92400e',
                   }}>{o.l}</span>
                 </label>
               ))}

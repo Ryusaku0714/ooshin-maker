@@ -209,8 +209,9 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
               className="btn btn-outline btn-sm"
               onClick={() => setShowArchived(s => !s)}
               style={{
-                color: showArchived ? 'var(--sky-600)' : 'var(--gray-400)',
-                borderColor: showArchived ? 'var(--sky-200)' : 'var(--gray-200)',
+                color: showArchived ? '#1e3a8a' : '#94a3b8',
+                background: showArchived ? '#dbeafe' : 'white',
+                borderColor: '#dce4f0',
               }}
             >
               {showArchived
@@ -387,8 +388,8 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
 
   return (
     <div style={{
-      background: archived ? '#f8fafc' : 'var(--sky-50)',
-      border: `1.5px solid ${archived ? 'var(--gray-200)' : 'var(--sky-100)'}`,
+      background: '#f8fafc',
+      border: '1px solid #dce4f0',
       borderRadius: 8, padding: '10px 12px', marginBottom: 6,
       display: 'flex', gap: 10, alignItems: 'flex-start',
       opacity: archived ? 0.7 : 1,

@@ -35,7 +35,7 @@ function checkboxBtnStyle(active) {
   return {
     background: 'none', border: 'none', cursor: 'pointer',
     fontSize: 10, fontFamily: 'inherit', padding: '2px 0',
-    color: active ? 'var(--sky-600)' : 'var(--gray-400)',
+    color: active ? '#1e3a8a' : '#94a3b8',
   }
 }
 
@@ -105,7 +105,7 @@ export default function DrugsTab({ patient, onRefetch }) {
               <button
                 className="btn btn-outline btn-sm"
                 onClick={() => setShowArchived(s => !s)}
-                style={{ color: showArchived ? 'var(--sky-600)' : 'var(--gray-400)', borderColor: showArchived ? 'var(--sky-200)' : 'var(--gray-200)' }}
+                style={{ color: showArchived ? '#1e3a8a' : '#94a3b8', background: showArchived ? '#dbeafe' : 'white', borderColor: '#dce4f0' }}
               >
                 {showArchived ? '📂 アーカイブを隠す' : `📂 アーカイブを表示（${archivedDrugs.length}件）`}
               </button>
@@ -197,11 +197,11 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
     drug.prescribed_at && `処方：${drug.prescribed_at}`,
   ].filter(Boolean)
 
-  const badgeBg    = archived ? '#f1f5f9' : (drug.drug_type === 'gaiyou' ? 'var(--sky-100)' : '#fef3c7')
-  const badgeColor = archived ? 'var(--gray-400)' : (drug.drug_type === 'gaiyou' ? 'var(--sky-700)' : '#92400e')
+  const badgeBg    = archived ? '#f1f5f9' : (drug.drug_type === 'gaiyou' ? '#dbeafe' : '#fef3c7')
+  const badgeColor = archived ? '#94a3b8' : (drug.drug_type === 'gaiyou' ? '#1e3a8a' : '#92400e')
 
-  const cardBg     = archived ? '#f8fafc' : (needsAlert ? '#fffbeb' : 'var(--sky-50)')
-  const cardBorder = archived ? 'var(--gray-200)' : (needsAlert ? '#fcd34d' : 'var(--sky-100)')
+  const cardBg     = archived ? '#f8fafc' : (needsAlert ? '#fffbeb' : '#f8fafc')
+  const cardBorder = archived ? '#dce4f0' : (needsAlert ? '#fcd34d' : '#dce4f0')
 
   return (
     <div
@@ -231,7 +231,7 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
             {drug.drug_name}
           </span>
           {drug.prescribed_quantity && (
-            <span className="drug-qty-span" style={{ fontSize: 10, color: archived ? 'var(--gray-400)' : 'var(--sky-700)', fontWeight: 600 }}>
+            <span className="drug-qty-span" style={{ fontSize: 10, color: archived ? '#94a3b8' : '#1e3a8a', fontWeight: 600 }}>
               {drug.prescribed_quantity}
             </span>
           )}
@@ -279,7 +279,7 @@ function DrugRow({ drug, archived, onEdit, onConfirm, onArchive, onRestore, onDe
         gap: 4,
         justifyContent: needsAlert ? 'space-between' : 'flex-end',
         paddingTop: 5,
-        borderTop: `1px dashed ${needsAlert ? '#fde68a' : (archived ? 'var(--gray-200)' : 'var(--sky-100)')}`,
+        borderTop: `1px dashed ${needsAlert ? '#fde68a' : '#dce4f0'}`,
       }}>
         {needsAlert && (
           <span style={{ fontSize: 9, color: '#b45309', fontWeight: 700 }}>
