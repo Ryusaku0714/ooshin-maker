@@ -352,7 +352,8 @@ body.printing .regular-med-highlight {
 
 /* ── Sidebar patient row hover ── */
 .patient-row-item:not(.patient-row-selected):hover {
-  background: #eff6ff !important;
+  background: #e8edf8 !important;
+  border-radius: 4px !important;
 }
 
 /* ── Sidebar: 追加系リンク ── */
