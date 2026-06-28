@@ -305,48 +305,47 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
     <div className="main-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* 患者ヘッダー */}
       <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', borderLeft: '4px solid #0f1f4e', padding: '14px 20px', flexShrink: 0 }}>
-        {/* 患者名 + スマホ用 … ボタン */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
-            {patient.initial ? (
-              <>
-                <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>{patient.room_number}</span>
-                <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.initial}</span>
-              </>
-            ) : (
-              <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.room_number}</span>
-            )}
-          </div>
-          {/* スマホ版（≤768px）のみ表示される … メニューボタン */}
-          <div className="patient-actions-mobile" style={{ position: 'relative', flexShrink: 0 }}>
-            <button
-              onClick={() => setShowMobileMenu(m => !m)}
-              style={{
-                background: 'white', border: '1.5px solid #dce4f0', borderRadius: 6,
-                padding: '5px 10px', fontSize: 16, lineHeight: 1,
-                cursor: 'pointer', color: '#64748b', fontFamily: 'inherit',
-              }}
-            >…</button>
-            {showMobileMenu && (
-              <>
-                <div className="row-menu-overlay" onClick={() => setShowMobileMenu(false)} />
-                <div className="row-menu" style={{ minWidth: 200 }}>
-                  <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); copyPatientText() }}>
-                    <span className="team-menu-item-label">📋 テキストコピー</span>
-                    <span className="team-menu-item-desc">1患者情報全コピー</span>
-                  </button>
-                  <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printPatientMonth() }}>
-                    <span className="team-menu-item-label">🖨️ 1ヶ月分</span>
-                    <span className="team-menu-item-desc">直近1ヶ月変更ログ</span>
-                  </button>
-                  <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printFullPatient() }}>
-                    <span className="team-menu-item-label">🖨️ 全体印刷</span>
-                    <span className="team-menu-item-desc">1患者情報印刷</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+        {/* 患者名（flex:1 で残スペースを占有し … ボタンを右端に押し出す） */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
+          {patient.initial ? (
+            <>
+              <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>{patient.room_number}</span>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.initial}</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.room_number}</span>
+          )}
+        </div>
+
+        {/* スマホ版（≤768px）… ボタン：常に右端固定 */}
+        <div className="patient-actions-mobile" style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={() => setShowMobileMenu(m => !m)}
+            style={{
+              background: 'white', border: '1.5px solid #dce4f0', borderRadius: 6,
+              padding: '5px 10px', fontSize: 16, lineHeight: 1,
+              cursor: 'pointer', color: '#64748b', fontFamily: 'inherit',
+            }}
+          >…</button>
+          {showMobileMenu && (
+            <>
+              <div className="row-menu-overlay" onClick={() => setShowMobileMenu(false)} />
+              <div className="row-menu" style={{ minWidth: 200 }}>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); copyPatientText() }}>
+                  <span className="team-menu-item-label">📋 テキストコピー</span>
+                  <span className="team-menu-item-desc">1患者情報全コピー</span>
+                </button>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printPatientMonth() }}>
+                  <span className="team-menu-item-label">🖨️ 1ヶ月分</span>
+                  <span className="team-menu-item-desc">直近1ヶ月変更ログ</span>
+                </button>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printFullPatient() }}>
+                  <span className="team-menu-item-label">🖨️ 全体印刷</span>
+                  <span className="team-menu-item-desc">1患者情報印刷</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* PC版（≥769px）アクションボタン群 */}

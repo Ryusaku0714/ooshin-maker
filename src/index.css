@@ -607,10 +607,7 @@ body.printing .regular-med-highlight {
 }
 
 @media (max-width: 480px) {
-  .patient-header {
-    flex-direction: column;
-    align-items: flex-start !important;
-  }
+  /* patient-header は flex-row を維持し … ボタンを常に右端に固定 */
 }
 
 /* ── 追加薬日数計算：折りたたみボタン（PCでは非表示） ── */
