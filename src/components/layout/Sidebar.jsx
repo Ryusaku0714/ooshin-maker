@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
 import MemoModal from '../modals/MemoModal'
+import TaskModal from '../modals/TaskModal'
 import ImportModal from '../modals/ImportModal'
 import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
@@ -440,7 +441,13 @@ export default function Sidebar({
   const [editTeamPharmacist, setEditTeamPharmacist] = useState('')
   const [editTeamVisitDate, setEditTeamVisitDate] = useState('')
   const [memoTarget, setMemoTarget] = useState(null)
-  // memoTarget = { type: 'facility' | 'team', id, name, memo }
+  // memoTarget = { type: 'team', id, name, memo }
+  const [taskFacilityTarget, setTaskFacilityTarget] = useState(null)
+  const [taskSummaries, setTaskSummaries] = useState({})
+
+  useEffect(() => {
+    db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
+  }, [facilities])
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -709,14 +716,47 @@ export default function Sidebar({
                         >✏️</button>
                         <span style={ICON_CAP_STYLE}>編集</span>
                       </span>
-                      <span style={ICON_WRAP_STYLE}>
+                      <div style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                         <button
-                          onClick={e => { e.stopPropagation(); setMemoTarget({ type: 'facility', id: facility.id, name: facility.name, memo: facility.memo ?? '' }) }}
-                          title={facility.memo ? 'メモあり（クリックで編集）' : 'メモを追加'}
-                          style={{ fontSize: 10, padding: '1px 4px', borderRadius: 4, border: facility.memo ? '1px solid #fde68a' : `1px solid ${cs.cardBorder}`, background: facility.memo ? '#fffbeb' : 'white', color: facility.memo ? '#f59e0b' : cs.accentBorder, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+                          onClick={e => { e.stopPropagation(); setTaskFacilityTarget(facility) }}
+                          title={
+                            taskSummaries[facility.id]?.overdue
+                              ? `期限切れタスクあり（${taskSummaries[facility.id].overdue}件）`
+                              : taskSummaries[facility.id]?.count
+                                ? `未完了タスク ${taskSummaries[facility.id].count}件`
+                                : '引継ぎ・タスク表'
+                          }
+                          style={{
+                            fontSize: 10, padding: '1px 4px', borderRadius: 4,
+                            border: taskSummaries[facility.id]?.overdue
+                              ? '1px solid #fca5a5'
+                              : taskSummaries[facility.id]?.count
+                                ? '1px solid #fed7aa'
+                                : `1px solid ${cs.cardBorder}`,
+                            background: taskSummaries[facility.id]?.overdue
+                              ? '#fee2e2'
+                              : taskSummaries[facility.id]?.count
+                                ? '#fff7ed'
+                                : 'white',
+                            color: taskSummaries[facility.id]?.overdue
+                              ? '#ef4444'
+                              : taskSummaries[facility.id]?.count
+                                ? '#f97316'
+                                : cs.accentBorder,
+                            cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                          }}
                         >📝</button>
-                        <span style={ICON_CAP_STYLE}>チームメモ</span>
-                      </span>
+                        {(taskSummaries[facility.id]?.count ?? 0) > 0 && (
+                          <span style={{
+                            position: 'absolute', top: -3, right: -3,
+                            width: 7, height: 7, borderRadius: '50%',
+                            background: taskSummaries[facility.id]?.overdue ? '#ef4444' : '#f97316',
+                            border: '1px solid white',
+                            pointerEvents: 'none',
+                          }} />
+                        )}
+                        <span style={ICON_CAP_STYLE}>タスク</span>
+                      </div>
                       <span style={ICON_WRAP_STYLE}>
                         <button
                           onClick={e => deleteFacility(e, facility)}
@@ -1077,16 +1117,21 @@ export default function Sidebar({
           onSaved={(patientId) => { onRefetch(); onSelectPatient(patientId) }}
         />
       )}
+      {taskFacilityTarget && (
+        <TaskModal
+          facility={taskFacilityTarget}
+          onClose={() => {
+            setTaskFacilityTarget(null)
+            db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
+          }}
+        />
+      )}
       {memoTarget && (
         <MemoModal
-          title={memoTarget.type === 'facility' ? `施設メモ：${memoTarget.name}` : `チームメモ：${memoTarget.name}`}
+          title={`チームメモ：${memoTarget.name}`}
           initialMemo={memoTarget.memo}
           onSave={async (newMemo) => {
-            if (memoTarget.type === 'facility') {
-              await db.updateFacility(memoTarget.id, { memo: newMemo || null })
-            } else {
-              await db.updateTeam(memoTarget.id, { memo: newMemo || null })
-            }
+            await db.updateTeam(memoTarget.id, { memo: newMemo || null })
             onRefetch()
           }}
           onClose={() => setMemoTarget(null)}

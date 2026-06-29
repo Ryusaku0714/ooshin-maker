@@ -115,4 +115,35 @@ export const db = {
       .in('id', patientIds)
     return data ?? []
   },
+
+  // タスク（引継ぎ・タスク表）
+  addTask: (facilityId, payload) =>
+    supabase.from('om_facility_tasks').insert({ facility_id: facilityId, ...payload }).select().single(),
+  updateTask: (id, data) =>
+    supabase.from('om_facility_tasks').update(data).eq('id', id),
+  deleteTask: (id) =>
+    supabase.from('om_facility_tasks').delete().eq('id', id),
+  getFacilityTasks: async (facilityId) => {
+    const { data } = await supabase
+      .from('om_facility_tasks')
+      .select('*')
+      .eq('facility_id', facilityId)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  },
+  getFacilityTaskSummaries: async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase
+      .from('om_facility_tasks')
+      .select('facility_id, deadline')
+      .eq('is_completed', false)
+    if (!data) return {}
+    const summaries = {}
+    data.forEach(t => {
+      if (!summaries[t.facility_id]) summaries[t.facility_id] = { count: 0, overdue: 0 }
+      summaries[t.facility_id].count++
+      if (t.deadline && t.deadline < today) summaries[t.facility_id].overdue++
+    })
+    return summaries
+  },
 }

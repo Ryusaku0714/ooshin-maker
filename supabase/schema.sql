@@ -230,3 +230,30 @@ ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS end_date     DATE;
 -- v12 マイグレーション：薬剤変更記録にアーカイブ機能を追加
 -- ============================================================
 ALTER TABLE om_change_logs ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- ============================================================
+-- v13 マイグレーション：施設ごとの引継ぎ・タスク表
+-- ============================================================
+CREATE TABLE IF NOT EXISTS om_facility_tasks (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  facility_id     UUID NOT NULL REFERENCES om_facilities(id) ON DELETE CASCADE,
+  patient_id      UUID REFERENCES om_patients(id) ON DELETE SET NULL,
+  color           TEXT NOT NULL DEFAULT '#94a3b8',
+  memo            TEXT NOT NULL DEFAULT '',
+  input_date      DATE NOT NULL DEFAULT CURRENT_DATE,
+  deadline        DATE,
+  is_completed    BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_date  DATE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE om_facility_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "om_facility_tasks_owner" ON om_facility_tasks;
+CREATE POLICY "om_facility_tasks_owner" ON om_facility_tasks
+  USING (facility_id IN (
+    SELECT id FROM om_facilities WHERE user_id = auth.uid()
+  ))
+  WITH CHECK (facility_id IN (
+    SELECT id FROM om_facilities WHERE user_id = auth.uid()
+  ));
