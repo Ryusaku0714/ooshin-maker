@@ -444,10 +444,18 @@ export default function Sidebar({
   // memoTarget = { type: 'team', id, name, memo }
   const [taskFacilityTarget, setTaskFacilityTarget] = useState(null)
   const [taskSummaries, setTaskSummaries] = useState({})
+  const [openFacGearId, setOpenFacGearId] = useState(null)
 
   useEffect(() => {
     db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
   }, [facilities])
+
+  useEffect(() => {
+    if (!openFacGearId) return
+    const close = () => setOpenFacGearId(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [openFacGearId])
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -698,7 +706,7 @@ export default function Sidebar({
                       >✕</button>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 9, color: cs.accentBorder, flexShrink: 0, width: 11, textAlign: 'center' }}>
                         {facOpen ? '▼' : '▶'}
                       </span>
@@ -708,63 +716,85 @@ export default function Sidebar({
                       }}>
                         {facility.name}
                       </span>
-                      <span style={ICON_WRAP_STYLE}>
-                        <button
-                          onClick={e => startEditFacility(e, facility)}
-                          title="施設名を編集"
-                          style={{ fontSize: 10, padding: '1px 4px', borderRadius: 4, border: `1px solid ${cs.cardBorder}`, background: 'white', color: cs.accentBorder, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                        >✏️</button>
-                        <span style={ICON_CAP_STYLE}>編集</span>
-                      </span>
-                      <div style={{ position: 'relative', display: 'inline-flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+
+                      {/* 📝タスクボタン（大きめ） */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button
                           onClick={e => { e.stopPropagation(); setTaskFacilityTarget(facility) }}
                           title={
                             taskSummaries[facility.id]?.overdue
                               ? `期限切れタスクあり（${taskSummaries[facility.id].overdue}件）`
-                              : taskSummaries[facility.id]?.count
+                              : (taskSummaries[facility.id]?.count ?? 0) > 0
                                 ? `未完了タスク ${taskSummaries[facility.id].count}件`
                                 : '引継ぎ・タスク表'
                           }
                           style={{
-                            fontSize: 10, padding: '1px 4px', borderRadius: 4,
-                            border: taskSummaries[facility.id]?.overdue
-                              ? '1px solid #fca5a5'
-                              : taskSummaries[facility.id]?.count
-                                ? '1px solid #fed7aa'
-                                : `1px solid ${cs.cardBorder}`,
+                            fontSize: 10, padding: '4px 10px', borderRadius: 6, border: 'none',
+                            fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer', color: 'white',
                             background: taskSummaries[facility.id]?.overdue
-                              ? '#fee2e2'
-                              : taskSummaries[facility.id]?.count
-                                ? '#fff7ed'
-                                : 'white',
-                            color: taskSummaries[facility.id]?.overdue
-                              ? '#ef4444'
-                              : taskSummaries[facility.id]?.count
-                                ? '#f97316'
-                                : cs.accentBorder,
-                            cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                              ? '#dc2626'
+                              : (taskSummaries[facility.id]?.count ?? 0) > 0
+                                ? '#ea580c'
+                                : '#0f1f4e',
+                            whiteSpace: 'nowrap',
                           }}
-                        >📝</button>
+                        >
+                          📝 {(taskSummaries[facility.id]?.count ?? 0) > 0
+                            ? `タスク（${taskSummaries[facility.id].count}）`
+                            : 'タスク'}
+                        </button>
                         {(taskSummaries[facility.id]?.count ?? 0) > 0 && (
                           <span style={{
                             position: 'absolute', top: -3, right: -3,
                             width: 7, height: 7, borderRadius: '50%',
-                            background: taskSummaries[facility.id]?.overdue ? '#ef4444' : '#f97316',
-                            border: '1px solid white',
-                            pointerEvents: 'none',
+                            background: taskSummaries[facility.id]?.overdue ? '#dc2626' : '#ea580c',
+                            border: '1.5px solid white', pointerEvents: 'none',
                           }} />
                         )}
-                        <span style={ICON_CAP_STYLE}>タスク</span>
                       </div>
-                      <span style={ICON_WRAP_STYLE}>
+
+                      {/* ⚙ボタン＋ドロップダウン */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button
-                          onClick={e => deleteFacility(e, facility)}
-                          title="施設を削除"
-                          style={{ fontSize: 10, padding: '1px 4px', borderRadius: 4, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                        >🗑️</button>
-                        <span style={ICON_CAP_STYLE}>削除</span>
-                      </span>
+                          onClick={e => { e.stopPropagation(); setOpenFacGearId(openFacGearId === facility.id ? null : facility.id) }}
+                          title="施設の設定"
+                          style={{
+                            fontSize: 13, padding: '2px 6px', borderRadius: 5, lineHeight: 1,
+                            border: '1px solid #dce4f0', background: 'transparent',
+                            color: '#94a3b8', cursor: 'pointer', fontFamily: 'inherit',
+                          }}
+                        >⚙</button>
+                        {openFacGearId === facility.id && (
+                          <div style={{
+                            position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 200,
+                            background: 'white', borderRadius: 8,
+                            boxShadow: '0 4px 16px rgba(15,31,78,0.12)',
+                            minWidth: 130, overflow: 'hidden',
+                            border: '1px solid #e2e8f0',
+                          }}>
+                            <button
+                              onClick={e => { e.stopPropagation(); setOpenFacGearId(null); startEditFacility(e, facility) }}
+                              style={{
+                                display: 'block', width: '100%', textAlign: 'left',
+                                padding: '8px 14px', border: 'none', background: 'none',
+                                fontSize: 11, cursor: 'pointer', color: '#0f1f4e', fontFamily: 'inherit',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            >✏️ 施設を編集</button>
+                            <button
+                              onClick={e => { e.stopPropagation(); setOpenFacGearId(null); deleteFacility(e, facility) }}
+                              style={{
+                                display: 'block', width: '100%', textAlign: 'left',
+                                padding: '8px 14px', border: 'none', background: 'none',
+                                fontSize: 11, cursor: 'pointer', color: '#dc2626', fontFamily: 'inherit',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            >🗑 施設を削除</button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
