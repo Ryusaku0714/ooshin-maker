@@ -157,6 +157,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [copied, setCopied]       = useState(false)
   const [showLogMenu, setShowLogMenu] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const { patient, loading, refetch } = usePatient(patientId)
 
   // 未保存変更の追跡：コンポーネント名をキーに保持し、いずれかが dirty なら親へ通知
@@ -301,10 +302,11 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const printFullPatient = () => printWithAutoFit('.print-all-tabs')
 
   return (
-    <div className="main-scroll" style={{ flex: 1, overflowY: 'auto', padding: '0 0 52px' }}>
+    <div className="main-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* 患者ヘッダー */}
-      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', borderLeft: '4px solid #0f1f4e', padding: '14px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0 }}>
+      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', borderLeft: '4px solid #0f1f4e', padding: '14px 20px', flexShrink: 0 }}>
+        {/* 患者名（flex:1 で残スペースを占有し … ボタンを右端に押し出す） */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
           {patient.initial ? (
             <>
               <span style={{ fontSize: 13, fontWeight: 400, color: '#94a3b8' }}>{patient.room_number}</span>
@@ -314,6 +316,39 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             <span style={{ fontSize: 22, fontWeight: 700, color: '#0f1f4e' }}>{patient.room_number}</span>
           )}
         </div>
+
+        {/* スマホ版（≤768px）… ボタン：常に右端固定 */}
+        <div className="patient-actions-mobile" style={{ position: 'relative', flexShrink: 0 }}>
+          <button
+            onClick={() => setShowMobileMenu(m => !m)}
+            style={{
+              background: 'white', border: '1.5px solid #dce4f0', borderRadius: 6,
+              padding: '5px 10px', fontSize: 16, lineHeight: 1,
+              cursor: 'pointer', color: '#64748b', fontFamily: 'inherit',
+            }}
+          >…</button>
+          {showMobileMenu && (
+            <>
+              <div className="row-menu-overlay" onClick={() => setShowMobileMenu(false)} />
+              <div className="row-menu" style={{ minWidth: 200 }}>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); copyPatientText() }}>
+                  <span className="team-menu-item-label">📋 テキストコピー</span>
+                  <span className="team-menu-item-desc">1患者情報全コピー</span>
+                </button>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printPatientMonth() }}>
+                  <span className="team-menu-item-label">🖨️ 1ヶ月分</span>
+                  <span className="team-menu-item-desc">直近1ヶ月変更ログ</span>
+                </button>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printFullPatient() }}>
+                  <span className="team-menu-item-label">🖨️ 全体印刷</span>
+                  <span className="team-menu-item-desc">1患者情報印刷</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* PC版（≥769px）アクションボタン群 */}
         <div className="patient-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <span style={ACTION_WRAP_STYLE}>
             <button
@@ -361,7 +396,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
         display: 'flex', background: '#ffffff',
         borderBottom: '2px solid #dce4f0',
         padding: '0 20px', marginBottom: 0,
-        flexWrap: 'wrap',
+        flexWrap: 'wrap', flexShrink: 0,
       }}>
         {TABS.map(t => (
           <button
@@ -382,43 +417,46 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
         ))}
       </div>
 
-      {/* タブコンテンツ：常時マウント＋display切替でタブ移動時の入力内容を保持 */}
-      {/* key={patient?.id} により患者切り替え時のみリマウントして状態リセット */}
-      <div className="tab-content">
-        <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
-          <BasicInfoTab
-            key={patient?.id}
-            patient={patient}
-            onSaved={refetch}
-            onDirtyChange={d => reportDirty('basic', d)}
-          />
+      {/* タブコンテンツ独立スクロールエリア：患者ヘッダー・タブバーを固定してコンテンツのみスクロール */}
+      <div className="tab-scroll-area" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 52 }}>
+        {/* タブコンテンツ：常時マウント＋display切替でタブ移動時の入力内容を保持 */}
+        {/* key={patient?.id} により患者切り替え時のみリマウントして状態リセット */}
+        <div className="tab-content">
+          <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
+            <BasicInfoTab
+              key={patient?.id}
+              patient={patient}
+              onSaved={refetch}
+              onDirtyChange={d => reportDirty('basic', d)}
+            />
+          </div>
+          <div style={{ display: activeTab === 'log' ? 'block' : 'none' }}>
+            <ChangeLogTab key={patient?.id} patient={patient} visitCalc={visitCalc} onRefetch={refetch} />
+          </div>
+          <div style={{ display: activeTab === 'drugs' ? 'block' : 'none' }}>
+            <DrugsTab key={patient?.id} patient={patient} onRefetch={refetch} />
+          </div>
+          <div style={{ display: activeTab === 'visit' ? 'block' : 'none' }}>
+            <OtherVisitsTab key={patient?.id} patient={patient} onRefetch={refetch} />
+          </div>
+          <div style={{ display: activeTab === 'free' ? 'block' : 'none' }}>
+            <FreeMemoTab
+              key={patient?.id}
+              patient={patient}
+              onRefetch={refetch}
+              onDirtyChange={d => reportDirty('free', d)}
+            />
+          </div>
         </div>
-        <div style={{ display: activeTab === 'log' ? 'block' : 'none' }}>
-          <ChangeLogTab key={patient?.id} patient={patient} visitCalc={visitCalc} onRefetch={refetch} />
-        </div>
-        <div style={{ display: activeTab === 'drugs' ? 'block' : 'none' }}>
-          <DrugsTab key={patient?.id} patient={patient} onRefetch={refetch} />
-        </div>
-        <div style={{ display: activeTab === 'visit' ? 'block' : 'none' }}>
-          <OtherVisitsTab key={patient?.id} patient={patient} onRefetch={refetch} />
-        </div>
-        <div style={{ display: activeTab === 'free' ? 'block' : 'none' }}>
-          <FreeMemoTab
-            key={patient?.id}
-            patient={patient}
-            onRefetch={refetch}
-            onDirtyChange={d => reportDirty('free', d)}
-          />
-        </div>
-      </div>
 
-      {/* 印刷用：全タブコンテンツ */}
-      <div className="print-all-tabs" style={{ display: 'none' }}>
-        <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} printMode={true} /></div>
-        <div className="print-section"><ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={() => {}} /></div>
-        <div className="print-section"><DrugsTab       patient={patient} onRefetch={() => {}} /></div>
-        <div className="print-section"><OtherVisitsTab patient={patient} onRefetch={() => {}} /></div>
-        <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} printMode={true} /></div>
+        {/* 印刷用：全タブコンテンツ */}
+        <div className="print-all-tabs" style={{ display: 'none' }}>
+          <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} printMode={true} /></div>
+          <div className="print-section"><ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={() => {}} /></div>
+          <div className="print-section"><DrugsTab       patient={patient} onRefetch={() => {}} /></div>
+          <div className="print-section"><OtherVisitsTab patient={patient} onRefetch={() => {}} /></div>
+          <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} printMode={true} /></div>
+        </div>
       </div>
     </div>
   )
