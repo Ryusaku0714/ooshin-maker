@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
@@ -444,18 +445,12 @@ export default function Sidebar({
   // memoTarget = { type: 'team', id, name, memo }
   const [taskFacilityTarget, setTaskFacilityTarget] = useState(null)
   const [taskSummaries, setTaskSummaries] = useState({})
-  const [openFacGearId, setOpenFacGearId] = useState(null)
+  // facGear: { id, pos } | null — ⚙ドロップダウンの対象施設IDと表示位置
+  const [facGear, setFacGear] = useState(null)
 
   useEffect(() => {
     db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
   }, [facilities])
-
-  useEffect(() => {
-    if (!openFacGearId) return
-    const close = () => setOpenFacGearId(null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [openFacGearId])
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -663,7 +658,19 @@ export default function Sidebar({
               >
                 {/* ── 施設ヘッダー ── */}
                 <div
-                  onClick={() => { if (!isEditingFacility) toggleFacility(facility.id) }}
+                  onClick={() => {
+                    if (isEditingFacility) return
+                    if (isHomeCare) {
+                      // 個人在宅：施設名クリック＝患者詳細に遷移
+                      const team = facility.om_teams?.[0]
+                      const patient = team?.om_patients?.[0]
+                      if (patient) { onSelectPatient(patient.id); onSelectTeam(team.id) }
+                      // 患者がいない場合は開閉トグルにフォールバック
+                      if (!patient) toggleFacility(facility.id)
+                    } else {
+                      toggleFacility(facility.id)
+                    }
+                  }}
                   style={{
                     margin: '0 8px 4px',
                     padding: '7px 10px',
@@ -753,10 +760,18 @@ export default function Sidebar({
                         )}
                       </div>
 
-                      {/* ⚙ボタン＋ドロップダウン */}
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {/* ⚙ボタン＋ドロップダウン（createPortal で overflow:hidden を回避） */}
+                      <div style={{ flexShrink: 0 }}>
                         <button
-                          onClick={e => { e.stopPropagation(); setOpenFacGearId(openFacGearId === facility.id ? null : facility.id) }}
+                          onClick={e => {
+                            e.stopPropagation()
+                            if (facGear?.id === facility.id) {
+                              setFacGear(null)
+                            } else {
+                              const r = e.currentTarget.getBoundingClientRect()
+                              setFacGear({ id: facility.id, pos: { top: r.bottom + 4, right: Math.max(4, window.innerWidth - r.right) } })
+                            }
+                          }}
                           title="施設の設定"
                           style={{
                             fontSize: 13, padding: '2px 6px', borderRadius: 5, lineHeight: 1,
@@ -764,35 +779,31 @@ export default function Sidebar({
                             color: '#94a3b8', cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >⚙</button>
-                        {openFacGearId === facility.id && (
-                          <div style={{
-                            position: 'absolute', right: 0, top: 'calc(100% + 4px)', zIndex: 200,
-                            background: 'white', borderRadius: 8,
-                            boxShadow: '0 4px 16px rgba(15,31,78,0.12)',
-                            minWidth: 130, overflow: 'hidden',
-                            border: '1px solid #e2e8f0',
-                          }}>
-                            <button
-                              onClick={e => { e.stopPropagation(); setOpenFacGearId(null); startEditFacility(e, facility) }}
-                              style={{
-                                display: 'block', width: '100%', textAlign: 'left',
-                                padding: '8px 14px', border: 'none', background: 'none',
-                                fontSize: 11, cursor: 'pointer', color: '#0f1f4e', fontFamily: 'inherit',
-                              }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                            >✏️ 施設を編集</button>
-                            <button
-                              onClick={e => { e.stopPropagation(); setOpenFacGearId(null); deleteFacility(e, facility) }}
-                              style={{
-                                display: 'block', width: '100%', textAlign: 'left',
-                                padding: '8px 14px', border: 'none', background: 'none',
-                                fontSize: 11, cursor: 'pointer', color: '#dc2626', fontFamily: 'inherit',
-                              }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
-                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                            >🗑 施設を削除</button>
-                          </div>
+                        {facGear?.id === facility.id && createPortal(
+                          <>
+                            <div className="row-menu-overlay" onClick={() => setFacGear(null)} />
+                            <div
+                              className="row-menu"
+                              style={{ position: 'fixed', top: facGear.pos.top, right: facGear.pos.right, minWidth: 140 }}
+                            >
+                              <button
+                                type="button"
+                                className="team-menu-item"
+                                onClick={e => { setFacGear(null); startEditFacility(e, facility) }}
+                              >
+                                <span className="team-menu-item-label">✏️ 施設を編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="team-menu-item"
+                                style={{ color: '#dc2626' }}
+                                onClick={e => { setFacGear(null); deleteFacility(e, facility) }}
+                              >
+                                <span className="team-menu-item-label" style={{ color: '#dc2626' }}>🗑 施設を削除</span>
+                              </button>
+                            </div>
+                          </>,
+                          document.body
                         )}
                       </div>
                     </div>
