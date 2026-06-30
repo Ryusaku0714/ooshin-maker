@@ -786,6 +786,15 @@ export default function Sidebar({
                               className="row-menu"
                               style={{ position: 'fixed', top: facGear.pos.top, right: facGear.pos.right, minWidth: 140 }}
                             >
+                              {isHomeCare && facility.om_teams?.[0] && (
+                                <button
+                                  type="button"
+                                  className="team-menu-item"
+                                  onClick={e => { setFacGear(null); startEditTeam(e, facility.om_teams[0], true) }}
+                                >
+                                  <span className="team-menu-item-label">⚙️ 在宅処方設定</span>
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 className="team-menu-item"
@@ -823,7 +832,7 @@ export default function Sidebar({
                     return (
                       <div
                         key={team.id}
-                        style={{
+                        style={isHomeCare ? {} : {
                           margin: '4px 8px 6px',
                           border: '1px solid #dce4f0',
                           borderRadius: 8,
@@ -832,9 +841,9 @@ export default function Sidebar({
                         }}
                       >
                         {isHomeCare ? (
-                          /* ─── 個人在宅：設定行 ─── */
+                          /* ─── 個人在宅：チーム行なし、設定フォームのみ ─── */
                           editTeamId === team.id ? (
-                            <div style={{ padding: '8px', background: '#f0fdf4' }}>
+                            <div style={{ margin: '0 8px 4px', border: '1px solid #86efac', borderRadius: 8, padding: '8px', background: '#f0fdf4', overflow: 'hidden' }}>
                               <div style={{ fontSize: 10, fontWeight: 700, color: '#166534', marginBottom: 8 }}>
                                 ⚙️ 在宅処方設定
                               </div>
@@ -916,69 +925,8 @@ export default function Sidebar({
                               </div>
                             </div>
                           ) : (
-                            /* 個人在宅 コンパクト操作行 */
-                            <div
-                              onClick={() => toggleTeam(team.id)}
-                              className="team-row"
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 4,
-                                padding: '6px 10px',
-                                background: '#eff6ff',
-                                borderBottom: '1px solid #dce4f0',
-                                borderLeft: '3px solid #c9a84c',
-                                cursor: 'pointer',
-                              }}>
-                              {/* チーム名（開閉アイコン＋在宅患者ラベル） */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
-                                <span style={{ fontSize: 9, color: '#16a34a', flexShrink: 0, width: 11, textAlign: 'center' }}>
-                                  {isOpen ? '▼' : '▶'}
-                                </span>
-                                <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b', flex: 1, minWidth: 0 }}>
-                                  🏠 在宅患者
-                                  {team.pharmacist_name && (
-                                    <span style={{ fontSize: 9, color: '#4ade80', fontWeight: 400, marginLeft: 6 }}>
-                                      👤 {team.pharmacist_name}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                              {/* 1行ボタングループ */}
-                              <div
-                                className="team-row-actions"
-                                onClick={e => e.stopPropagation()}
-                                style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}
-                              >
-                                <div className="row-actions-desktop" style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                  <button
-                                    onClick={expA.onClick}
-                                    title={teamMenuTip(expA)}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >📤</button>
-                                  <PrintMenuButton
-                                    icon="🖨️"
-                                    title={teamMenuTip(printA)}
-                                    options={printA.options}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  />
-                                  <button
-                                    onClick={memoA.onClick}
-                                    title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid #86efac', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >📝</button>
-                                  <button
-                                    onClick={editA.onClick}
-                                    title={teamMenuTip(editA)}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #86efac', background: 'white', color: '#16a34a', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >⚙️</button>
-                                  <button
-                                    onClick={delA.onClick}
-                                    title={teamMenuTip(delA)}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >🗑️</button>
-                                </div>
-                                <TeamHeaderMenu actions={menuActions} triggerStyle={{ border: '1px solid #86efac', background: 'white', color: '#16a34a' }} />
-                              </div>
-                            </div>
+                            /* 個人在宅：チーム行は非表示（⚙ドロップダウンから設定にアクセス） */
+                            null
                           )
                         ) : (
                           /* ─── 通常施設：チーム行 ─── */
@@ -1093,8 +1041,8 @@ export default function Sidebar({
                           )
                         )}
 
-                        {/* 患者リスト（チームブロック内にインデント） */}
-                        {isOpen && (
+                        {/* 患者リスト（個人在宅は常時展開、通常施設は isOpen に従う） */}
+                        {(isOpen || isHomeCare) && (
                           <div style={{ padding: '2px 0 3px' }}>
                             {patients.map(p => renderPatientRow(p, team))}
                             {!(isHomeCare && hasPatients) && (
