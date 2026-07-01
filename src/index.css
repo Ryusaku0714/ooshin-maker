@@ -1057,49 +1057,51 @@ body.printing .drug-qty-span {
 }
 
 /* ── About Modal ── */
-.about-modal-body {
-  display: flex;
-  flex-direction: row;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-}
-.about-modal-text {
-  flex: 0 0 60%;
-  padding: 36px 40px;
-  overflow-y: auto;
-}
-.about-modal-visual {
-  flex: 0 0 40%;
+.about-main-area {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: linear-gradient(160deg, #e8f4fd 0%, #d1e8fa 100%);
-  padding: 28px 24px;
+}
+.about-left-area {
+  flex: 1.15;
+  padding: 8px 28px 24px;
+  min-width: 0;
+}
+.about-catch {
+  font-size: 26px;
+}
+.about-desc {
+  font-size: 12px;
+}
+.about-right-area {
+  flex: 0.85;
+  height: 300px;
+}
+.about-visual-top-mobile {
+  display: none;
 }
 
-@media (max-width: 768px) {
-  .about-modal-body {
+@media (max-width: 600px) {
+  .about-main-area {
     flex-direction: column;
-    overflow-y: auto;
   }
-  .about-modal-text {
+  .about-visual-top-mobile {
+    display: block;
+    width: 100%;
+    height: 90px;
+  }
+  .about-right-area {
+    display: none;
+  }
+  .about-left-area {
+    padding: 6px 20px 18px;
     flex: none;
-    padding: 24px 22px;
-    overflow: visible;
+    width: 100%;
   }
-  .about-modal-visual {
-    flex: none;
-    padding: 20px;
-    min-height: 200px;
+  .about-catch {
+    font-size: 19px;
+    margin-bottom: 12px !important;
   }
-}
-
-@media (max-width: 375px) {
-  .about-modal-text {
-    padding: 20px 16px;
-  }
-  .about-modal-text h2 {
-    font-size: 26px !important;
+  .about-desc {
+    font-size: 10.5px;
   }
 }
