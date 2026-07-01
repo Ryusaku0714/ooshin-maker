@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { printWithAutoFit } from '../../lib/printFit'
+import AboutModal from '../modals/AboutModal'
 
 const NOTE_URL = 'https://note.com/gentle_pansy1797'
 
@@ -8,6 +9,7 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState(null)
   const btnRef = useRef(null)
+  const [showAbout, setShowAbout] = useState(false)
 
   const displayName = user?.user_metadata?.name ?? user?.email ?? ''
 
@@ -33,7 +35,18 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
       flexShrink: 0,
       zIndex: 100,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 15, color: 'var(--color-text-white)', minWidth: 0 }}>
+      <button
+        type="button"
+        onClick={() => setShowAbout(true)}
+        title="Bridgeworkについて"
+        aria-label="Aboutを開く"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          fontWeight: 700, fontSize: 15, color: 'var(--color-text-white)',
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: 0, fontFamily: 'inherit', minWidth: 0,
+        }}
+      >
         <div style={{
           background: 'transparent',
           border: '1.5px solid var(--color-gold)',
@@ -63,7 +76,7 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
           <span className="nav-title" style={{ fontFamily: 'var(--font-base)', fontWeight: 700, color: 'var(--color-text-white)' }}>往診資料メーカー</span>
           <span style={{ fontSize: 9, color: 'var(--color-gold)', letterSpacing: '2px', textTransform: 'uppercase', marginTop: 2 }}>Bridgework</span>
         </div>
-      </div>
+      </button>
 
       {user && (
         <>
@@ -115,6 +128,8 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
           )}
         </>
       )}
+
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
     </nav>
   )
 }

@@ -1045,3 +1045,51 @@ body.printing .drug-qty-span {
     resize: none !important;
   }
 }
+
+/* ── About Modal ── */
+.about-modal-body {
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+.about-modal-text {
+  flex: 0 0 60%;
+  padding: 36px 40px;
+  overflow-y: auto;
+}
+.about-modal-visual {
+  flex: 0 0 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #e8f4fd 0%, #d1e8fa 100%);
+  padding: 28px 24px;
+}
+
+@media (max-width: 768px) {
+  .about-modal-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .about-modal-text {
+    flex: none;
+    padding: 24px 22px;
+    overflow: visible;
+  }
+  .about-modal-visual {
+    flex: none;
+    padding: 20px;
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 375px) {
+  .about-modal-text {
+    padding: 20px 16px;
+  }
+  .about-modal-text h2 {
+    font-size: 26px !important;
+  }
+}
