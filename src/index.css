@@ -1046,6 +1046,16 @@ body.printing .drug-qty-span {
   }
 }
 
+/* ── モバイル用flexアクション列（Do処方ボタン＋…メニューを横並びに） ── */
+.row-actions-mobile-flex {
+  display: none;
+  gap: 4px;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .row-actions-mobile-flex { display: flex !important; }
+}
+
 /* ── About Modal ── */
 .about-modal-body {
   display: flex;

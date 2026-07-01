@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
-import RowActionsMenu from '../common/RowActionsMenu'
 import { PREV_TIMING, computeTemporaryEnd, computeTemporaryDays } from '../../lib/changeLogFormat'
 
 const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
+
+// 終了タイミング → 次の開始タイミング（Do処方用）
+const NEXT_TIMING = { '朝': '昼', '昼': '夕', '夕': '眠前', '眠前': '朝' }
 
 const EMPTY_VISIT = {
   hospital: '', department: '',
@@ -16,8 +18,13 @@ const EMPTY_VISIT = {
   is_archived: false,
 }
 
-// 日数入力 → 終了日・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
-// 開始タイミング未選択時は朝開始扱い（末日+0日）で計算し、終了タイミングは表示しない
+function addOneDayToStr(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().slice(0, 10)
+}
+
 function recalcFromDays(next) {
   const n = parseInt(next.days)
   if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.dispensing_from) {
@@ -27,8 +34,6 @@ function recalcFromDays(next) {
   return next
 }
 
-// 終了日入力 → 日数・終了タイミングを再計算（分4ロジック、臨時薬と同じ）
-// 開始タイミング未選択時は朝開始扱い（末日+0日）で計算し、終了タイミングは表示しない
 function recalcFromEndDate(next) {
   if (next.dispensing_to && next.dispensing_from) {
     const { days, endTiming } = computeTemporaryDays(next.dispensing_from, next.medication_timing || '朝', next.dispensing_to)
@@ -67,7 +72,6 @@ function fmtPeriod(from, to) {
   return ''
 }
 
-// 受診1件分のテキスト（コピー用）
 function formatVisitText(v) {
   let line = `・${v.hospital}`
   if (v.department) line += ` / ${v.department}`
@@ -89,17 +93,16 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
   const [visits,        setVisits]        = useState(patient?.other_visits ?? [])
   const [showVisitForm, setShowVisitForm] = useState(false)
   const [editingId,     setEditingId]     = useState(null)
+  const [doFromId,      setDoFromId]      = useState(null)
   const [visitForm,     setVisitForm]     = useState({ ...EMPTY_VISIT })
   const [savingVisit,   setSavingVisit]   = useState(false)
   const [showArchived,  setShowArchived]  = useState(false)
   const notesRef = useRef(null)
 
-  // patient 更新時に visits を同期
   useEffect(() => {
     setVisits(patient?.other_visits ?? [])
   }, [patient?.other_visits])
 
-  // 備考欄：入力内容に応じて高さを自動調整（最小1行、最大は制限なし）
   const resizeNotes = (el) => {
     if (!el) return
     el.style.height = 'auto'
@@ -114,7 +117,6 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
   const upV = k => e => setVisitForm(f => ({ ...f, [k]: e.target.value }))
 
-  // 調剤開始日・開始タイミング変更 → 終了タイミングを再計算し、入力済みの日数／終了日を基準に再計算
   const handleStartChange = (patch) => {
     setVisitForm(f => {
       let next = { ...f, ...patch }
@@ -142,19 +144,65 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
 
   const openAddVisit = () => {
     setEditingId(null)
+    setDoFromId(null)
     setVisitForm({ ...EMPTY_VISIT })
     setShowVisitForm(true)
   }
 
   const openEditVisit = (v) => {
     setEditingId(v.id)
+    setDoFromId(null)
     setVisitForm(toFormData(v))
+    setShowVisitForm(true)
+  }
+
+  // Do処方：前回終了タイミングから次の開始タイミング・調剤開始日を自動計算
+  const openDoVisit = (v) => {
+    const prevEndDate   = v.dispensing_to ?? ''
+    const prevEndTiming = v.medication_timing_end ?? ''
+
+    let newStartDate, newStartTiming
+    if (!prevEndDate) {
+      newStartDate   = ''
+      newStartTiming = ''
+    } else if (!prevEndTiming) {
+      // タイミングなし → 翌日・タイミングなし
+      newStartDate   = addOneDayToStr(prevEndDate)
+      newStartTiming = ''
+    } else if (prevEndTiming === '眠前') {
+      // 眠前終了 → 翌日朝開始
+      newStartDate   = addOneDayToStr(prevEndDate)
+      newStartTiming = '朝'
+    } else {
+      // 朝→昼・昼→夕・夕→眠前（同日）
+      newStartDate   = prevEndDate
+      newStartTiming = NEXT_TIMING[prevEndTiming] ?? ''
+    }
+
+    const baseForm = {
+      hospital:              v.hospital   ?? '',
+      department:            v.department ?? '',
+      dispensing_from:       newStartDate,
+      dispensing_to:         '',
+      medication_timing:     newStartTiming,
+      medication_timing_end: prevEndTiming,   // 前回と同じ終了タイミング（手動変更可）
+      days:                  v.days ? String(v.days) : '',
+      next_visit_date:       '',               // 次回受診日は空欄（手動入力）
+      notes:                 v.notes ?? '',
+      is_archived:           false,
+    }
+
+    const withRecalc = recalcFromDays(baseForm)
+    setDoFromId(v.id)
+    setEditingId(null)
+    setVisitForm(withRecalc)
     setShowVisitForm(true)
   }
 
   const cancelVisitForm = () => {
     setShowVisitForm(false)
     setEditingId(null)
+    setDoFromId(null)
     setVisitForm({ ...EMPTY_VISIT })
   }
 
@@ -165,7 +213,14 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
     if (editingId) {
       updated = visits.map(v => v.id === editingId ? { ...visitForm, id: editingId } : v)
     } else {
-      updated = [...visits, { ...visitForm, id: `${Date.now()}`, is_archived: false }]
+      const newRecord = { ...visitForm, id: `${Date.now()}`, is_archived: false }
+      if (doFromId) {
+        // Do処方：前回レコードをアーカイブしてから新レコードを追加
+        updated = visits.map(v => v.id === doFromId ? { ...v, is_archived: true } : v)
+        updated = [...updated, newRecord]
+      } else {
+        updated = [...visits, newRecord]
+      }
     }
     setVisits(updated)
     await db.updatePatient(patient.id, { other_visits: updated })
@@ -226,6 +281,17 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
       {/* 入力フォーム */}
       {showVisitForm && (
         <div className="rx-form-box">
+          {/* Do処方ヒント */}
+          {doFromId && (
+            <div style={{
+              fontSize: 11, color: '#1e3a8a', background: '#dbeafe',
+              border: '1px solid #bfdbfe', borderRadius: 6,
+              padding: '6px 10px', marginBottom: 10,
+            }}>
+              🔄 Do処方：確定すると前回のレコードが自動でアーカイブされます
+            </div>
+          )}
+
           <div className="visit-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
             <div>
               <label className="field-label">受診先 *</label>
@@ -349,6 +415,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
           onArchive={() => archiveVisit(v.id)}
           onRestore={() => restoreVisit(v.id)}
           onDelete={() => deleteVisit(v.id)}
+          onDo={() => openDoVisit(v)}
         />
       ))}
 
@@ -372,6 +439,7 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
               onArchive={() => archiveVisit(v.id)}
               onRestore={() => restoreVisit(v.id)}
               onDelete={() => deleteVisit(v.id)}
+              onDo={() => openDoVisit(v)}
             />
           ))}
         </>
@@ -380,11 +448,25 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
   )
 }
 
-function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
+function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete, onDo }) {
+  const [menuOpen, setMenuOpen] = useState(false)
   const from   = v.dispensing_from ?? v.dispensing_date ?? ''
   const to     = v.dispensing_to ?? ''
   const period = fmtPeriod(from, to)
   const endT   = v.medication_timing_end || (v.medication_timing ? (PREV_TIMING[v.medication_timing] ?? '') : '')
+  const copyText = formatVisitText(v)
+
+  // スマホ版 … メニューのアクション
+  const mobileMenuActions = archived ? [
+    { key: 'copy',    icon: '📋', label: 'コピー',      onClick: () => navigator.clipboard?.writeText(copyText) },
+    { key: 'restore', icon: '↩️', label: '復元',        onClick: onRestore },
+    { key: 'delete',  icon: '🗑️', label: '削除',        onClick: onDelete },
+  ] : [
+    { key: 'copy',    icon: '📋', label: 'コピー',      onClick: () => navigator.clipboard?.writeText(copyText) },
+    { key: 'edit',    icon: '✏️', label: '編集',        onClick: onEdit },
+    { key: 'archive', icon: '📂', label: 'アーカイブ',  onClick: onArchive },
+    { key: 'delete',  icon: '🗑️', label: '削除',        onClick: onDelete },
+  ]
 
   return (
     <div style={{
@@ -395,7 +477,8 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
       display: 'flex', gap: 10, alignItems: 'flex-start',
       opacity: archived ? 0.7 : 1,
     }}>
-      <div style={{ flex: 1 }}>
+      {/* 受診情報 */}
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
           <span style={{ color: archived ? '#94a3b8' : '#0f1f4e' }}>{v.hospital}</span>
           {v.department && (
@@ -412,16 +495,103 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete }) {
           {v.notes             && <span>📝 備考：{v.notes}</span>}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <CopyButton title="この受診記録をコピー" getText={() => formatVisitText(v)} />
-        <RowActionsMenu actions={archived ? [
-          { key: 'restore', icon: '↩️', label: '復元', title: '復元（受診中に戻す）', onClick: onRestore },
-          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: onDelete },
-        ] : [
-          { key: 'edit',    icon: '✏️', label: '編集', onClick: onEdit },
-          { key: 'archive', icon: '📂', label: '非表示', title: 'アーカイブ（終了した受診記録として保存）', onClick: onArchive },
-          { key: 'delete',  icon: '🗑️', label: '削除', title: '完全削除', onClick: onDelete },
-        ]} />
+
+      {/* ── ボタンエリア ── */}
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'flex-start' }}>
+
+        {/* PC版（769px+）：コピー ＋ Do ＋ 編集/アーカイブ/削除 */}
+        <div className="row-actions-desktop">
+          <CopyButton title="この受診記録をコピー" getText={() => copyText} />
+          {!archived && (
+            <button
+              type="button"
+              className="icon-btn"
+              title="Do処方（前回のまま継続）"
+              onClick={onDo}
+              style={{ background: '#dbeafe', color: '#1e3a8a', border: '1px solid #bfdbfe' }}
+            >
+              <span aria-hidden="true">🔄</span>
+              <span className="icon-btn-cap">Do</span>
+            </button>
+          )}
+          {archived ? (
+            <>
+              <button type="button" className="icon-btn" title="復元（受診中に戻す）" onClick={onRestore}>
+                <span aria-hidden="true">↩️</span>
+                <span className="icon-btn-cap">復元</span>
+              </button>
+              <button type="button" className="icon-btn" title="完全削除" onClick={onDelete}>
+                <span aria-hidden="true">🗑️</span>
+                <span className="icon-btn-cap">削除</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="icon-btn" title="編集" onClick={onEdit}>
+                <span aria-hidden="true">✏️</span>
+                <span className="icon-btn-cap">編集</span>
+              </button>
+              <button type="button" className="icon-btn" title="アーカイブ（終了した受診記録として保存）" onClick={onArchive}>
+                <span aria-hidden="true">📂</span>
+                <span className="icon-btn-cap">非表示</span>
+              </button>
+              <button type="button" className="icon-btn" title="完全削除" onClick={onDelete}>
+                <span aria-hidden="true">🗑️</span>
+                <span className="icon-btn-cap">削除</span>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* スマホ版（768px-）：Doボタン（外）＋ … メニュー */}
+        <div className="row-actions-mobile-flex">
+          {!archived && (
+            <button
+              type="button"
+              onClick={onDo}
+              style={{
+                background: '#dbeafe', color: '#1e3a8a',
+                border: '1px solid #bfdbfe',
+                borderRadius: 6, fontSize: 10, fontWeight: 700,
+                padding: '5px 9px', cursor: 'pointer',
+                fontFamily: 'inherit', whiteSpace: 'nowrap', lineHeight: 1,
+              }}
+            >🔄 Do</button>
+          )}
+
+          {/* … ドロップダウンメニュー */}
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="icon-btn"
+              style={{ background: '#f1f5fb', border: '1px solid #dce4f0', color: '#64748b' }}
+              title="メニュー"
+              aria-label="メニュー"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(o => !o)}
+            >
+              <span aria-hidden="true">⋯</span>
+            </button>
+            {menuOpen && (
+              <>
+                <div className="row-menu-overlay" onClick={() => setMenuOpen(false)} />
+                <div className="row-menu">
+                  {mobileMenuActions.map(a => (
+                    <button
+                      key={a.key}
+                      type="button"
+                      className="row-menu-item"
+                      onClick={() => { setMenuOpen(false); a.onClick() }}
+                    >
+                      <span aria-hidden="true">{a.icon}</span>{a.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   )
