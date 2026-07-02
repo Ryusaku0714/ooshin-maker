@@ -281,7 +281,7 @@ const ICON_WRAP_STYLE = { display: 'inline-flex', flexDirection: 'column', align
 // 患者ごとの「個別設定」トグル＋往診日・処方日数・処方ズレ日数の入力欄
 // custom_days / custom_offset の両方に値が入っている場合のみ個別設定ONとして扱う
 // （individual_visit_date は空欄可：空の場合は上枠の共通往診日にフォールバックする）
-function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch }) {
+function PatientRow({ patient: p, team, selected, isHomeCare, onSelect, onDelete, onRefetch }) {
   const isCustom = p.custom_days != null && p.custom_offset != null
 
   const [days,   setDays]   = useState(p.custom_days   ?? team.default_rx_days ?? 14)
@@ -340,9 +340,9 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
       <div
         className={`patient-row-item${selected ? ' patient-row-selected' : ''}`}
         style={{
-          padding: '5px 8px',
+          padding: '3px 6px 3px 12px',
           borderRadius: 6,
-          background: selected ? '#0f1f4e' : 'transparent',
+          background: selected ? '#0f1f4e' : (isHomeCare ? '#eef2ff' : 'transparent'),
           display: 'flex', alignItems: 'center', gap: 4,
           transition: 'background 0.1s',
           borderLeft: selected ? '2px solid #c9a84c' : '2px solid transparent',
@@ -352,9 +352,9 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           onClick={onSelect}
           style={{ flex: 1, minWidth: 0, cursor: 'pointer', display: 'flex', alignItems: 'baseline', gap: 6 }}
         >
-          <span style={{ fontSize: 10, color: selected ? '#c9a84c' : '#94a3b8', flexShrink: 0 }}>{p.room_number}</span>
+          <span style={{ fontSize: 10, color: selected ? '#c9a84c' : (isHomeCare ? '#a5b4fc' : '#94a3b8'), flexShrink: 0 }}>{p.room_number}</span>
           {p.initial && (
-            <span style={{ fontSize: 11, fontWeight: selected ? 700 : 500, color: selected ? '#ffffff' : '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 11, fontWeight: selected ? 700 : 500, color: selected ? '#ffffff' : (isHomeCare ? '#312e81' : '#64748b'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {p.initial}
             </span>
           )}
@@ -627,12 +627,13 @@ export default function Sidebar({
     if (diffDays >= 0 && diffDays <= 14) setEditTeamGraceDays(diffDays)
   }
 
-  const renderPatientRow = (p, team) => (
+  const renderPatientRow = (p, team, isHomeCare) => (
     <PatientRow
       key={p.id}
       patient={p}
       team={team}
       selected={selectedPatientId === p.id}
+      isHomeCare={isHomeCare}
       onSelect={() => { onSelectPatient(p.id); onSelectTeam(team.id) }}
       onDelete={e => deletePatient(e, p)}
       onRefetch={onRefetch}
@@ -678,7 +679,11 @@ export default function Sidebar({
               <div
                 key={facility.id}
                 style={{
-                  marginBottom: 8,
+                  margin: '4px 8px 8px',
+                  border: `1px solid ${isHomeCare ? '#c7d2fe' : '#dce4f0'}`,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  background: 'white',
                 }}
               >
                 {/* ── 施設ヘッダー ── */}
@@ -697,11 +702,10 @@ export default function Sidebar({
                     }
                   }}
                   style={{
-                    margin: '0 8px 4px',
                     padding: '7px 10px',
-                    borderRadius: 6,
-                    background: '#eff6ff',
-                    borderLeft: '2px solid #c9a84c',
+                    background: isHomeCare ? '#eef2ff' : '#eff6ff',
+                    borderBottom: `1px solid ${isHomeCare ? '#c7d2fe' : '#dce4f0'}`,
+                    borderLeft: `3px solid ${isHomeCare ? '#4338ca' : '#c9a84c'}`,
                     cursor: isEditingFacility ? 'default' : 'pointer',
                   }}
                 >
@@ -743,7 +747,7 @@ export default function Sidebar({
                         {facOpen ? '▼' : '▶'}
                       </span>
                       <span style={{
-                        flex: 1, fontSize: 11, fontWeight: 700, color: '#0f1f4e',
+                        flex: 1, fontSize: 11, fontWeight: 700, color: isHomeCare ? '#312e81' : '#0f1f4e',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0,
                       }}>
                         {facility.name}
@@ -767,7 +771,7 @@ export default function Sidebar({
                               ? '#dc2626'
                               : (taskSummaries[facility.id]?.count ?? 0) > 0
                                 ? '#ea580c'
-                                : '#0f1f4e',
+                                : (isHomeCare ? '#4338ca' : '#0f1f4e'),
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -800,8 +804,8 @@ export default function Sidebar({
                           title="施設の設定"
                           style={{
                             fontSize: 13, padding: '2px 6px', borderRadius: 5, lineHeight: 1,
-                            border: '1px solid #dce4f0', background: 'transparent',
-                            color: '#94a3b8', cursor: 'pointer', fontFamily: 'inherit',
+                            border: `1px solid ${isHomeCare ? '#c7d2fe' : '#dce4f0'}`, background: 'transparent',
+                            color: isHomeCare ? '#4338ca' : '#94a3b8', cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >⚙</button>
                         {facGear?.id === facility.id && createPortal(
@@ -858,11 +862,12 @@ export default function Sidebar({
                       <div
                         key={team.id}
                         style={isHomeCare ? {} : {
-                          margin: '4px 8px 6px',
-                          border: '1px solid #dce4f0',
-                          borderRadius: 8,
+                          margin: '3px 4px',
+                          marginBottom: 3,
+                          border: '1px solid #e8eef8',
+                          borderRadius: 7,
                           overflow: 'hidden',
-                          background: '#f8fafc',
+                          background: '#f8faff',
                         }}
                       >
                         {isHomeCare ? (
@@ -1002,10 +1007,9 @@ export default function Sidebar({
                               style={{
                                 fontSize: 10, fontWeight: 700,
                                 color: '#64748b',
-                                padding: '6px 10px',
-                                background: '#eff6ff',
-                                borderBottom: '1px solid #dce4f0',
-                                borderLeft: '3px solid #c9a84c',
+                                padding: '5px 8px',
+                                background: '#f0f4ff',
+                                borderLeft: '2px solid #c9a84c',
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4,
                                 cursor: 'pointer',
                               }}
@@ -1069,7 +1073,7 @@ export default function Sidebar({
                         {/* 患者リスト（個人在宅は常時展開、通常施設は isOpen に従う） */}
                         {(isOpen || isHomeCare) && (
                           <div style={{ padding: '2px 0 3px' }}>
-                            {patients.map(p => renderPatientRow(p, team))}
+                            {patients.map(p => renderPatientRow(p, team, isHomeCare))}
                             {!(isHomeCare && hasPatients) && (
                               <div
                                 onClick={() => setAddPatientTeamId(team.id)}
