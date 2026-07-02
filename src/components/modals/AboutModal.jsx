@@ -17,36 +17,22 @@ export default function AboutModal({ onClose }) {
         maxHeight: '90vh',
         overflowY: 'auto',
       }}>
-        {/* ── nav ── */}
+        {/* ── header ── */}
         <div style={{
-          padding: '18px 28px',
+          padding: '16px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          background: '#0f1f4e',
+          borderBottom: '2px solid #c9a84c',
         }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
             fontFamily: "'Inter', sans-serif",
-            fontWeight: 700,
-            fontSize: 14,
-            color: '#0f1f4e',
-            letterSpacing: '1px',
+            fontWeight: 800,
+            fontSize: 22,
+            letterSpacing: '-0.5px',
           }}>
-            <div style={{
-              width: 18,
-              height: 18,
-              border: '1.5px solid #0f1f4e',
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 9,
-            }}>
-              📋
-            </div>
-            BRIDGEWORK
+            <span style={{ color: '#ffffff' }}>Bridge</span><span style={{ color: '#60a5fa' }}>work</span><span style={{ color: '#ffffff' }}> Rounds</span>
           </div>
           <button
             type="button"
@@ -56,7 +42,7 @@ export default function AboutModal({ onClose }) {
               background: 'none',
               border: 'none',
               color: '#94a3b8',
-              fontSize: 14,
+              fontSize: 18,
               cursor: 'pointer',
               padding: 0,
               fontFamily: 'inherit',
@@ -138,7 +124,7 @@ export default function AboutModal({ onClose }) {
           justifyContent: 'space-between',
           background: 'white',
         }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#0f1f4e' }}>{'薬剤師　鈴木隆索'}</div>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '1px', color: '#0f1f4e' }}>Bridgework</div>
           <button
             type="button"
             onClick={() => window.open(NOTE_URL, '_blank', 'noopener,noreferrer')}
