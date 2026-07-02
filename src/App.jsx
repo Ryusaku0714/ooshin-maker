@@ -86,7 +86,7 @@ export default function App() {
     .find(p => p.id === selectedPatientId) ?? null
 
   const patientOverride = (selectedPatient?.custom_days != null && selectedPatient?.custom_offset != null)
-    ? { rxDays: selectedPatient.custom_days, graceDays: selectedPatient.custom_offset }
+    ? { rxDays: selectedPatient.custom_days, graceDays: selectedPatient.custom_offset, visitDate: selectedPatient.individual_visit_date || null }
     : null
 
   const handleSelectPatient = (id) => {

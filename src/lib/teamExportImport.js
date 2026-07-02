@@ -50,6 +50,7 @@ export async function exportTeamData(team, facilityName) {
       sort_order:              p.sort_order ?? 0,
       custom_days:             p.custom_days ?? null,
       custom_offset:           p.custom_offset ?? null,
+      individual_visit_date:   p.individual_visit_date ?? null,
       regular_medication:      p.regular_medication ?? null,
       drugs:       (drugsByPatient[p.id] ?? []).map(omitMeta),
       change_logs: (logsByPatient[p.id]  ?? []).map(omitMeta),

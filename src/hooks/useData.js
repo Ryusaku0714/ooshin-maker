@@ -14,7 +14,7 @@ export function useFacilities() {
         *,
         om_teams (
           *,
-          om_patients ( id, room_number, initial, sort_order, updated_at, custom_days, custom_offset )
+          om_patients ( id, room_number, initial, sort_order, updated_at, custom_days, custom_offset, individual_visit_date )
         )
       `)
       .order('sort_order')

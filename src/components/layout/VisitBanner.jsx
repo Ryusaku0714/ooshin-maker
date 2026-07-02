@@ -45,14 +45,16 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   }, [])
 
   // 個別設定ON（patientOverride）の患者を選択中は、その患者専用の値で計算する
-  // ※ チーム単位の rxDays / graceDays state やその保存ロジックはそのまま
+  // ※ チーム単位の rxDays / graceDays / visitDate state やその保存ロジックはそのまま
   const effRxDays    = patientOverride?.rxDays    ?? Number(rxDays)
   const effGraceDays = patientOverride?.graceDays ?? Number(graceDays)
+  // 個別往診日が入力されていればそれを使用、空なら共通往診日にフォールバック
+  const effVisitDate = patientOverride?.visitDate || visitDate
 
-  // 処方開始日は visitDate + 処方ズレ日数（個別設定があれば個別値）から導出（独立したstateを持たない）
+  // 処方開始日は往診日 + 処方ズレ日数（個別設定があれば個別値）から導出（独立したstateを持たない）
   const rxStartDate = (() => {
-    if (!visitDate) return ''
-    const d = new Date(visitDate)
+    if (!effVisitDate) return ''
+    const d = new Date(effVisitDate)
     d.setDate(d.getDate() + effGraceDays)
     return fmtFull(d)
   })()
@@ -67,7 +69,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
 
   useEffect(() => {
     calc()
-  }, [visitDate, rxDays, graceDays, patientOverride])
+  }, [visitDate, rxDays, graceDays, patientOverride?.rxDays, patientOverride?.graceDays, patientOverride?.visitDate])
 
   useEffect(() => {
     const teamId = team?.id
@@ -89,8 +91,8 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   }, [visitDate, rxDays, graceDays, team?.id])
 
   function calc() {
-    if (!visitDate) return
-    const visit = new Date(visitDate)
+    if (!effVisitDate) return
+    const visit = new Date(effVisitDate)
     const start = new Date(visit)
     start.setDate(start.getDate() + effGraceDays)
     const end = new Date(start)
@@ -101,13 +103,13 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
     setRxPeriod(`${fmtWithDow(start)}〜${fmtWithDow(end)}`)
     setNextVisit(`次回往診：${fmt(next)}`)
     setRxEnd(fmtFull(end))
-    onVisitCalcChange?.({ visitDate, rxDays: effRxDays, graceDays: effGraceDays, rxEnd: fmtFull(end) })
+    onVisitCalcChange?.({ visitDate: effVisitDate, rxDays: effRxDays, graceDays: effGraceDays, rxEnd: fmtFull(end) })
   }
 
   // 処方開始日を変更 → 往診日との差分から処方ズレ日数を逆算
   function handleRxStartDateChange(newDateStr) {
-    if (!newDateStr || !visitDate) return
-    const diffDays = Math.round((new Date(newDateStr) - new Date(visitDate)) / 86400000)
+    if (!newDateStr || !effVisitDate) return
+    const diffDays = Math.round((new Date(newDateStr) - new Date(effVisitDate)) / 86400000)
     if (diffDays >= 0 && diffDays <= 14) {
       setGraceDays(diffDays)
     }
@@ -124,7 +126,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
         onClick={() => setIsExpanded(prev => !prev)}
       >
         <span className="visit-banner-mobile-summary">
-          {`往診日：${visitDate ? fmtWithDow(parseDate(visitDate)) : ''}${rxPeriod !== '—' ? `　${stripDow(rxPeriod)}（${effRxDays}日分）` : ''}`}
+          {`往診日：${effVisitDate ? fmtWithDow(parseDate(effVisitDate)) : ''}${rxPeriod !== '—' ? `　${stripDow(rxPeriod)}（${effRxDays}日分）` : ''}`}
         </span>
         <span className="visit-banner-chevron">{isExpanded ? '▲' : '▼'}</span>
       </div>
@@ -138,12 +140,14 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
         }
       >
 
-        <Field label="往診日" dow={visitDate ? `（${DOW[parseDate(visitDate).getDay()]}）` : ''} className="visit-date-field"
+        <Field label="往診日" dow={effVisitDate ? `（${DOW[parseDate(effVisitDate).getDay()]}）` : ''} className="visit-date-field"
           style={isMobile ? mobileFieldStyle : { flex: '2 1 120px', minWidth: 110 }}>
           <input
-            type="date" value={visitDate}
+            type="date" value={patientOverride?.visitDate ? patientOverride.visitDate : visitDate}
+            disabled={!!patientOverride?.visitDate}
             onChange={e => setVisitDate(e.target.value)}
-            style={bannerInputStyle}
+            style={patientOverride?.visitDate ? overrideInputStyle : bannerInputStyle}
+            title={patientOverride?.visitDate ? '個別設定中：この患者の値は患者一覧の「個別設定」で編集してください' : undefined}
           />
         </Field>
 

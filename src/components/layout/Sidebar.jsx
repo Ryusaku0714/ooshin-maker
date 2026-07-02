@@ -278,19 +278,22 @@ const HOME_STYLE = {
 const ICON_CAP_STYLE = { fontSize: 9, lineHeight: 1, fontWeight: 400, color: 'var(--gray-400)', whiteSpace: 'nowrap', marginTop: 1 }
 const ICON_WRAP_STYLE = { display: 'inline-flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }
 
-// 患者ごとの「個別設定」トグル＋処方日数・処方ズレ日数の入力欄
+// 患者ごとの「個別設定」トグル＋往診日・処方日数・処方ズレ日数の入力欄
 // custom_days / custom_offset の両方に値が入っている場合のみ個別設定ONとして扱う
+// （individual_visit_date は空欄可：空の場合は上枠の共通往診日にフォールバックする）
 function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch }) {
   const isCustom = p.custom_days != null && p.custom_offset != null
 
   const [days,   setDays]   = useState(p.custom_days   ?? team.default_rx_days ?? 14)
   const [offset, setOffset] = useState(p.custom_offset ?? team.grace_days ?? 1)
+  const [visitDateInput, setVisitDateInput] = useState(p.individual_visit_date ?? '')
 
   // 患者切り替え・サーバ側の値変化に追従
   useEffect(() => {
     setDays(p.custom_days ?? team.default_rx_days ?? 14)
     setOffset(p.custom_offset ?? team.grace_days ?? 1)
-  }, [p.id, p.custom_days, p.custom_offset])
+    setVisitDateInput(p.individual_visit_date ?? '')
+  }, [p.id, p.custom_days, p.custom_offset, p.individual_visit_date])
 
   // 個別設定ON時のみ、入力値をデバウンスして自動保存
   useEffect(() => {
@@ -307,10 +310,22 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
     return () => clearTimeout(timer)
   }, [days, offset, isCustom, p.id, p.custom_days, p.custom_offset, onRefetch])
 
+  // 個別往診日をデバウンスして自動保存（空欄＝共通往診日を使用、として null 保存）
+  useEffect(() => {
+    if (!isCustom) return
+    const current = p.individual_visit_date ?? ''
+    if (visitDateInput === current) return
+
+    const timer = setTimeout(() => {
+      db.updatePatient(p.id, { individual_visit_date: visitDateInput || null }).then(() => onRefetch())
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [visitDateInput, isCustom, p.id, p.individual_visit_date, onRefetch])
+
   const toggleCustom = async (e) => {
     e.stopPropagation()
     if (isCustom) {
-      await db.updatePatient(p.id, { custom_days: null, custom_offset: null })
+      await db.updatePatient(p.id, { custom_days: null, custom_offset: null, individual_visit_date: null })
     } else {
       await db.updatePatient(p.id, {
         custom_days:   team.default_rx_days ?? 14,
@@ -391,6 +406,16 @@ function PatientRow({ patient: p, team, selected, onSelect, onDelete, onRefetch 
           }}
         >
           <span style={{ fontWeight: 700, color: '#f59e0b', flexShrink: 0 }}>👤個別設定</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            往診日
+            <input
+              type="date"
+              value={visitDateInput || team.last_visit_date || ''}
+              onChange={e => setVisitDateInput(e.target.value)}
+              title="空欄（クリアボタン）にすると上枠の共通往診日を使用します"
+              style={{ width: 118, fontSize: 10, border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 4px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             処方日数
             <input

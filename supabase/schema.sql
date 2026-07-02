@@ -257,3 +257,9 @@ CREATE POLICY "om_facility_tasks_owner" ON om_facility_tasks
   WITH CHECK (facility_id IN (
     SELECT id FROM om_facilities WHERE user_id = auth.uid()
   ));
+
+-- ============================================================
+-- v14 マイグレーション：患者ごとの個別往診日を追加
+-- ============================================================
+-- NULL の場合は個別設定OFF扱い（上枠の共通往診日＝チームの last_visit_date を使用）。
+ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS individual_visit_date DATE;
