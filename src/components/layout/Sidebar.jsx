@@ -14,6 +14,7 @@ import { fitFontSize, PRINT_PAGE_HEIGHT_PX, PRINT_PAGE_WIDTH_PX } from '../../li
 import { TEAM_COLORS } from '../../lib/teamColors'
 import TeamHeaderMenu from './TeamHeaderMenu'
 import PrintMenuButton from '../common/PrintMenuButton'
+import { loadCollapse, saveCollapse } from '../../lib/collapseStorage'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -499,6 +500,32 @@ export default function Sidebar({
 
   useEffect(() => { refreshTeamTaskSummaries() }, [facilities])
 
+  // 施設・チームの開閉状態をlocalStorageから復元（未保存のIDはデフォルトで開いた状態のまま）
+  useEffect(() => {
+    setOpenFacilities(prev => {
+      const next = { ...prev }
+      let changed = false
+      facilities.forEach(f => {
+        if (!(f.id in next)) {
+          next[f.id] = loadCollapse(`facility_${f.id}`)
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+    setOpenTeams(prev => {
+      const next = { ...prev }
+      let changed = false
+      facilities.forEach(f => (f.om_teams ?? []).forEach(t => {
+        if (!(t.id in next)) {
+          next[t.id] = loadCollapse(`team_${t.id}`)
+          changed = true
+        }
+      }))
+      return changed ? next : prev
+    })
+  }, [facilities])
+
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
     setEditFacId(fac.id)
@@ -576,12 +603,20 @@ export default function Sidebar({
   }
 
   const toggleTeam = (teamId) => {
-    setOpenTeams(prev => ({ ...prev, [teamId]: !prev[teamId] }))
+    setOpenTeams(prev => {
+      const next = prev[teamId] === false
+      saveCollapse(`team_${teamId}`, next)
+      return { ...prev, [teamId]: next }
+    })
     onSelectTeam(teamId)
   }
 
   const toggleFacility = (facilityId) => {
-    setOpenFacilities(prev => ({ ...prev, [facilityId]: !prev[facilityId] }))
+    setOpenFacilities(prev => {
+      const next = prev[facilityId] === false
+      saveCollapse(`facility_${facilityId}`, next)
+      return { ...prev, [facilityId]: next }
+    })
   }
 
   // チームヘッダーのボタン（印刷・チームメモ・編集・エクスポート・削除）の項目＋説明文

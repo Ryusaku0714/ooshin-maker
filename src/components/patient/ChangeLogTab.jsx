@@ -6,6 +6,7 @@ import {
   PREV_TIMING, fmtMMDD, addDaysToStr,
   computeTemporaryEnd, computeTemporaryDays, formatChangeLogText,
 } from '../../lib/changeLogFormat'
+import { loadCollapse, saveCollapse } from '../../lib/collapseStorage'
 
 // ── 追加薬 日数計算ツール（変更ログタブ上部） ──────────────
 const DAY_LABELS = ['日', '月', '火', '水', '木', '金', '土']
@@ -22,7 +23,7 @@ function CalcTool({ visitCalc, onUseForTemp }) {
   const [startTiming, setStartTiming] = useState('朝')
   const [manualDays,  setManualDays]  = useState('')
   const [targetDate,  setTargetDate]  = useState('')
-  const [open,        setOpen]        = useState(true)
+  const [open,        setOpen]        = useState(() => loadCollapse('calctool'))
   const [copiedPeriod, setCopiedPeriod] = useState(false)
   const [copiedTarget, setCopiedTarget] = useState(false)
   const rxEnd = visitCalc?.rxEnd ?? ''
@@ -143,7 +144,11 @@ function CalcTool({ visitCalc, onUseForTemp }) {
         {/* スマホのみ折りたたみボタンを表示 */}
         <button
           className="calc-tool-toggle"
-          onClick={() => setOpen(o => !o)}
+          onClick={() => setOpen(o => {
+            const next = !o
+            saveCollapse('calctool', next)
+            return next
+          })}
           aria-expanded={open}
           aria-label={open ? '折りたたむ' : '展開する'}
           style={{

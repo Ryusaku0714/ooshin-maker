@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
+import { loadCollapse, saveCollapse } from '../../lib/collapseStorage'
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -31,7 +32,15 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
   const [nextVisit, setNextVisit] = useState('次回往診：—')
   const [rxEnd,     setRxEnd]     = useState('')
   const [saving,    setSaving]    = useState(false)
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(() => loadCollapse('visitbanner'))
+
+  const toggleExpanded = () => {
+    setIsExpanded(prev => {
+      const next = !prev
+      saveCollapse('visitbanner', next)
+      return next
+    })
+  }
 
   // スマホ判定（768px以下）— JSXインラインstyleで直接レイアウト制御するため
   const [isMobile, setIsMobile] = useState(() =>
@@ -123,7 +132,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
       {/* モバイル用折りたたみヘッダー（768px以下のみ表示）：往診日＋処方期間を1行で表示 */}
       <div
         className="visit-banner-mobile-header"
-        onClick={() => setIsExpanded(prev => !prev)}
+        onClick={toggleExpanded}
       >
         <span className="visit-banner-mobile-summary">
           {`往診日：${effVisitDate ? fmtWithDow(parseDate(effVisitDate)) : ''}${rxPeriod !== '—' ? `　${stripDow(rxPeriod)}（${effRxDays}日分）` : ''}`}

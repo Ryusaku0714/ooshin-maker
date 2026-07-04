@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { db } from '../../hooks/useData'
 
 const COLORS = [
@@ -22,6 +22,55 @@ function isOverdue(deadline) {
   return deadline < todayStr()
 }
 
+function patientTag(p) {
+  if (!p) return ''
+  return `${p.room_number}${p.initial ? '　' + p.initial : ''}`
+}
+
+function printFacilityTasks(facility, items) {
+  const now = new Date()
+  const today = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
+
+  const itemsHTML = items.map(item => `<div class="task">
+    <span class="chk">☐</span>
+    <span class="dot" style="background:${item.color}"></span>
+    <div class="body">
+      <div class="meta">
+        ${item.patient ? `<span class="tag">🏠 ${patientTag(item.patient)}</span>` : ''}
+        <span class="date">入力：${fmtMMDD(item.input_date)}</span>
+        ${item.deadline ? `<span class="deadline">期限：${fmtMMDD(item.deadline)}</span>` : ''}
+      </div>
+      <div class="memo">${item.memo}</div>
+    </div>
+  </div>`).join('')
+
+  const html = `<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>引継ぎ・タスク表 - ${facility.name}</title>
+<style>
+  * { box-sizing: border-box; }
+  body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;font-size:12px;padding:20px;color:#0f172a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1{font-size:15px;font-weight:700;border-bottom:2px solid #0f1f4e;padding-bottom:8px;margin-bottom:14px;color:#0f1f4e}
+  .task{display:flex;gap:8px;padding:8px 4px;border-bottom:1px solid #e2e8f0;align-items:flex-start;page-break-inside:avoid}
+  .chk{font-size:14px;flex-shrink:0;line-height:1.3}
+  .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .body{flex:1;min-width:0}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:3px;font-size:10px;color:#64748b;align-items:center}
+  .tag{padding:1px 6px;border-radius:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:600}
+  .deadline{font-weight:700;color:#475569}
+  .memo{font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  @media print{body{padding:0}}
+</style></head><body>
+<h1>${facility.name}　引継ぎ・タスク表　（${today}）</h1>
+${itemsHTML || '<p>未完了のタスクはありません</p>'}
+</body></html>`
+
+  const w = window.open('', '_blank', 'width=800,height=600')
+  w.document.write(html)
+  w.document.close()
+  setTimeout(() => { w.focus(); w.print() }, 300)
+}
+
 export default function TaskModal({ facility, onClose }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -33,8 +82,10 @@ export default function TaskModal({ facility, onClose }) {
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [memo, setMemo] = useState('')
   const [deadline, setDeadline] = useState('')
-  const [adding, setAdding] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [copyingId, setCopyingId] = useState(null)
+  const [editingTaskId, setEditingTaskId] = useState(null)
+  const memoRef = useRef(null)
 
   const allPatients = (facility.om_teams ?? []).flatMap(t => t.om_patients ?? [])
 
@@ -48,6 +99,13 @@ export default function TaskModal({ facility, onClose }) {
   useEffect(() => { fetchTasks() }, [facility.id])
 
   useEffect(() => {
+    if (memoRef.current) {
+      memoRef.current.style.height = 'auto'
+      memoRef.current.style.height = Math.max(52, memoRef.current.scrollHeight) + 'px'
+    }
+  }, [memo])
+
+  useEffect(() => {
     if (!roomInput.trim()) { setSuggestions([]); return }
     const q = roomInput.trim().toLowerCase()
     const matched = allPatients.filter(p =>
@@ -59,26 +117,46 @@ export default function TaskModal({ facility, onClose }) {
 
   const handleSelectPatient = (p) => {
     setSelectedPatient(p)
-    setRoomInput(`${p.room_number}${p.initial ? '　' + p.initial : ''}`)
+    setRoomInput(patientTag(p))
     setSuggestions([])
   }
 
-  const handleAdd = async () => {
-    if (!memo.trim()) return
-    setAdding(true)
-    await db.addTask(facility.id, {
-      patient_id: selectedPatient?.id ?? null,
-      color,
-      memo: memo.trim(),
-      input_date: todayStr(),
-      deadline: deadline || null,
-    })
+  const resetForm = () => {
     setMemo('')
     setDeadline('')
     setRoomInput('')
     setSelectedPatient(null)
+    setColor(COLORS[0])
+    setEditingTaskId(null)
+  }
+
+  const handleSubmit = async () => {
+    if (!memo.trim()) return
+    setSaving(true)
+    const payload = {
+      patient_id: selectedPatient?.id ?? null,
+      color,
+      memo: memo.trim(),
+      deadline: deadline || null,
+    }
+    if (editingTaskId) {
+      await db.updateTask(editingTaskId, payload)
+    } else {
+      await db.addTask(facility.id, { ...payload, input_date: todayStr() })
+    }
+    resetForm()
     await fetchTasks()
-    setAdding(false)
+    setSaving(false)
+  }
+
+  const handleEditClick = (task) => {
+    setEditingTaskId(task.id)
+    setColor(task.color)
+    setMemo(task.memo)
+    setDeadline(task.deadline ?? '')
+    const patient = task.patient_id ? allPatients.find(p => p.id === task.patient_id) : null
+    setSelectedPatient(patient ?? null)
+    setRoomInput(patient ? patientTag(patient) : '')
   }
 
   const handleComplete = async (task) => {
@@ -93,6 +171,7 @@ export default function TaskModal({ facility, onClose }) {
 
   const handleDelete = async (task) => {
     if (!confirm('このタスクを削除しますか？')) return
+    if (editingTaskId === task.id) resetForm()
     await db.deleteTask(task.id)
     await fetchTasks()
   }
@@ -112,10 +191,11 @@ export default function TaskModal({ facility, onClose }) {
     setTimeout(() => setCopyingId(null), 1500)
   }
 
-  const handleMemoChange = (e) => {
-    setMemo(e.target.value)
-    e.target.style.height = 'auto'
-    e.target.style.height = Math.max(52, e.target.scrollHeight) + 'px'
+  const handlePrint = () => {
+    const items = tasks
+      .filter(t => !t.is_completed)
+      .map(t => ({ ...t, patient: t.patient_id ? allPatients.find(p => p.id === t.patient_id) : null }))
+    printFacilityTasks(facility, items)
   }
 
   const incompleteTasks = tasks.filter(t => !t.is_completed)
@@ -150,7 +230,7 @@ export default function TaskModal({ facility, onClose }) {
                 background: '#eff6ff', color: '#1d4ed8',
                 border: '1px solid #bfdbfe', fontWeight: 600, whiteSpace: 'nowrap',
               }}>
-                🏠 {patient.room_number}{patient.initial ? '　' + patient.initial : ''}
+                🏠 {patientTag(patient)}
               </span>
             )}
             <span style={{ fontSize: 10, color: '#64748b' }}>
@@ -203,6 +283,19 @@ export default function TaskModal({ facility, onClose }) {
                 cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
               }}
             >↩戻す</button>
+          )}
+          {!isCompleted && (
+            <button
+              onClick={() => handleEditClick(task)}
+              title="編集"
+              style={{
+                fontSize: 10, padding: '2px 5px', borderRadius: 4,
+                border: editingTaskId === task.id ? '1px solid #38bdf8' : '1px solid #e2e8f0',
+                background: editingTaskId === task.id ? '#eff6ff' : 'white',
+                color: editingTaskId === task.id ? '#0369a1' : '#64748b',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >✏️</button>
           )}
           <button
             onClick={() => handleCopy(task)}
@@ -257,26 +350,43 @@ export default function TaskModal({ facility, onClose }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: 'white', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             📝 引継ぎ・タスク表　{facility.name}
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none',
-              color: 'rgba(255,255,255,0.7)', fontSize: 16,
-              cursor: 'pointer', padding: '0 2px', lineHeight: 1, flexShrink: 0, marginLeft: 8,
-            }}
-          >✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 8 }}>
+            <button
+              onClick={handlePrint}
+              title="印刷"
+              style={{
+                background: 'none', border: 'none',
+                color: 'rgba(255,255,255,0.7)', fontSize: 15,
+                cursor: 'pointer', padding: '0 2px', lineHeight: 1,
+              }}
+            >🖨️</button>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none', border: 'none',
+                color: 'rgba(255,255,255,0.7)', fontSize: 16,
+                cursor: 'pointer', padding: '0 2px', lineHeight: 1,
+              }}
+            >✕</button>
+          </div>
         </div>
 
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 16px' }}>
-          {/* Add form */}
+          {/* Add / Edit form */}
           <div style={{
             marginBottom: 14,
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
+            background: editingTaskId ? '#eff6ff' : '#f8fafc',
+            border: editingTaskId ? '1px solid #93c5fd' : '1px solid #e2e8f0',
             borderRadius: 10,
             padding: 12,
           }}>
+            {editingTaskId && (
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0369a1', marginBottom: 8 }}>
+                ✏️ タスクを編集中
+              </div>
+            )}
+
             {/* Color picker */}
             <div style={{ marginBottom: 9 }}>
               <div style={{ fontSize: 10, color: '#64748b', fontWeight: 500, marginBottom: 5 }}>担当カラー</div>
@@ -342,7 +452,7 @@ export default function TaskModal({ facility, onClose }) {
                       onMouseEnter={e => e.currentTarget.style.background = '#f0f9ff'}
                       onMouseLeave={e => e.currentTarget.style.background = 'white'}
                     >
-                      🏠 {p.room_number}{p.initial ? '　' + p.initial : ''}
+                      🏠 {patientTag(p)}
                     </button>
                   ))}
                 </div>
@@ -355,8 +465,9 @@ export default function TaskModal({ facility, onClose }) {
                 メモ・タスク内容
               </label>
               <textarea
+                ref={memoRef}
                 value={memo}
-                onChange={handleMemoChange}
+                onChange={e => setMemo(e.target.value)}
                 placeholder="タスク内容を入力してください"
                 rows={2}
                 style={{
@@ -397,19 +508,31 @@ export default function TaskModal({ facility, onClose }) {
               )}
             </div>
 
-            <button
-              onClick={handleAdd}
-              disabled={adding || !memo.trim()}
-              style={{
-                width: '100%', padding: '8px 0', borderRadius: 6, border: 'none',
-                background: adding || !memo.trim() ? '#cbd5e1' : '#0f1f4e',
-                color: 'white', fontSize: 13, fontWeight: 600,
-                cursor: adding || !memo.trim() ? 'default' : 'pointer',
-                fontFamily: 'inherit', transition: 'background 0.15s',
-              }}
-            >
-              {adding ? '追加中…' : '＋ 追加'}
-            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {editingTaskId && (
+                <button
+                  onClick={resetForm}
+                  style={{
+                    padding: '8px 14px', borderRadius: 6, border: '1px solid #e2e8f0',
+                    background: 'white', color: '#64748b', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                  }}
+                >キャンセル</button>
+              )}
+              <button
+                onClick={handleSubmit}
+                disabled={saving || !memo.trim()}
+                style={{
+                  flex: 1, padding: '8px 0', borderRadius: 6, border: 'none',
+                  background: saving || !memo.trim() ? '#cbd5e1' : '#0f1f4e',
+                  color: 'white', fontSize: 13, fontWeight: 600,
+                  cursor: saving || !memo.trim() ? 'default' : 'pointer',
+                  fontFamily: 'inherit', transition: 'background 0.15s',
+                }}
+              >
+                {saving ? '保存中…' : (editingTaskId ? '✏️ 更新' : '＋ 追加')}
+              </button>
+            </div>
           </div>
 
           {/* Incomplete tasks */}
