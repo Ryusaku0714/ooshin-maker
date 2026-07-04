@@ -263,3 +263,42 @@ CREATE POLICY "om_facility_tasks_owner" ON om_facility_tasks
 -- ============================================================
 -- NULL の場合は個別設定OFF扱い（上枠の共通往診日＝チームの last_visit_date を使用）。
 ALTER TABLE om_patients ADD COLUMN IF NOT EXISTS individual_visit_date DATE;
+
+-- ============================================================
+-- v15 マイグレーション：チームカラー機能を追加
+-- ============================================================
+ALTER TABLE om_teams ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#94a3b8';
+
+-- ============================================================
+-- v16 マイグレーション：チームタスク機能（施設タスクとは別のチーム単位タスク）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS om_team_tasks (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id         UUID NOT NULL REFERENCES om_teams(id) ON DELETE CASCADE,
+  patient_id      UUID REFERENCES om_patients(id) ON DELETE SET NULL,
+  color           TEXT NOT NULL DEFAULT '#94a3b8',
+  memo            TEXT NOT NULL DEFAULT '',
+  input_date      DATE NOT NULL DEFAULT CURRENT_DATE,
+  deadline        DATE,
+  is_completed    BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_date  DATE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 既に om_team_tasks を作成済みの場合に備えたマイグレーション（部屋番号／患者タグ用）
+ALTER TABLE om_team_tasks ADD COLUMN IF NOT EXISTS patient_id UUID REFERENCES om_patients(id) ON DELETE SET NULL;
+
+ALTER TABLE om_team_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "om_team_tasks_owner" ON om_team_tasks;
+CREATE POLICY "om_team_tasks_owner" ON om_team_tasks
+  USING (team_id IN (
+    SELECT t.id FROM om_teams t
+    JOIN om_facilities f ON t.facility_id = f.id
+    WHERE f.user_id = auth.uid()
+  ))
+  WITH CHECK (team_id IN (
+    SELECT t.id FROM om_teams t
+    JOIN om_facilities f ON t.facility_id = f.id
+    WHERE f.user_id = auth.uid()
+  ));

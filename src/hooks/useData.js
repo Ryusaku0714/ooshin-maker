@@ -146,4 +146,58 @@ export const db = {
     })
     return summaries
   },
+
+  // 施設タスクのうち、部屋番号（患者）が紐づいているものだけを患者IDリストで取得
+  // チームタスク表への「施設タスク」反映表示に使用
+  getFacilityTasksByPatientIds: async (patientIds) => {
+    if (!patientIds?.length) return []
+    const { data } = await supabase
+      .from('om_facility_tasks')
+      .select('*')
+      .in('patient_id', patientIds)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  },
+
+  // 未完了の施設タスクのうち、部屋番号（患者）が紐づいているもの一覧
+  // チームタスクボタンの件数バッジ集計（施設タスクの反映分）に使用
+  getFacilityTaskPatientMap: async () => {
+    const { data } = await supabase
+      .from('om_facility_tasks')
+      .select('patient_id, deadline')
+      .eq('is_completed', false)
+      .not('patient_id', 'is', null)
+    return data ?? []
+  },
+
+  // チームタスク（施設タスクとは別の、チーム単位の引継ぎ・タスク表）
+  addTeamTask: (teamId, payload) =>
+    supabase.from('om_team_tasks').insert({ team_id: teamId, ...payload }).select().single(),
+  updateTeamTask: (id, data) =>
+    supabase.from('om_team_tasks').update(data).eq('id', id),
+  deleteTeamTask: (id) =>
+    supabase.from('om_team_tasks').delete().eq('id', id),
+  getTeamTasks: async (teamId) => {
+    const { data } = await supabase
+      .from('om_team_tasks')
+      .select('*')
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+    return data ?? []
+  },
+  getTeamTaskSummaries: async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const { data } = await supabase
+      .from('om_team_tasks')
+      .select('team_id, deadline')
+      .eq('is_completed', false)
+    if (!data) return {}
+    const summaries = {}
+    data.forEach(t => {
+      if (!summaries[t.team_id]) summaries[t.team_id] = { count: 0, overdue: 0 }
+      summaries[t.team_id].count++
+      if (t.deadline && t.deadline < today) summaries[t.team_id].overdue++
+    })
+    return summaries
+  },
 }

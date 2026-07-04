@@ -3,14 +3,15 @@ import { createPortal } from 'react-dom'
 import AddFacilityModal from '../modals/AddFacilityModal'
 import AddTeamModal from '../modals/AddTeamModal'
 import AddPatientModal from '../modals/AddPatientModal'
-import MemoModal from '../modals/MemoModal'
 import TaskModal from '../modals/TaskModal'
+import TeamTaskModal from '../modals/TeamTaskModal'
 import ImportModal from '../modals/ImportModal'
 import { db } from '../../hooks/useData'
 import LegalFooter from '../LegalFooter'
 import { fmtMMDD, formatChangeLogText } from '../../lib/changeLogFormat'
 import { exportTeamData } from '../../lib/teamExportImport'
 import { fitFontSize, PRINT_PAGE_HEIGHT_PX, PRINT_PAGE_WIDTH_PX } from '../../lib/printFit'
+import { TEAM_COLORS } from '../../lib/teamColors'
 import TeamHeaderMenu from './TeamHeaderMenu'
 import PrintMenuButton from '../common/PrintMenuButton'
 
@@ -466,16 +467,37 @@ export default function Sidebar({
   const [editTeamGraceDays, setEditTeamGraceDays] = useState(1)
   const [editTeamPharmacist, setEditTeamPharmacist] = useState('')
   const [editTeamVisitDate, setEditTeamVisitDate] = useState('')
-  const [memoTarget, setMemoTarget] = useState(null)
-  // memoTarget = { type: 'team', id, name, memo }
+  const [editTeamColor, setEditTeamColor] = useState(TEAM_COLORS[0])
   const [taskFacilityTarget, setTaskFacilityTarget] = useState(null)
   const [taskSummaries, setTaskSummaries] = useState({})
+  // teamTaskTarget = { facility, team } | null — チームタスクモーダルの表示対象
+  const [teamTaskTarget, setTeamTaskTarget] = useState(null)
+  const [teamTaskSummaries, setTeamTaskSummaries] = useState({})
   // facGear: { id, pos } | null — ⚙ドロップダウンの対象施設IDと表示位置
   const [facGear, setFacGear] = useState(null)
 
   useEffect(() => {
     db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
   }, [facilities])
+
+  // チームタスクの件数集計：チーム自身のタスク＋そのチームの患者に紐づく施設タスク（未完了分）を合算
+  const refreshTeamTaskSummaries = async () => {
+    const [teamSummaries, facTasks] = await Promise.all([db.getTeamTaskSummaries(), db.getFacilityTaskPatientMap()])
+    const today = new Date().toISOString().slice(0, 10)
+    const combined = {}
+    facilities.forEach(f => (f.om_teams ?? []).forEach(t => {
+      const teamPatientIds = new Set((t.om_patients ?? []).map(p => p.id))
+      const relevant = facTasks.filter(ft => teamPatientIds.has(ft.patient_id))
+      const base = teamSummaries[t.id] ?? { count: 0, overdue: 0 }
+      combined[t.id] = {
+        count: base.count + relevant.length,
+        overdue: base.overdue + relevant.filter(ft => ft.deadline && ft.deadline < today).length,
+      }
+    }))
+    setTeamTaskSummaries(combined)
+  }
+
+  useEffect(() => { refreshTeamTaskSummaries() }, [facilities])
 
   const startEditFacility = (e, fac) => {
     e.stopPropagation()
@@ -511,6 +533,7 @@ export default function Sidebar({
     setEditTeamGraceDays(team.grace_days ?? 1)
     setEditTeamPharmacist(team.pharmacist_name ?? '')
     setEditTeamVisitDate(team.last_visit_date ?? fmtFullSidebar(new Date()))
+    setEditTeamColor(team.color ?? TEAM_COLORS[TEAM_COLORS.length - 1])
   }
   const saveTeamName = async (id) => {
     if (editTeamIsHomeCare) {
@@ -529,6 +552,7 @@ export default function Sidebar({
       clinic_name: editTeamClinic.trim(),
       team_name: editTeamName.trim(),
       visit_schedule_custom: editTeamVisitNotes.trim(),
+      color: editTeamColor,
     })
     setEditTeamId(null)
     onRefetch()
@@ -579,14 +603,6 @@ export default function Sidebar({
           onClick: () => printTeamAllPatients(team, facility.name),
         },
       ],
-    },
-    {
-      key: 'memo', icon: '📝', label: 'チームメモ', description: 'チーム共有メモを編集',
-      onClick: () => setMemoTarget({
-        type: 'team', id: team.id,
-        name: isHomeCare ? '在宅患者' : [team.clinic_name, team.team_name].filter(Boolean).join(' '),
-        memo: team.memo ?? '',
-      }),
     },
     {
       key: 'edit', icon: isHomeCare ? '⚙️' : '✏️', label: '編集',
@@ -856,7 +872,11 @@ export default function Sidebar({
                     const patients = sortPatients(team.om_patients, sort)
                     const hasPatients = patients.length > 0
                     const menuActions = teamMenuActions(team, facility, isHomeCare)
-                    const [expA, printA, memoA, editA, delA] = menuActions
+                    const [expA, printA, editA, delA] = menuActions
+                    const teamTaskSummary = teamTaskSummaries[team.id]
+                    const teamHasOverdueTasks = (teamTaskSummary?.overdue ?? 0) > 0
+                    const teamHasIncompleteTasks = (teamTaskSummary?.count ?? 0) > 0
+                    const openTeamTasks = () => setTeamTaskTarget({ facility, team })
 
                     return (
                       <div
@@ -989,6 +1009,25 @@ export default function Sidebar({
                                   style={{ width: '100%', fontSize: 10, border: '1.5px solid var(--sky-400)', borderRadius: 4, padding: '2px 6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                                 />
                               </div>
+                              <div style={{ marginBottom: 6 }}>
+                                <div style={{ fontSize: 9, color: 'var(--sky-500)', marginBottom: 3 }}>チームカラー</div>
+                                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                  {TEAM_COLORS.map(c => (
+                                    <button
+                                      key={c}
+                                      onClick={() => setEditTeamColor(c)}
+                                      aria-label={`カラー ${c}`}
+                                      style={{
+                                        width: 18, height: 18, borderRadius: '50%', background: c,
+                                        border: editTeamColor === c ? '2px solid var(--sky-700)' : '2px solid transparent',
+                                        outline: editTeamColor === c ? `1.5px solid ${c}` : 'none',
+                                        outlineOffset: 2,
+                                        cursor: 'pointer', padding: 0, flexShrink: 0,
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
                                 <button
                                   onClick={() => saveTeamName(team.id)}
@@ -1020,7 +1059,11 @@ export default function Sidebar({
                                   {isOpen ? '▼' : '▶'}
                                 </span>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <span style={{
+                                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                                      background: team.color ?? '#94a3b8',
+                                    }} />
                                     🏥 {team.clinic_name} {team.team_name}
                                   </div>
                                   {team.visit_schedule_custom && (
@@ -1049,10 +1092,21 @@ export default function Sidebar({
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                                   />
                                   <button
-                                    onClick={memoA.onClick}
-                                    title={team.memo ? `${teamMenuTip(memoA)}（メモあり）` : teamMenuTip(memoA)}
-                                    style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: team.memo ? '1px solid #fde68a' : '1px solid var(--sky-200)', background: team.memo ? '#fffbeb' : 'white', color: team.memo ? '#f59e0b' : 'var(--sky-600)', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
-                                  >📝</button>
+                                    onClick={openTeamTasks}
+                                    title={
+                                      teamHasOverdueTasks
+                                        ? `期限切れタスクあり（${teamTaskSummary.overdue}件）`
+                                        : teamHasIncompleteTasks
+                                          ? `未完了タスク ${teamTaskSummary.count}件`
+                                          : 'チームタスクを管理'
+                                    }
+                                    style={{
+                                      fontSize: 10, padding: '1px 4px', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                                      border: teamHasOverdueTasks ? '1px solid #fecaca' : teamHasIncompleteTasks ? '1px solid #fed7aa' : '1px solid var(--sky-200)',
+                                      background: teamHasOverdueTasks ? '#fee2e2' : teamHasIncompleteTasks ? '#fff7ed' : 'white',
+                                      color: teamHasOverdueTasks ? '#dc2626' : teamHasIncompleteTasks ? '#ea580c' : 'var(--sky-600)',
+                                    }}
+                                  >📋 {teamHasIncompleteTasks ? `タスク(${teamTaskSummary.count})` : 'タスク'}</button>
                                   <button
                                     onClick={editA.onClick}
                                     title={teamMenuTip(editA)}
@@ -1064,6 +1118,21 @@ export default function Sidebar({
                                     style={{ fontSize: 10, padding: '1px 4px', borderRadius: 3, border: '1px solid #fca5a5', background: 'white', color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                                   >🗑️</button>
                                 </div>
+                                <button
+                                  className="row-actions-mobile"
+                                  onClick={openTeamTasks}
+                                  title={
+                                    teamHasIncompleteTasks
+                                      ? `未完了タスク ${teamTaskSummary.count}件`
+                                      : 'チームタスクを管理'
+                                  }
+                                  style={{
+                                    fontSize: 10, padding: '1px 6px', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                                    border: teamHasIncompleteTasks ? '1px solid #fed7aa' : '1px solid #dce4f0',
+                                    background: teamHasIncompleteTasks ? '#fff7ed' : '#f1f5fb',
+                                    color: teamHasIncompleteTasks ? '#ea580c' : '#64748b',
+                                  }}
+                                >📋{teamHasIncompleteTasks ? `(${teamTaskSummary.count})` : ''}</button>
                                 <TeamHeaderMenu actions={menuActions} triggerStyle={{ border: '1px solid var(--sky-200)', background: 'white', color: 'var(--sky-600)' }} />
                               </div>
                             </div>
@@ -1144,18 +1213,18 @@ export default function Sidebar({
           onClose={() => {
             setTaskFacilityTarget(null)
             db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
+            refreshTeamTaskSummaries()
           }}
         />
       )}
-      {memoTarget && (
-        <MemoModal
-          title={`チームメモ：${memoTarget.name}`}
-          initialMemo={memoTarget.memo}
-          onSave={async (newMemo) => {
-            await db.updateTeam(memoTarget.id, { memo: newMemo || null })
-            onRefetch()
+      {teamTaskTarget && (
+        <TeamTaskModal
+          facility={teamTaskTarget.facility}
+          team={teamTaskTarget.team}
+          onClose={() => {
+            setTeamTaskTarget(null)
+            refreshTeamTaskSummaries()
           }}
-          onClose={() => setMemoTarget(null)}
         />
       )}
       {showImport && (
