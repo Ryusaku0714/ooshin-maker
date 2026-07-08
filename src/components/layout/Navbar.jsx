@@ -5,7 +5,7 @@ import AboutModal from '../modals/AboutModal'
 
 const NOTE_URL = 'https://note.com/gentle_pansy1797'
 
-export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
+export default function Navbar({ user, onSignOut, onOpenZanyaku, scale, onSetScale, onResetView }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState(null)
   const btnRef = useRef(null)
@@ -105,6 +105,26 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
               <div className="row-menu" style={{ position: 'fixed', top: pos.top, right: pos.right, minWidth: 200 }}>
                 <div className="nav-menu-username">{displayName}</div>
                 <div className="nav-menu-divider" />
+                <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--sky-100)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    🔤 文字サイズ
+                  </div>
+                  <div style={{ display: 'flex', gap: 3, background: '#f1f5fb', borderRadius: 8, padding: 3 }}>
+                    {[['標準', 1], ['ゆとり', 1.15], ['大', 1.3]].map(([label, v]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => onSetScale(v)}
+                        style={{
+                          flex: 1, padding: '4px 8px', borderRadius: 6, border: 'none',
+                          fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                          background: scale === v ? '#0f1f4e' : 'transparent',
+                          color: scale === v ? '#ffffff' : '#64748b',
+                        }}
+                      >{label}</button>
+                    ))}
+                  </div>
+                </div>
                 <button type="button" className="row-menu-item" onClick={runAndClose(() => printWithAutoFit())}>
                   🖨️ 印刷
                 </button>
@@ -117,6 +137,9 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku }) {
                   onClick={runAndClose(() => window.open(NOTE_URL, '_blank', 'noopener,noreferrer'))}
                 >
                   📝 公式note
+                </button>
+                <button type="button" className="row-menu-item" onClick={runAndClose(onResetView)}>
+                  ↩️ 表示を初期化
                 </button>
                 <div className="nav-menu-divider" />
                 <button type="button" className="row-menu-item" style={{ color: '#dc2626' }} onClick={runAndClose(onSignOut)}>

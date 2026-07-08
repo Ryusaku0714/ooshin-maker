@@ -1,6 +1,7 @@
-﻿import { useState, useRef } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useFacilities } from './hooks/useData'
+import { useDisplayPrefs } from './hooks/useDisplayPrefs'
 import Login from './components/auth/Login'
 import Navbar from './components/layout/Navbar'
 import Sidebar from './components/layout/Sidebar'
@@ -62,6 +63,36 @@ export default function App() {
   // 未保存変更の追跡（PatientDetail から通知される）
   const isDirtyRef = useRef(false)
 
+  const { scale, setScale, sbw, setSbw, persistSbw, resetSbw, resetAll } = useDisplayPrefs()
+
+  // zoom / 仕切りは PC のみ（≤768px はモバイルタブUIのため既存のまま）
+  const [isDesktop, setIsDesktop] = useState(
+    () => window.matchMedia('(min-width: 769px)').matches
+  )
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 769px)')
+    const h = (e) => setIsDesktop(e.matches)
+    mql.addEventListener('change', h)
+    return () => mql.removeEventListener('change', h)
+  }, [])
+
+  // 仕切りドラッグ
+  const startResize = (e) => {
+    e.preventDefault()
+    const left = e.currentTarget.parentElement.getBoundingClientRect().left
+    document.body.style.userSelect = 'none'
+    let latest = sbw
+    const onMove = (ev) => { latest = setSbw(ev.clientX - left) }
+    const onUp = () => {
+      document.body.style.userSelect = ''
+      persistSbw(latest)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--sky-600)' }}>
@@ -110,6 +141,9 @@ export default function App() {
         user={user}
         onSignOut={signOut}
         onOpenZanyaku={() => setShowZanyaku(true)}
+        scale={scale}
+        onSetScale={setScale}
+        onResetView={resetAll}
       />
 
       {/* ④ モバイルタブバー */}
@@ -136,14 +170,22 @@ export default function App() {
 
       <div
         className="layout"
-        style={{ display: 'grid', gridTemplateColumns: '240px 1fr', flex: 1, overflow: 'hidden', minHeight: 0 }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isDesktop ? `${sbw}px 5px 1fr` : '240px 1fr',
+          flex: 1, overflow: 'hidden', minHeight: 0,
+        }}
       >
 
         {/* サイドバー */}
         <div
           id="mobileSidebar"
           className="sidebar-wrap"
-          style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#ffffff', borderRight: '1px solid #dce4f0' }}
+          style={{
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            background: '#ffffff', borderRight: '1px solid #dce4f0',
+            zoom: isDesktop ? scale : 1,
+          }}
         >
           {facLoading ? (
             <div style={{ padding: 20, color: 'var(--gray-400)', fontSize: 12 }}>読み込み中…</div>
@@ -159,11 +201,25 @@ export default function App() {
           )}
         </div>
 
+        {isDesktop && (
+          <div
+            onPointerDown={startResize}
+            onDoubleClick={resetSbw}
+            title="ドラッグで幅を変更・ダブルクリックで初期位置に戻す"
+            style={{ background: '#dce4f0', cursor: 'col-resize' }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#c9a84c')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#dce4f0')}
+          />
+        )}
+
         {/* メインエリア */}
         <div
           id="mobileMain"
           className="main"
-          style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}
+          style={{
+            display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0,
+            zoom: isDesktop ? scale : 1,
+          }}
         >
           {/* 往診設定バナー */}
           <VisitBanner team={selectedTeam} patientOverride={patientOverride} onVisitCalcChange={setVisitCalc} />
