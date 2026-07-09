@@ -75,6 +75,9 @@ export default function TaskModal({ facility, onClose }) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [sortMode, setSortMode] = useState('input') // 'input' | 'room'
+  const [printPickerOpen, setPrintPickerOpen] = useState(false)
+  const [printOn, setPrintOn] = useState({}) // { [taskId]: boolean }
 
   const [color, setColor] = useState(COLORS[0])
   const [roomInput, setRoomInput] = useState('')
@@ -191,15 +194,38 @@ export default function TaskModal({ facility, onClose }) {
     setTimeout(() => setCopyingId(null), 1500)
   }
 
-  const handlePrint = () => {
-    const items = tasks
-      .filter(t => !t.is_completed)
+  function patientRoomOf(task) {
+    const p = task.patient_id ? allPatients.find(p => p.id === task.patient_id) : null
+    // 部屋番号が数値化できればそれで、できなければ文字列比較。患者紐付けなしは末尾へ。
+    if (!p) return Infinity
+    const n = parseInt(p.room_number, 10)
+    return Number.isNaN(n) ? p.room_number : n
+  }
+
+  const incompleteTasksSorted = [...tasks.filter(t => !t.is_completed)].sort((a, b) => {
+    if (sortMode === 'room') {
+      const ra = patientRoomOf(a), rb = patientRoomOf(b)
+      if (typeof ra === 'number' && typeof rb === 'number') return ra - rb
+      return String(ra).localeCompare(String(rb))
+    }
+    return 0 // 入力順 = tasks の取得順（db.getFacilityTasks が入力日時順で返す前提。既存順を維持）
+  })
+  const completedTasks = tasks.filter(t => t.is_completed)
+
+  const openPrintPicker = () => {
+    const init = {}
+    incompleteTasksSorted.forEach(t => { init[t.id] = true })
+    setPrintOn(init)
+    setPrintPickerOpen(true)
+  }
+
+  const confirmPrint = () => {
+    setPrintPickerOpen(false)
+    const items = incompleteTasksSorted
+      .filter(t => printOn[t.id])
       .map(t => ({ ...t, patient: t.patient_id ? allPatients.find(p => p.id === t.patient_id) : null }))
     printFacilityTasks(facility, items)
   }
-
-  const incompleteTasks = tasks.filter(t => !t.is_completed)
-  const completedTasks = tasks.filter(t => t.is_completed)
 
   const renderTask = (task, isCompleted) => {
     const overdue = !isCompleted && isOverdue(task.deadline)
@@ -352,7 +378,7 @@ export default function TaskModal({ facility, onClose }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 8 }}>
             <button
-              onClick={handlePrint}
+              onClick={openPrintPicker}
               title="印刷"
               style={{
                 background: 'none', border: 'none',
@@ -535,12 +561,31 @@ export default function TaskModal({ facility, onClose }) {
             </div>
           </div>
 
+          {/* 並べ替え */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ fontSize: 10, color: '#64748b', fontWeight: 500 }}>並べ替え</span>
+            <div style={{ display: 'flex', gap: 2, background: '#f1f5fb', borderRadius: 7, padding: 3 }}>
+              {[['input', '入力順'], ['room', '部屋番号順']].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSortMode(key)}
+                  style={{
+                    padding: '4px 10px', borderRadius: 5, border: 'none',
+                    fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                    background: sortMode === key ? '#0f1f4e' : 'transparent',
+                    color: sortMode === key ? '#ffffff' : '#64748b',
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
           {/* Incomplete tasks */}
           {loading ? (
             <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 12 }}>
               読み込み中…
             </div>
-          ) : incompleteTasks.length === 0 ? (
+          ) : incompleteTasksSorted.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: 14, color: '#94a3b8', fontSize: 12,
               border: '1px dashed #e2e8f0', borderRadius: 8, marginBottom: 12,
@@ -552,7 +597,7 @@ export default function TaskModal({ facility, onClose }) {
               border: '1px solid #e2e8f0', borderRadius: 10,
               overflow: 'hidden', marginBottom: 12,
             }}>
-              {incompleteTasks.map(t => renderTask(t, false))}
+              {incompleteTasksSorted.map(t => renderTask(t, false))}
             </div>
           )}
 
@@ -581,6 +626,55 @@ export default function TaskModal({ facility, onClose }) {
           )}
         </div>
       </div>
+
+      {printPickerOpen && (
+        <div onClick={(e) => e.target === e.currentTarget && setPrintPickerOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5fb' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0f1f4e', marginBottom: 2 }}>🖨️ 印刷するタスクを選択</div>
+              <div style={{ fontSize: 10, color: '#94a3b8' }}>チェックを外すと引継ぎ・タスク表から除外されます</div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '6px 6px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderBottom: '1px solid #f1f5fb', cursor: 'pointer' }}>
+                <input type="checkbox"
+                  checked={incompleteTasksSorted.every(t => printOn[t.id])}
+                  onChange={() => {
+                    const allOn = incompleteTasksSorted.every(t => printOn[t.id])
+                    const next = {}
+                    incompleteTasksSorted.forEach(t => { next[t.id] = !allOn })
+                    setPrintOn(next)
+                  }}
+                  style={{ width: 15, height: 15, accentColor: '#0f1f4e', cursor: 'pointer', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#0f1f4e' }}>すべて選択</span>
+              </label>
+              {incompleteTasksSorted.map(t => {
+                const patient = t.patient_id ? allPatients.find(p => p.id === t.patient_id) : null
+                return (
+                  <label key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', borderBottom: '1px solid #f1f5fb', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={!!printOn[t.id]}
+                      onChange={() => setPrintOn(s => ({ ...s, [t.id]: !s[t.id] }))}
+                      style={{ width: 15, height: 15, accentColor: '#0f1f4e', cursor: 'pointer', flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 2 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.color, flexShrink: 0 }} />
+                        {patient && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 8, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontWeight: 600 }}>🏠 {patientTag(patient)}</span>}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: '#1e293b', lineHeight: 1.4, display: 'block' }}>{t.memo}</span>
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+            <div style={{ display: 'flex', gap: 8, padding: '12px 14px', borderTop: '1px solid #f1f5fb' }}>
+              <button onClick={() => setPrintPickerOpen(false)} style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: '1.5px solid #dce4f0', background: 'white', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>キャンセル</button>
+              <button onClick={confirmPrint} disabled={!Object.values(printOn).some(Boolean)}
+                style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: 'none', background: '#0f1f4e', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: Object.values(printOn).some(Boolean) ? 1 : 0.5 }}
+              >🖨️ 印刷する</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -158,6 +158,12 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const [copied, setCopied]       = useState(false)
   const [showLogMenu, setShowLogMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showPrintPicker, setShowPrintPicker] = useState(false)
+  const [printSections, setPrintSections] = useState({
+    basic: true, log: true, drugs: true, visit: true, free: true,
+  })
+  const togglePrintSection = (key) =>
+    setPrintSections(s => ({ ...s, [key]: !s[key] }))
   const { patient, loading, refetch } = usePatient(patientId)
 
   // 未保存変更の追跡：コンポーネント名をキーに保持し、いずれかが dirty なら親へ通知
@@ -339,7 +345,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
                   <span className="team-menu-item-label">🖨️ 1ヶ月分</span>
                   <span className="team-menu-item-desc">直近1ヶ月変更ログ</span>
                 </button>
-                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); printFullPatient() }}>
+                <button className="team-menu-item" onClick={() => { setShowMobileMenu(false); setShowPrintPicker(true) }}>
                   <span className="team-menu-item-label">🖨️ 全体印刷</span>
                   <span className="team-menu-item-desc">1患者情報印刷</span>
                 </button>
@@ -378,7 +384,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             )}
           </span>
           <span style={ACTION_WRAP_STYLE}>
-            <button className="btn btn-sm" onClick={printFullPatient} style={{ background: '#0f1f4e', color: 'white', border: 'none', borderRadius: 6 }}>🖨️ 全体印刷</button>
+            <button className="btn btn-sm" onClick={() => setShowPrintPicker(true)} style={{ background: '#0f1f4e', color: 'white', border: 'none', borderRadius: 6 }}>🖨️ 全体印刷</button>
             <span style={ACTION_CAP_STYLE}>1患者情報印刷</span>
           </span>
         </div>
@@ -451,13 +457,50 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
 
         {/* 印刷用：全タブコンテンツ */}
         <div className="print-all-tabs" style={{ display: 'none' }}>
-          <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} printMode={true} /></div>
-          <div className="print-section"><ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={() => {}} /></div>
-          <div className="print-section"><DrugsTab       patient={patient} onRefetch={() => {}} /></div>
-          <div className="print-section"><OtherVisitsTab patient={patient} onRefetch={() => {}} /></div>
-          <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} printMode={true} /></div>
+          <div className="print-repeat-header">{patient.room_number}{patient.initial ? `　${patient.initial}` : ''}</div>
+          {printSections.basic && <div className="print-section"><BasicInfoTab   patient={patient} onSaved={() => {}} printMode={true} /></div>}
+          {printSections.log   && <div className="print-section"><ChangeLogTab   patient={patient} visitCalc={visitCalc} onRefetch={() => {}} /></div>}
+          {printSections.drugs && <div className="print-section"><DrugsTab       patient={patient} onRefetch={() => {}} /></div>}
+          {printSections.visit && <div className="print-section"><OtherVisitsTab patient={patient} onRefetch={() => {}} /></div>}
+          {printSections.free  && <div className="print-section"><FreeMemoTab    patient={patient} onRefetch={() => {}} printMode={true} /></div>}
         </div>
       </div>
+
+      {showPrintPicker && (
+        <>
+          <div className="row-menu-overlay" onClick={() => setShowPrintPicker(false)} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            background: 'white', borderRadius: 12, border: '1px solid #dce4f0',
+            boxShadow: '0 8px 32px rgba(15,31,78,0.25)', padding: 20, width: 280, zIndex: 300,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f1f4e', marginBottom: 4 }}>印刷する項目を選択</div>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 12 }}>チェックを外すと印刷から除外されます</div>
+            {[
+              ['basic', '🏷️ 患者背景（基本情報）'],
+              ['log',   '📝 薬剤変更記録'],
+              ['drugs', '💊 外用・頓用薬'],
+              ['visit', '🏥 他科受診'],
+              ['free',  '📄 フリーメモ'],
+            ].map(([key, label]) => (
+              <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 2px', borderBottom: '1px solid #f1f5fb', cursor: 'pointer' }}>
+                <input type="checkbox" checked={printSections[key]} onChange={() => togglePrintSection(key)}
+                  style={{ width: 15, height: 15, accentColor: '#0f1f4e', cursor: 'pointer' }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: printSections[key] ? '#0f1f4e' : '#94a3b8' }}>{label}</span>
+              </label>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button className="btn btn-sm" onClick={() => setShowPrintPicker(false)} style={{ flex: 1, background: 'white', color: '#64748b', border: '1.5px solid #dce4f0', borderRadius: 6 }}>キャンセル</button>
+              <button
+                className="btn btn-sm"
+                onClick={() => { setShowPrintPicker(false); printFullPatient() }}
+                disabled={!Object.values(printSections).some(Boolean)}
+                style={{ flex: 1, background: '#0f1f4e', color: 'white', border: 'none', borderRadius: 6, opacity: Object.values(printSections).some(Boolean) ? 1 : 0.5 }}
+              >🖨️ 印刷する</button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

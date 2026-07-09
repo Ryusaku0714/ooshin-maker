@@ -725,9 +725,11 @@ body.printing {
   background: white !important;
   height: auto !important;
   overflow: visible !important;
-  font-size: calc(11px * var(--print-scale)) !important;
-  line-height: 1.5 !important;
+  font-size: calc(12.5px * var(--print-scale)) !important;
+  line-height: 1.6 !important;
   font-family: 'Noto Sans JP', sans-serif !important;
+  color: #000000 !important;
+  font-weight: 500 !important;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
@@ -791,9 +793,9 @@ body.printing .card {
 }
 
 body.printing .card-title {
-  font-size: 11px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
-  color: #64748b !important;
+  color: #1e293b !important;
   border-left: 3px solid #c9a84c !important;
   padding-left: 6px !important;
   margin-bottom: 6px !important;
@@ -805,7 +807,8 @@ body.printing .card-title {
 body.printing .field-input {
   border: none !important;
   padding: 2px 0 !important;
-  font-size: calc(11px * var(--print-scale)) !important;
+  font-size: calc(12.5px * var(--print-scale)) !important;
+  color: #000000 !important;
 }
 
 /* 長文テキストフィールド：JS固定高さ・overflow隠蔽を解除して全文表示 */
@@ -855,9 +858,9 @@ body.printing .patient-header > div:first-child span {
 /* 往診情報行（印刷時のみ表示） */
 body.printing .visit-info-print {
   display: block !important;
-  font-size: calc(11px * var(--print-scale));
-  color: #475569;
-  margin-bottom: 6px;
+  font-size: calc(12.5px * var(--print-scale));
+  color: #1e293b;
+  margin-bottom: 8px;
 }
 
 /* 外用・頓用薬セクション：コンパクト1行表示 */
@@ -889,8 +892,8 @@ body.printing .drug-content > div > span {
   margin-right: 4px !important;
 }
 body.printing .drug-detail {
-  font-size: calc(9px * var(--print-scale)) !important;
-  color: #64748b !important;
+  font-size: calc(10px * var(--print-scale)) !important;
+  color: #1e293b !important;
   margin-top: 0 !important;
 }
 body.printing .drug-badge {
@@ -900,19 +903,49 @@ body.printing .drug-badge {
 
 /* 変更記録：日付・指示理由テキストを統一（臨時薬の赤左ラインはJSインラインstyleで維持） */
 body.printing .log-instr-header {
-  color: #0f172a !important;
-  font-weight: normal !important;
+  color: #000000 !important;
+  font-weight: 500 !important;
   font-size: 11px !important;
   line-height: 1.6 !important;
 }
 body.printing .log-date-span {
-  color: #0f172a !important;
-  font-weight: normal !important;
+  color: #000000 !important;
+  font-weight: 500 !important;
 }
 
 /* 外用・頓用薬：数量テキストを黒に統一 */
 body.printing .drug-qty-span {
-  color: #0f172a !important;
+  color: #000000 !important;
+  font-weight: 500 !important;
+}
+
+/* カード（セクション）は途中でページをまたがない */
+body.printing .print-section,
+body.printing .card {
+  break-inside: avoid;
+  page-break-inside: avoid; /* 古いブラウザ向けフォールバック */
+}
+
+/* 2ページ目以降にも患者名ヘッダーを再掲する固定ヘッダー */
+body.printing .print-repeat-header {
+  display: block !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  font-size: 12px !important;
+  font-weight: 700;
+  color: #0f1f4e;
+  border-bottom: 1.5px solid #c9a84c;
+  padding-bottom: 4px;
+  background: white;
+}
+/* 通常表示（画面上）では非表示 */
+.print-repeat-header { display: none; }
+
+/* 固定ヘッダー分、本文の先頭に余白を確保 */
+body.printing .print-all-tabs {
+  padding-top: 22px;
 }
 
 /* ⑦ ── @media print（ブラウザ印刷ダイアログ対応） ── */
@@ -921,9 +954,11 @@ body.printing .drug-qty-span {
 
   body {
     font-family: 'Noto Sans JP', sans-serif !important;
-    font-size: 11px !important;
-    line-height: 1.5 !important;
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
     background: white !important;
+    color: #000000 !important;
+    font-weight: 500 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -939,8 +974,8 @@ body.printing .drug-qty-span {
   /* レイアウト */
   .layout { grid-template-columns: 1fr !important; overflow: visible !important; }
   .main, .main-scroll, .tab-scroll-area { overflow: visible !important; padding: 0 !important; background: white !important; }
-  .print-all-tabs { display: block !important; width: 680px; max-width: 680px; margin: 0 auto; }
-  .print-section { margin-bottom: 12px; }
+  .print-all-tabs { display: block !important; width: 680px; max-width: 680px; margin: 0 auto; padding-top: 22px; }
+  .print-section { margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
 
   /* 患者ヘッダー */
   .patient-header {
@@ -960,12 +995,13 @@ body.printing .drug-qty-span {
   }
 
   /* 往診情報行 */
-  .visit-info-print { display: block !important; font-size: 11px; color: #475569; margin-bottom: 6px; }
+  .visit-info-print { display: block !important; font-size: 12.5px; color: #1e293b; margin-bottom: 8px; }
 
   /* カード */
   .card {
     border: 1px solid #dce4f0 !important;
     box-shadow: none !important;
+    break-inside: avoid;
     page-break-inside: avoid;
     padding: 8px 10px !important;
     margin-bottom: 12px !important;
@@ -973,9 +1009,9 @@ body.printing .drug-qty-span {
 
   /* セクションタイトル */
   .card-title {
-    font-size: 11px !important;
+    font-size: 12.5px !important;
     font-weight: 700 !important;
-    color: #64748b !important;
+    color: #1e293b !important;
     border-left: 3px solid #c9a84c !important;
     padding-left: 6px !important;
     margin-bottom: 6px !important;
@@ -1016,9 +1052,9 @@ body.printing .drug-qty-span {
   }
   .drug-content > div { display: inline !important; margin-top: 0 !important; }
   .drug-content > div > span { margin-right: 4px !important; }
-  .drug-detail { font-size: 9px !important; color: #64748b !important; margin-top: 0 !important; }
+  .drug-detail { font-size: 10px !important; color: #1e293b !important; margin-top: 0 !important; }
   .drug-badge { font-size: 8px !important; padding: 1px 4px !important; }
-  .drug-qty-span { color: #0f172a !important; }
+  .drug-qty-span { color: #000000 !important; font-weight: 500 !important; }
   .drug-alert-print { display: block !important; }
   .drug-card.drug-unconfirmed {
     background: #fffbeb !important;
@@ -1028,14 +1064,30 @@ body.printing .drug-qty-span {
   }
 
   /* 変更記録 */
-  .log-instr-header { color: #0f172a !important; font-weight: normal !important; font-size: 11px !important; line-height: 1.6 !important; }
-  .log-date-span { color: #0f172a !important; font-weight: normal !important; }
+  .log-instr-header { color: #000000 !important; font-weight: 500 !important; font-size: 11px !important; line-height: 1.6 !important; }
+  .log-date-span { color: #000000 !important; font-weight: 500 !important; }
 
   /* テキストフィールド */
   .field-input {
     border: none !important;
     padding: 2px 0 !important;
-    font-size: 11px !important;
+    font-size: 12.5px !important;
+    color: #000000 !important;
+  }
+
+  /* 2ページ目以降にも患者名ヘッダーを再掲する固定ヘッダー */
+  .print-repeat-header {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    font-size: 12px !important;
+    font-weight: 700;
+    color: #0f1f4e;
+    border-bottom: 1.5px solid #c9a84c;
+    padding-bottom: 4px;
+    background: white;
   }
   textarea.field-input {
     height: auto !important;

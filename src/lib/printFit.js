@@ -21,29 +21,18 @@ export function fitFontSize(el, { maxFontPx = 11, minFontPx = 10, targetHeightPx
 }
 
 /**
- * CSS変数 --print-scale を段階的に縮小し、対象要素が1ページに収まる最大のスケールを探す
- * 既存CSSの固定px指定を calc(基準px * var(--print-scale)) に書き換えて利用する想定
+ * 変更後：縮小は行わず、常に scale=1 を設定する。
+ * 1ページに収まらない内容は、CSSの break-inside:avoid に従って
+ * カード単位を保ったまま自然に2ページ目以降へ送られる。
  */
-export function fitPrintScale(doc, measureEl, { targetHeightPx = PRINT_PAGE_HEIGHT_PX, minScale = 10 / 11, step = 0.02 } = {}) {
-  if (!doc || !measureEl) return 1
-  const root = doc.documentElement
-  let scale = 1
-  root.style.setProperty('--print-scale', scale)
-  while (scale > minScale && measureEl.scrollHeight > targetHeightPx) {
-    scale = Math.max(minScale, scale - step)
-    root.style.setProperty('--print-scale', scale)
-  }
-  return scale
+export function fitPrintScale(doc /*, measureEl, opts */) {
+  if (!doc) return 1
+  doc.documentElement.style.setProperty('--print-scale', 1)
+  return 1
 }
 
-/**
- * メイン画面の印刷用クラス（body.printing）を付与し、患者全体印刷コンテンツがあれば
- * 1ページに収まるようフォントサイズを自動縮小してから window.print() を呼ぶ。
- * 後始末（クラス・スケールのリセット）は呼び出し側で afterprint イベントを監視すること。
- */
 export function printWithAutoFit(containerSelector = '.print-all-tabs') {
   document.body.classList.add('printing')
-  const target = document.querySelector(containerSelector)
-  if (target) fitPrintScale(document, target, { targetHeightPx: PRINT_PAGE_HEIGHT_PX })
+  fitPrintScale(document)
   window.print()
 }
