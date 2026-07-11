@@ -404,6 +404,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
         borderBottom: '2px solid #dce4f0',
         padding: '0 20px', marginBottom: 0,
         flexWrap: 'wrap', flexShrink: 0,
+        position: 'sticky', top: 0, zIndex: 5,
       }}>
         {TABS.map(t => (
           <button

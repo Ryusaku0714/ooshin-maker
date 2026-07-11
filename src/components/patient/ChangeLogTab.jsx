@@ -20,7 +20,7 @@ function fmtWithDay(dateStr) {
 
 function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
-  const [startTiming, setStartTiming] = useState('朝')
+  const [startTiming, setStartTiming] = useState('') // '' = なし（デフォルト）
   const [manualDays,  setManualDays]  = useState('')
   const [targetDate,  setTargetDate]  = useState('')
   const [calcMode,    setCalcMode]    = useState('A') // 'A' | 'B' | 'C'
@@ -53,7 +53,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
 
   const calc50MobileStyle = { width: '45%' }
 
-  const endTiming = PREV_TIMING[startTiming]
+  // タイミング未選択（なし）は「朝」相当（同日換算）で日数計算し、表記には何も付けない
+  const endTiming = startTiming ? PREV_TIMING[startTiming] : ''
   const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
 
   let periodText = ''
@@ -65,8 +66,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   if (addStart) {
     if (isManual) {
       const days = parseInt(manualDays)
-      // 朝開始は同日の眠前で完結（+days-1日）、昼以降は翌日へまたぐ（+days日）
-      const daysOffset = startTiming === '朝' ? days - 1 : days
+      // 朝開始（またはなし）は同日の眠前で完結（+days-1日）、昼以降は翌日へまたぐ（+days日）
+      const daysOffset = (startTiming === '朝' || startTiming === '') ? days - 1 : days
       const endStr = addDaysToStr(addStart, daysOffset)
       periodText     = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       daysText       = `${days}日分`
@@ -78,8 +79,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
       const end   = new Date(rxEnd    + 'T00:00:00')
       const diff  = Math.ceil((end - start) / (1000*60*60*24)) + 1
       if (diff > 0) {
-        // 朝開始以外は定期処方末日の翌日までまたがるため、末尾のタイミングは省き「+α」と表記する
-        periodText     = startTiming === '朝'
+        // 朝開始（またはなし）以外は定期処方末日の翌日までまたがるため、末尾のタイミングは省き「+α」と表記する
+        periodText     = (startTiming === '朝' || startTiming === '')
           ? `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}${endTiming}`
           : `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}+α`
         daysText       = `定期に合わせた場合${diff}日分`
@@ -99,8 +100,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
     const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24))
     const tDays = daysDiff + 1
     if (tDays > 0) {
-      // 朝開始は指定末日当日の眠前で完結（+tDays-1日）、昼以降は翌日へまたぐ（+tDays日）
-      const daysOffset = startTiming === '朝' ? tDays - 1 : tDays
+      // 朝開始（またはなし）は指定末日当日の眠前で完結（+tDays-1日）、昼以降は翌日へまたぐ（+tDays日）
+      const daysOffset = (startTiming === '朝' || startTiming === '') ? tDays - 1 : tDays
       const endStr = addDaysToStr(addStart, daysOffset)
       targetPeriodText = `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(endStr)}${endTiming}`
       targetDaysText   = `${tDays}日分`
@@ -196,19 +197,24 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
             ))}
           </div>
 
-          {/* 開始日・タイミングは完全50%固定（flex伸縮禁止） */}
+          {/* 開始日は50%固定（flex伸縮禁止） */}
           <div style={isMobile ? calc50MobileStyle : { flex: '1 1 110px', minWidth: 100 }}>
             <label style={calcLabelStyle}>開始日</label>
             <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
           </div>
-          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 75px', minWidth: 70 }}>
+          {/* タイミングは「なし/朝/昼/夕/眠前」のチップ選択（なしがデフォルト）。開始日の右にコンパクトに配置 */}
+          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 150px', minWidth: 140 }}>
             <label style={calcLabelStyle}>タイミング</label>
-            <select value={startTiming} onChange={e => setStartTiming(e.target.value)} style={calcSelectStyle}>
-              <option value="朝">朝</option>
-              <option value="昼">昼</option>
-              <option value="夕">夕</option>
-              <option value="眠前">眠前</option>
-            </select>
+            <div style={{ display: 'flex', gap: 2 }}>
+              {[['なし', ''], ['朝', '朝'], ['昼', '昼'], ['夕', '夕'], ['眠前', '眠前']].map(([label, val]) => (
+                <button key={label} type="button" onClick={() => setStartTiming(val)} style={{
+                  flex: '1 1 0', minWidth: 0, padding: '6px 1px', borderRadius: 5, border: 'none',
+                  fontSize: 9, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap',
+                  background: startTiming === val ? '#2563eb' : 'rgba(255,255,255,0.08)',
+                  color: startTiming === val ? '#ffffff' : 'var(--sky-200)',
+                }}>{label}</button>
+              ))}
+            </div>
           </div>
           {calcMode === 'A' && (
             <div style={isMobile ? { width: '45%' } : { flex: '1 1 80px', minWidth: 70 }}>
@@ -365,12 +371,6 @@ const calcClearBtnStyle = {
   flexShrink: 0, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: 6, color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1,
   padding: '0 9px', cursor: 'pointer', fontFamily: 'inherit',
-}
-
-// select は option が白背景で見えなくなるため背景を濃く設定
-const calcSelectStyle = {
-  ...calcInputStyle,
-  colorScheme: 'dark',
 }
 
 // ── 日付タップ選択フィールド（変更ログ入力フォーム共通） ─────────
@@ -650,6 +650,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch, onUseForOt
   const [sortMode,    setSortMode]    = useState('date')
   const [showArchived, setShowArchived] = useState(false)
   const [focusField,  setFocusField]  = useState(null) // 'instr' | 'start' | 'content' | 'reason' | null
+  const [editFocusField, setEditFocusField] = useState(null) // 編集フォーム（定期変更）用のプレビューフォーカス
 
   // 定期処方開始日（往診日＋処方ズレ日数）：visitCalc に rxStart が無いため同等の値を算出
   const rxStart = (visitCalc?.visitDate && visitCalc?.graceDays != null)
@@ -870,37 +871,86 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch, onUseForOt
             background: '#f1f5fb', border: '1px solid #dce4f0',
             borderRadius: 8, padding: 12,
           }}>
-            <div
-              className={`log-form-grid ${editForm.log_type === 'temporary' ? 'temp-log-grid' : ''}`}
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: editForm.log_type === 'temporary' ? 6 : 8, marginBottom: 8 }}
-            >
-              {editForm.log_type === 'temporary' ? (
+            {editForm.log_type === 'temporary' ? (
+              <div
+                className="log-form-grid temp-log-grid"
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}
+              >
                 <TemporaryLogFields value={editForm} onChange={setEditForm} />
-              ) : (
-                <>
-                  <div>
-                    <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
-                    <input type="date" className="field-input" value={editForm.changed_at} onChange={upEdit('changed_at')} />
+              </div>
+            ) : (
+              <>
+                {/* 指示日・開始日を横並び＋注釈、タップメニュー化（新規追加フォームと同じ構造） */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                  <DateTapField
+                    label="指示日" caption="＝指示を受けた日"
+                    value={editForm.changed_at}
+                    options={[
+                      { icon: '☀️', label: `今日（${fmtMMDD(today)}）`, value: today },
+                      { icon: '🚗', label: `往診日（${fmtMMDD(visitCalc?.visitDate ?? '')}）`, value: visitCalc?.visitDate },
+                    ]}
+                    onChange={v => setEditForm(f => ({ ...f, changed_at: v }))}
+                  />
+                  <DateTapField
+                    label="開始日" caption="＝変更を始める日"
+                    value={editForm.start_date}
+                    options={[
+                      { icon: '🌅', label: `翌朝から（${fmtMMDD(addDaysToStr(editForm.changed_at || today, 1))}）`, value: addDaysToStr(editForm.changed_at || today, 1) },
+                      { icon: '💊', label: `定期処方開始日（${fmtMMDD(rxStart)}）`, value: rxStart },
+                    ]}
+                    onChange={v => setEditForm(f => ({ ...f, start_date: v }))}
+                  />
+                </div>
+
+                {/* 内容：主役 */}
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: 12.5, color: '#0f1f4e', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                    変更内容 <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
+                  <input
+                    className="field-input" value={editForm.content} onChange={upEdit('content')}
+                    onFocus={() => setEditFocusField('content')}
+                    onBlur={() => setEditFocusField(null)}
+                    placeholder="例：クエチアピン中止"
+                    style={{ border: 'none', borderBottom: '2px solid #0f1f4e', borderRadius: 0, background: 'transparent', fontSize: 14.5 }}
+                    onKeyDown={e => e.key === 'Enter' && saveEdit()}
+                  />
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 6 }}>
+                    {['中止', '増量', '減量', '開始'].map(w => (
+                      <button key={w} type="button" onClick={() => setEditForm(f => ({ ...f, content: f.content ? f.content + w : w }))}
+                        style={quickChipStyle}>＋{w}</button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
-                    <input type="text" className="field-input" value={editForm.reason} onChange={upEdit('reason')} placeholder="例：傾眠あり" />
+                </div>
+
+                {/* 理由：脇役 */}
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, display: 'block', marginBottom: 4 }}>
+                    理由（任意・症状など）
+                  </label>
+                  <input
+                    className="field-input" value={editForm.reason} onChange={upEdit('reason')}
+                    onFocus={() => setEditFocusField('reason')}
+                    onBlur={() => setEditFocusField(null)}
+                    placeholder="例：傾眠あり"
+                    style={{ width: '60%', border: 'none', borderBottom: '2px solid #94a3b8', borderRadius: 0, background: 'transparent', fontSize: 13, color: '#64748b' }}
+                  />
+                </div>
+
+                {/* プレビュー（一覧にはこう記録されるかを常時表示） */}
+                <div style={{ background: '#f8fafc', borderLeft: '3px solid #c9a84c', borderRadius: '0 8px 8px 0', padding: '10px 14px', marginBottom: 14 }}>
+                  <div style={{ fontSize: 9.5, color: '#94a3b8', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 4 }}>プレビュー（一覧にはこう記録されます）</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.6, color: editForm.changed_at ? '#0f1f4e' : PREVIEW_GHOST }}>
+                    <span style={previewHi(editFocusField === 'instr')}>{editForm.changed_at ? fmtMMDD(editForm.changed_at) : '07/09'}</span>
+                    <span style={{ marginLeft: '1em', ...previewHi(editFocusField === 'reason'), color: editForm.reason ? '#0f1f4e' : PREVIEW_GHOST }}>{editForm.reason || '傾眠あり'}</span>
                   </div>
-                  <div>
-                    <label className="field-label">開始日</label>
-                    <input type="date" className="field-input" value={editForm.start_date} onChange={upEdit('start_date')} />
+                  <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.6 }}>
+                    <span style={{ ...previewHi(editFocusField === 'start'), color: editForm.start_date ? '#1e293b' : PREVIEW_GHOST }}>{editForm.start_date ? fmtMMDD(editForm.start_date) : '07/10'}〜</span>
+                    <span style={{ ...previewHi(editFocusField === 'content'), color: editForm.content ? '#1e293b' : PREVIEW_GHOST }}>{editForm.content || 'クエチアピン中止'}</span>
                   </div>
-                  <div>
-                    <label className="field-label">内容</label>
-                    <input
-                      type="text" className="field-input"
-                      value={editForm.content} onChange={upEdit('content')}
-                      onKeyDown={e => e.key === 'Enter' && saveEdit()}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
               <button className="btn btn-outline btn-sm" onClick={cancelEdit}>キャンセル</button>
               <button
