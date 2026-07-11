@@ -159,6 +159,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   const [showLogMenu, setShowLogMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showPrintPicker, setShowPrintPicker] = useState(false)
+  const [otherVisitPrefill, setOtherVisitPrefill] = useState(null)
   const [printSections, setPrintSections] = useState({
     basic: true, log: true, drugs: true, visit: true, free: true,
   })
@@ -437,13 +438,25 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
             />
           </div>
           <div style={{ display: activeTab === 'log' ? 'block' : 'none' }}>
-            <ChangeLogTab key={patient?.id} patient={patient} visitCalc={visitCalc} onRefetch={refetch} />
+            <ChangeLogTab
+              key={patient?.id}
+              patient={patient}
+              visitCalc={visitCalc}
+              onRefetch={refetch}
+              onUseForOtherVisit={(payload) => { setOtherVisitPrefill(payload); setActiveTab('visit') }}
+            />
           </div>
           <div style={{ display: activeTab === 'drugs' ? 'block' : 'none' }}>
             <DrugsTab key={patient?.id} patient={patient} onRefetch={refetch} />
           </div>
           <div style={{ display: activeTab === 'visit' ? 'block' : 'none' }}>
-            <OtherVisitsTab key={patient?.id} patient={patient} onRefetch={refetch} />
+            <OtherVisitsTab
+              key={patient?.id}
+              patient={patient}
+              onRefetch={refetch}
+              prefill={otherVisitPrefill}
+              onPrefillConsumed={() => setOtherVisitPrefill(null)}
+            />
           </div>
           <div style={{ display: activeTab === 'free' ? 'block' : 'none' }}>
             <FreeMemoTab
@@ -469,7 +482,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
       {showPrintPicker && (
         <>
           <div className="row-menu-overlay" onClick={() => setShowPrintPicker(false)} />
-          <div style={{
+          <div data-print-picker-modal style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
             background: 'white', borderRadius: 12, border: '1px solid #dce4f0',
             boxShadow: '0 8px 32px rgba(15,31,78,0.25)', padding: 20, width: 280, zIndex: 300,
@@ -493,7 +506,13 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
               <button className="btn btn-sm" onClick={() => setShowPrintPicker(false)} style={{ flex: 1, background: 'white', color: '#64748b', border: '1.5px solid #dce4f0', borderRadius: 6 }}>キャンセル</button>
               <button
                 className="btn btn-sm"
-                onClick={() => { setShowPrintPicker(false); printFullPatient() }}
+                onClick={() => {
+                  // モーダルを閉じてから印刷。state更新は非同期なので
+                  // requestAnimationFrame で再描画を待ってから window.print() 系を呼ぶ
+                  // （閉じる前に印刷するとモーダルごと印刷される不具合の対策）
+                  setShowPrintPicker(false)
+                  requestAnimationFrame(() => requestAnimationFrame(printFullPatient))
+                }}
                 disabled={!Object.values(printSections).some(Boolean)}
                 style={{ flex: 1, background: '#0f1f4e', color: 'white', border: 'none', borderRadius: 6, opacity: Object.values(printSections).some(Boolean) ? 1 : 0.5 }}
               >🖨️ 印刷する</button>

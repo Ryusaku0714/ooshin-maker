@@ -948,6 +948,15 @@ body.printing .print-all-tabs {
   padding-top: 22px;
 }
 
+/* 印刷項目ピッカー・タスク印刷ピッカーのモーダルは、どんなタイミングで開いていても
+   印刷には絶対に写らないよう強制非表示にする（requestAnimationFrame対策の二重ガード） */
+@media print {
+  .row-menu-overlay,
+  [data-print-picker-modal] {
+    display: none !important;
+  }
+}
+
 /* ⑦ ── @media print（ブラウザ印刷ダイアログ対応） ── */
 @media print {
   @page { margin: 10mm; }

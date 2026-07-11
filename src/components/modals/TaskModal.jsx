@@ -221,10 +221,11 @@ export default function TaskModal({ facility, onClose }) {
 
   const confirmPrint = () => {
     setPrintPickerOpen(false)
+    // モーダルを閉じてから印刷を実行（再描画を待ってからprintFacilityTasksを呼ぶ）
     const items = incompleteTasksSorted
       .filter(t => printOn[t.id])
       .map(t => ({ ...t, patient: t.patient_id ? allPatients.find(p => p.id === t.patient_id) : null }))
-    printFacilityTasks(facility, items)
+    requestAnimationFrame(() => requestAnimationFrame(() => printFacilityTasks(facility, items)))
   }
 
   const renderTask = (task, isCompleted) => {
@@ -628,7 +629,7 @@ export default function TaskModal({ facility, onClose }) {
       </div>
 
       {printPickerOpen && (
-        <div onClick={(e) => e.target === e.currentTarget && setPrintPickerOpen(false)}
+        <div data-print-picker-modal onClick={(e) => e.target === e.currentTarget && setPrintPickerOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5fb' }}>

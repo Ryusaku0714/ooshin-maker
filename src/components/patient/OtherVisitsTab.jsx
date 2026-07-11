@@ -89,7 +89,7 @@ function formatVisitText(v) {
   return line
 }
 
-export default function OtherVisitsTab({ patient, onRefetch }) {
+export default function OtherVisitsTab({ patient, onRefetch, prefill, onPrefillConsumed }) {
   const [visits,        setVisits]        = useState(patient?.other_visits ?? [])
   const [showVisitForm, setShowVisitForm] = useState(false)
   const [editingId,     setEditingId]     = useState(null)
@@ -102,6 +102,22 @@ export default function OtherVisitsTab({ patient, onRefetch }) {
   useEffect(() => {
     setVisits(patient?.other_visits ?? [])
   }, [patient?.other_visits])
+
+  // 日数計算ツール「📋 他科受診へ」の結果を追加フォームに反映
+  useEffect(() => {
+    if (!prefill) return
+    setEditingId(null)
+    setDoFromId(null)
+    setVisitForm(f => ({
+      ...f,
+      dispensing_from:       prefill.startDate,
+      medication_timing:     prefill.startTiming,
+      dispensing_to:         prefill.endDate,
+      medication_timing_end: prefill.endTiming,
+    }))
+    setShowVisitForm(true)
+    onPrefillConsumed?.()
+  }, [prefill])
 
   const resizeNotes = (el) => {
     if (!el) return

@@ -18,12 +18,20 @@ function fmtWithDay(dateStr) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}（${DAY_LABELS[d.getDay()]}）`
 }
 
-function CalcTool({ visitCalc, onUseForTemp }) {
+function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
   const [startTiming, setStartTiming] = useState('朝')
   const [manualDays,  setManualDays]  = useState('')
   const [targetDate,  setTargetDate]  = useState('')
+  const [calcMode,    setCalcMode]    = useState('A') // 'A' | 'B' | 'C'
   const [open,        setOpen]        = useState(() => loadCollapse('calctool'))
+
+  // モード切替時、他モードの入力をクリアして結果の混線を防ぐ
+  const switchMode = (mode) => {
+    setCalcMode(mode)
+    if (mode !== 'B') setManualDays('')
+    if (mode !== 'C') setTargetDate('')
+  }
   const [copiedPeriod, setCopiedPeriod] = useState(false)
   const [copiedTarget, setCopiedTarget] = useState(false)
   const rxEnd = visitCalc?.rxEnd ?? ''
@@ -131,6 +139,16 @@ function CalcTool({ visitCalc, onUseForTemp }) {
     onUseForTemp?.({ startDate: addStart, startTiming, endDate: targetEndDate, endTiming: targetEndTiming })
   }
 
+  const handleUseForRegular = () => {
+    if (!addStart) return
+    onUseForRegular?.({ startDate: addStart })
+  }
+
+  const handleUseForOtherVisit = () => {
+    if (!periodEndDate || !periodEndTiming) return
+    onUseForOtherVisit?.({ startDate: addStart, startTiming, endDate: periodEndDate, endTiming: periodEndTiming })
+  }
+
   return (
     <div className="calc-tool" style={{
       background: '#0f1f4e',
@@ -166,6 +184,18 @@ function CalcTool({ visitCalc, onUseForTemp }) {
           ? { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 6 }
           : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
         }>
+          {/* 3モードタブ */}
+          <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: 3, marginBottom: 8, flex: '1 1 100%' }}>
+            {[['A', '定期末までの日数'], ['B', '処方期間を出す'], ['C', '必要日数を出す']].map(([key, label]) => (
+              <button key={key} type="button" onClick={() => switchMode(key)} style={{
+                flex: 1, padding: '6px 8px', borderRadius: 6, border: 'none',
+                fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+                background: calcMode === key ? '#2563eb' : 'transparent',
+                color: calcMode === key ? '#ffffff' : 'var(--sky-200)',
+              }}>{label}</button>
+            ))}
+          </div>
+
           {/* 開始日・タイミングは完全50%固定（flex伸縮禁止） */}
           <div style={isMobile ? calc50MobileStyle : { flex: '1 1 110px', minWidth: 100 }}>
             <label style={calcLabelStyle}>開始日</label>
@@ -180,69 +210,85 @@ function CalcTool({ visitCalc, onUseForTemp }) {
               <option value="眠前">眠前</option>
             </select>
           </div>
-          <div style={isMobile ? { width: '45%' } : { flex: '1 1 80px', minWidth: 70 }}>
-            <label style={calcLabelStyle}>定期処方末日</label>
-            <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
-          </div>
-          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 140px', minWidth: 130 }}>
-            <label style={calcLabelStyle}>指定末日</label>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <input
-                type="date" value={targetDate}
-                onChange={e => setTargetDate(e.target.value)}
-                style={{ ...calcInputStyle, minWidth: 0, flex: 1 }}
-              />
-              {targetDate && (
-                <button
-                  type="button"
-                  onClick={() => setTargetDate('')}
-                  aria-label="指定末日を削除"
-                  title="指定末日を削除"
-                  style={calcClearBtnStyle}
-                >×</button>
-              )}
+          {calcMode === 'A' && (
+            <div style={isMobile ? { width: '45%' } : { flex: '1 1 80px', minWidth: 70 }}>
+              <label style={calcLabelStyle}>定期処方末日</label>
+              <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
             </div>
-          </div>
-          <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
-            <label style={calcLabelStyle}>日数（任意）</label>
-            <input
-              type="number" inputMode="numeric" value={manualDays}
-              onChange={e => setManualDays(e.target.value)}
-              placeholder="自動" min="1"
-              style={calcInputStyle}
-            />
-          </div>
+          )}
+          {calcMode === 'C' && (
+            <div style={isMobile ? calc50MobileStyle : { flex: '1 1 140px', minWidth: 130 }}>
+              <label style={calcLabelStyle}>指定末日</label>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <input
+                  type="date" value={targetDate}
+                  onChange={e => setTargetDate(e.target.value)}
+                  style={{ ...calcInputStyle, minWidth: 0, flex: 1 }}
+                />
+                {targetDate && (
+                  <button
+                    type="button"
+                    onClick={() => setTargetDate('')}
+                    aria-label="指定末日を削除"
+                    title="指定末日を削除"
+                    style={calcClearBtnStyle}
+                  >×</button>
+                )}
+              </div>
+            </div>
+          )}
+          {calcMode === 'B' && (
+            <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
+              <label style={calcLabelStyle}>日数（任意）</label>
+              <input
+                type="number" inputMode="numeric" value={manualDays}
+                onChange={e => setManualDays(e.target.value)}
+                placeholder="自動" min="1"
+                style={calcInputStyle}
+              />
+            </div>
+          )}
 
-          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び（指定末日入力中はやや薄く表示） */}
-          {periodText && (
+          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び */}
+          {calcMode !== 'C' && periodText && (
             <div style={{
               ...(isMobile
                 ? { width: '100%', marginTop: 8 }
-                : { flex: '2 1 160px', minWidth: 140 }),
+                : { flex: '2 1 160px', minWidth: 140, maxWidth: '100%' }),
               background: '#1e3a8a',
               border: '1px solid #2563eb',
               borderLeft: '2px dashed #c9a84c',
               borderRadius: 10,
               padding: '8px 10px',
-              opacity: targetDate ? 0.4 : 1,
+              overflowX: 'auto',
             }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
                     {periodText}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
                     {daysText}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <button type="button" onClick={handleCopyPeriod} style={calcCopyBtnStyle}>
                     {copiedPeriod ? '✅' : '日付コピー'}
                   </button>
-                  {isManual && (
-                    <button type="button" onClick={handleUseForTempPeriod} style={calcCopyBtnStyle}>
-                      臨時薬に使う
+                  {calcMode === 'A' && (
+                    <button type="button" onClick={handleUseForRegular} style={{ ...calcCopyBtnStyle, background: '#334155' }}>
+                      📋 定期処方変更へ
                     </button>
+                  )}
+                  {calcMode === 'B' && isManual && (
+                    <>
+                      <button type="button" onClick={handleUseForTempPeriod} style={{ ...calcCopyBtnStyle, background: '#ea580c' }}>
+                        📋 臨時処方変更へ
+                      </button>
+                      <button type="button" onClick={handleUseForOtherVisit} style={{ ...calcCopyBtnStyle, background: '#0d9488' }}>
+                        📋 他科受診へ
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -250,32 +296,33 @@ function CalcTool({ visitCalc, onUseForTemp }) {
           )}
 
           {/* 指定末日の結果 */}
-          {targetPeriodText && (
+          {calcMode === 'C' && targetPeriodText && (
             <div style={{
               ...(isMobile
                 ? { width: '100%', marginTop: 8 }
-                : { flex: '2 1 160px', minWidth: 140 }),
+                : { flex: '2 1 160px', minWidth: 140, maxWidth: '100%' }),
               background: '#1e3a8a',
               border: '1px solid #2563eb',
               borderLeft: '2px dashed #c9a84c',
               borderRadius: 10,
               padding: '8px 10px',
+              overflowX: 'auto',
             }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, wordBreak: 'break-all' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
                     {targetPeriodText}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
                     {targetDaysText}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <button type="button" onClick={handleCopyTarget} style={calcCopyBtnStyle}>
                     {copiedTarget ? '✅' : '日付コピー'}
                   </button>
-                  <button type="button" onClick={handleUseForTempTarget} style={calcCopyBtnStyle}>
-                    臨時薬に使う
+                  <button type="button" onClick={handleUseForTempTarget} style={{ ...calcCopyBtnStyle, background: '#ea580c' }}>
+                    📋 臨時処方変更へ
                   </button>
                 </div>
               </div>
@@ -326,6 +373,108 @@ const calcSelectStyle = {
   colorScheme: 'dark',
 }
 
+// ── 日付タップ選択フィールド（変更ログ入力フォーム共通） ─────────
+function DateTapField({ label, caption, value, options, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [hover, setHover] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, display: 'block', marginBottom: 2 }}>{label}</label>
+      {caption && <div style={{ fontSize: 9.5, color: '#c9a84c', marginBottom: 4 }}>{caption}</div>}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          border: 'none', borderBottom: '2px solid #94a3b8', borderRadius: '4px 4px 0 0', padding: '5px 6px',
+          fontSize: 13, fontFamily: 'inherit', color: value ? '#1e293b' : '#94a3b8',
+          background: hover ? '#f8fafc' : 'transparent', cursor: 'pointer',
+          transition: 'background 0.15s',
+        }}>
+        <span>{value ? fmtMMDD(value) : '選択してください'}</span>
+        <span style={{ fontSize: 11, color: '#64748b' }}>▾</span>
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+            background: 'white', border: '1px solid #dce4f0', borderRadius: 10,
+            boxShadow: '0 6px 20px rgba(15,31,78,0.18)', zIndex: 100, overflow: 'hidden',
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', fontSize: 12.5, fontWeight: 600, borderBottom: options?.length ? '1px solid #f1f5fb' : 'none', cursor: 'pointer', position: 'relative' }}>
+              📅 カレンダーで選ぶ
+              <input type="date" onChange={e => { onChange(e.target.value); setOpen(false) }}
+                style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }} />
+            </label>
+            {(options ?? []).map((o, i) => (
+              <button key={i} type="button" onClick={() => { onChange(o.value); setOpen(false) }} style={{
+                display: 'block', width: '100%', textAlign: 'left', background: 'white', border: 'none',
+                borderBottom: i < options.length - 1 ? '1px solid #f1f5fb' : 'none',
+                padding: '10px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              }}>{o.icon} {o.label}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── タイミング（朝/昼/夕/眠前）チップ（臨時薬フォーム用） ────────
+function TimingChip({ label, value, onChange }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+      <button type="button" onClick={() => setOpen(o => !o)} style={{
+        fontSize: 9.5, padding: '2px 7px', borderRadius: 9, border: '1px solid #dce4f0',
+        background: value ? '#0f1f4e' : '#f8fafc', color: value ? 'white' : '#94a3b8',
+        cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+      }}>{value ? value : `＋${label}`}</button>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          title="タイミングを未選択に戻す"
+          aria-label="タイミングを未選択に戻す"
+          style={{
+            width: 14, height: 14, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 9, lineHeight: 1, padding: 0, borderRadius: '50%',
+            border: '1px solid #dce4f0', background: '#f8fafc', color: '#94a3b8',
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >×</button>
+      )}
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
+          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 100, display: 'flex', gap: 4, background: 'white', border: '1px solid #dce4f0', borderRadius: 8, padding: 4, boxShadow: '0 4px 14px rgba(15,31,78,0.15)' }}>
+            {['朝', '昼', '夕', '眠前'].map(t => (
+              <button key={t} type="button" onClick={() => { onChange(t); setOpen(false) }} style={{
+                padding: '5px 8px', borderRadius: 6, border: 'none', fontSize: 11, fontWeight: 700,
+                fontFamily: 'inherit', cursor: 'pointer',
+                background: value === t ? '#0f1f4e' : 'white', color: value === t ? 'white' : '#64748b',
+              }}>{t}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+const quickChipStyle = {
+  padding: '4px 10px', borderRadius: 14, fontSize: 10.5, fontWeight: 700,
+  fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap',
+  border: '1px solid #dce4f0', background: '#f8fafc', color: '#64748b',
+}
+
+// プレビュー用の見本色・フォーカスハイライト（変更ログ入力フォーム共通）
+const PREVIEW_GHOST = '#cbd5e1'
+const previewHi = (active) => active ? { background: '#fef3c7', borderRadius: 3, padding: '1px 3px', boxShadow: '0 0 0 1px #fcd34d' } : {}
+
 // 編集前の空フォーム（log_type で「定期変更」「臨時薬」を判別）
 const BLANK_REGULAR_EDIT = { log_type: 'regular', changed_at: '', reason: '', start_date: '', content: '' }
 
@@ -334,8 +483,8 @@ function blankTempForm(instrDate) {
     changed_at: instrDate,
     reason: '',
     start_date: instrDate,
-    start_timing: '朝',
-    end_timing: PREV_TIMING['朝'],
+    start_timing: '',
+    end_timing: '',
     drug_name: '',
     days: '',
     end_date: '',
@@ -344,12 +493,16 @@ function blankTempForm(instrDate) {
 
 // ── 臨時薬：入力フィールド群（追加・編集フォーム共通） ───────
 function TemporaryLogFields({ value, onChange }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [focusField, setFocusField] = useState(null) // 'instr' | 'reason' | 'drug' | null
+
   // 日数入力 → 終了日・終了タイミングを再計算（分4ロジック）
+  // タイミング未選択（分1など）の場合は「朝」相当（同日換算）で日数計算し、終了タイミングは空欄のまま維持する
   const recalcFromDays = (next) => {
     const n = parseInt(next.days)
     if (next.days?.toString().trim() !== '' && !isNaN(n) && n > 0 && next.start_date) {
-      const { endDate, endTiming } = computeTemporaryEnd(next.start_date, next.start_timing, n)
-      return { ...next, end_date: endDate, end_timing: endTiming }
+      const { endDate, endTiming } = computeTemporaryEnd(next.start_date, next.start_timing || '朝', n)
+      return { ...next, end_date: endDate, end_timing: next.start_timing ? endTiming : next.end_timing }
     }
     return next
   }
@@ -357,8 +510,8 @@ function TemporaryLogFields({ value, onChange }) {
   // 終了日入力 → 日数・終了タイミングを再計算（分4ロジック）
   const recalcFromEndDate = (next) => {
     if (next.end_date && next.start_date) {
-      const { days, endTiming } = computeTemporaryDays(next.start_date, next.start_timing, next.end_date)
-      if (days > 0) return { ...next, days: String(days), end_timing: endTiming }
+      const { days, endTiming } = computeTemporaryDays(next.start_date, next.start_timing || '朝', next.end_date)
+      if (days > 0) return { ...next, days: String(days), end_timing: next.start_timing ? endTiming : next.end_timing }
     }
     return next
   }
@@ -375,13 +528,6 @@ function TemporaryLogFields({ value, onChange }) {
     onChange(next)
   }
 
-  const line1 = value.changed_at
-    ? `${fmtMMDD(value.changed_at)}　${value.reason?.trim() || '変更指示'}`
-    : ''
-  const line2 = (value.start_date && value.end_date && value.end_timing)
-    ? `${fmtMMDD(value.start_date)}${value.start_timing}〜${fmtMMDD(value.end_date)}${value.end_timing}　${value.drug_name}`
-    : ''
-
   return (
     <>
       <div>
@@ -390,6 +536,8 @@ function TemporaryLogFields({ value, onChange }) {
           type="date" className="field-input rx-input"
           value={value.changed_at}
           onChange={e => onChange({ ...value, changed_at: e.target.value })}
+          onFocus={() => setFocusField('instr')}
+          onBlur={() => setFocusField(null)}
         />
       </div>
       <div>
@@ -398,55 +546,39 @@ function TemporaryLogFields({ value, onChange }) {
           type="text" className="field-input rx-input"
           value={value.reason}
           onChange={e => onChange({ ...value, reason: e.target.value })}
+          onFocus={() => setFocusField('reason')}
+          onBlur={() => setFocusField(null)}
           placeholder="例：発熱・疼痛・便秘"
         />
       </div>
 
       <div className="rx-row">
         <div>
-          <label className="field-label">開始日</label>
-          <input
-            type="date" className="field-input rx-input"
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <label className="field-label" style={{ marginBottom: 0 }}>開始日</label>
+            <TimingChip label="朝昼夕" value={value.start_timing} onChange={t => handleStartChange({ start_timing: t })} />
+          </div>
+          <DateTapField
+            label=""
             value={value.start_date}
-            onChange={e => handleStartChange({ start_date: e.target.value })}
+            options={[
+              { icon: '☀️', label: `指示日と同じ（${fmtMMDD(value.changed_at)}）`, value: value.changed_at },
+              { icon: '🌅', label: `翌日から（${fmtMMDD(addDaysToStr(value.changed_at || today, 1))}）`, value: addDaysToStr(value.changed_at || today, 1) },
+            ]}
+            onChange={v => handleStartChange({ start_date: v })}
           />
         </div>
         <div>
-          <label className="field-label">開始タイミング</label>
-          <select
-            className="field-input rx-input"
-            value={value.start_timing}
-            onChange={e => handleStartChange({ start_timing: e.target.value })}
-          >
-            <option value="朝">朝</option>
-            <option value="昼">昼</option>
-            <option value="夕">夕</option>
-            <option value="眠前">眠前</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="rx-row">
-        <div>
-          <label className="field-label">終了日</label>
-          <input
-            type="date" className="field-input rx-input"
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <label className="field-label" style={{ marginBottom: 0 }}>終了日</label>
+            <TimingChip label="朝昼夕" value={value.end_timing} onChange={t => onChange({ ...value, end_timing: t })} />
+          </div>
+          <DateTapField
+            label=""
             value={value.end_date}
-            onChange={e => handleEndDateChange(e.target.value)}
+            options={[]}
+            onChange={v => handleEndDateChange(v)}
           />
-        </div>
-        <div>
-          <label className="field-label">終了タイミング</label>
-          <select
-            className="field-input rx-input"
-            value={value.end_timing}
-            onChange={e => onChange({ ...value, end_timing: e.target.value })}
-          >
-            <option value="朝">朝</option>
-            <option value="昼">昼</option>
-            <option value="夕">夕</option>
-            <option value="眠前">眠前</option>
-          </select>
         </div>
       </div>
 
@@ -465,21 +597,43 @@ function TemporaryLogFields({ value, onChange }) {
           type="text" className="field-input rx-input"
           value={value.drug_name}
           onChange={e => onChange({ ...value, drug_name: e.target.value })}
+          onFocus={() => setFocusField('drug')}
+          onBlur={() => setFocusField(null)}
           placeholder="例：ロキソプロフェン60mg 飲み切り / ムコスタ100mg 2錠 飲み切り"
         />
       </div>
-      {(line1 || line2) && (
-        <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 700, color: 'var(--sky-700)', lineHeight: 1.6 }}>
-          <div>{line1}</div>
-          {line2 && <div>{line2}</div>}
+
+      {/* プレビュー（一覧にはこう記録されるかを常時表示） */}
+      <div style={{
+        gridColumn: '1 / -1', background: '#f8fafc', borderLeft: '3px solid #c9a84c',
+        borderRadius: '0 8px 8px 0', padding: '10px 14px',
+      }}>
+        <div style={{ fontSize: 9.5, color: '#94a3b8', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 4 }}>
+          プレビュー（一覧にはこう記録されます）
         </div>
-      )}
+        <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.6 }}>
+          <span style={{ ...previewHi(focusField === 'instr'), color: value.changed_at ? '#0f1f4e' : PREVIEW_GHOST }}>
+            {value.changed_at ? fmtMMDD(value.changed_at) : '07/09'}
+          </span>
+          <span style={{ marginLeft: '1em', ...previewHi(focusField === 'reason'), color: value.reason ? '#0f1f4e' : PREVIEW_GHOST }}>
+            {value.reason || '変更指示'}
+          </span>
+        </div>
+        <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.6 }}>
+          <span style={{ color: (value.start_date && value.end_date) ? '#1e293b' : PREVIEW_GHOST }}>
+            {value.start_date ? `${fmtMMDD(value.start_date)}${value.start_timing}` : '07/10朝'}〜{value.end_date ? `${fmtMMDD(value.end_date)}${value.end_timing}` : '07/16眠前'}
+          </span>
+          <span style={{ marginLeft: '1em', ...previewHi(focusField === 'drug'), color: value.drug_name ? '#1e293b' : PREVIEW_GHOST }}>
+            {value.drug_name || 'ロキソプロフェン60mg'}
+          </span>
+        </div>
+      </div>
     </>
   )
 }
 
 // ── メインコンポーネント ───────────────────────────────────
-export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
+export default function ChangeLogTab({ patient, visitCalc, onRefetch, onUseForOtherVisit }) {
   const today = new Date().toISOString().slice(0, 10)
   const [instrDate, setInstrDate]   = useState(visitCalc?.visitDate ?? today)
   const [reason,    setReason]      = useState('')
@@ -495,6 +649,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   const [editSaving,  setEditSaving]  = useState(false)
   const [sortMode,    setSortMode]    = useState('date')
   const [showArchived, setShowArchived] = useState(false)
+  const [focusField,  setFocusField]  = useState(null) // 'instr' | 'start' | 'content' | 'reason' | null
+
+  // 定期処方開始日（往診日＋処方ズレ日数）：visitCalc に rxStart が無いため同等の値を算出
+  const rxStart = (visitCalc?.visitDate && visitCalc?.graceDays != null)
+    ? addDaysToStr(visitCalc.visitDate, visitCalc.graceDays)
+    : ''
 
   // 往診日が変わったらデフォルト日付を同期
   useEffect(() => {
@@ -536,6 +696,13 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
     setAddMode('temporary')
   }
 
+  // 日数計算ツールの結果を定期変更追加フォームに反映
+  const useCalcResultForRegular = ({ startDate }) => {
+    setShowAddMenu(false)
+    setAddMode('regular')
+    setStartDate(startDate)
+  }
+
   const closeAddForm = () => {
     setAddMode(null)
     resetForm()
@@ -558,7 +725,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
   }
 
   const addTemporary = async () => {
-    if (!tempForm.drug_name.trim() || !tempForm.end_date || !tempForm.end_timing) return
+    if (!tempForm.drug_name.trim() || !tempForm.end_date) return
     setAdding(true)
     await db.addLog(patient.id, {
       changed_at:   tempForm.changed_at,
@@ -627,7 +794,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
   const saveEdit = async () => {
     if (editForm.log_type === 'temporary') {
-      if (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing) return
+      if (!editForm.drug_name.trim() || !editForm.end_date) return
       setEditSaving(true)
       await db.updateLog(editingId, {
         changed_at:   editForm.changed_at,
@@ -739,7 +906,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
               <button
                 className="btn btn-primary btn-sm" onClick={saveEdit}
                 disabled={editSaving || (editForm.log_type === 'temporary'
-                  ? (!editForm.drug_name.trim() || !editForm.end_date || !editForm.end_timing)
+                  ? (!editForm.drug_name.trim() || !editForm.end_date)
                   : !editForm.content.trim())}
               >
                 {editSaving ? '…' : '保存'}
@@ -800,7 +967,12 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
 
   return (
     <>
-      <CalcTool visitCalc={visitCalc} onUseForTemp={useCalcResultForTemp} />
+      <CalcTool
+        visitCalc={visitCalc}
+        onUseForTemp={useCalcResultForTemp}
+        onUseForRegular={useCalcResultForRegular}
+        onUseForOtherVisit={onUseForOtherVisit}
+      />
 
       <div className="card" style={{ borderTop: '1px solid rgba(201,168,76,0.3)' }}>
         <div className="card-title">
@@ -877,40 +1049,76 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
             background: '#f1f5fb', border: '1px solid #dce4f0',
             borderRadius: 8, padding: 12, marginBottom: 12,
           }}>
-            <div className="log-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-              <div>
-                <label className="field-label" style={{ paddingLeft: '1em' }}>変更指示日</label>
-                <input
-                  type="date" className="field-input"
-                  value={instrDate} onChange={e => setInstrDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="field-label" style={{ paddingLeft: '1em' }}>理由（空欄→「指示受け」）</label>
-                <input
-                  type="text" className="field-input"
-                  value={reason} onChange={e => setReason(e.target.value)}
-                  placeholder="例：傾眠あり"
-                />
-              </div>
-              <div>
-                <label className="field-label">開始日</label>
-                <input
-                  type="date" className="field-input"
-                  value={startDate} onChange={e => setStartDate(e.target.value)}
-                  placeholder={instrDate}
-                />
-              </div>
-              <div>
-                <label className="field-label">内容</label>
-                <input
-                  type="text" className="field-input"
-                  value={content} onChange={e => setContent(e.target.value)}
-                  placeholder="例：クエチアピン中止"
-                  onKeyDown={e => e.key === 'Enter' && add()}
-                />
+            {/* 指示日・開始日を横並び＋注釈、タップメニュー化 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <DateTapField
+                label="指示日" caption="＝指示を受けた日"
+                value={instrDate}
+                options={[
+                  { icon: '☀️', label: `今日（${fmtMMDD(today)}）`, value: today },
+                  { icon: '🚗', label: `往診日（${fmtMMDD(visitCalc?.visitDate ?? '')}）`, value: visitCalc?.visitDate },
+                ]}
+                onChange={setInstrDate}
+              />
+              <DateTapField
+                label="開始日" caption="＝変更を始める日"
+                value={startDate}
+                options={[
+                  { icon: '🌅', label: `翌朝から（${fmtMMDD(addDaysToStr(instrDate, 1))}）`, value: addDaysToStr(instrDate, 1) },
+                  { icon: '💊', label: `定期処方開始日（${fmtMMDD(rxStart)}）`, value: rxStart },
+                ]}
+                onChange={setStartDate}
+              />
+            </div>
+
+            {/* 内容：主役 */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12.5, color: '#0f1f4e', fontWeight: 700, display: 'block', marginBottom: 6 }}>
+                変更内容 <span style={{ color: '#dc2626' }}>*</span>
+              </label>
+              <input
+                className="field-input" value={content} onChange={e => setContent(e.target.value)}
+                onFocus={() => setFocusField('content')}
+                onBlur={() => setFocusField(null)}
+                placeholder="例：クエチアピン中止"
+                style={{ border: 'none', borderBottom: '2px solid #0f1f4e', borderRadius: 0, background: 'transparent', fontSize: 14.5 }}
+                onKeyDown={e => e.key === 'Enter' && add()}
+              />
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 6 }}>
+                {['中止', '増量', '減量', '開始'].map(w => (
+                  <button key={w} type="button" onClick={() => setContent(c => c ? c + w : w)}
+                    style={quickChipStyle}>＋{w}</button>
+                ))}
               </div>
             </div>
+
+            {/* 理由：脇役 */}
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, display: 'block', marginBottom: 4 }}>
+                理由（任意・症状など）
+              </label>
+              <input
+                className="field-input" value={reason} onChange={e => setReason(e.target.value)}
+                onFocus={() => setFocusField('reason')}
+                onBlur={() => setFocusField(null)}
+                placeholder="例：傾眠あり"
+                style={{ width: '60%', border: 'none', borderBottom: '2px solid #94a3b8', borderRadius: 0, background: 'transparent', fontSize: 13, color: '#64748b' }}
+              />
+            </div>
+
+            {/* プレビュー（一覧にはこう記録されるかを常時表示） */}
+            <div style={{ background: '#f8fafc', borderLeft: '3px solid #c9a84c', borderRadius: '0 8px 8px 0', padding: '10px 14px', marginBottom: 14 }}>
+              <div style={{ fontSize: 9.5, color: '#94a3b8', fontWeight: 700, letterSpacing: '0.05em', marginBottom: 4 }}>プレビュー（一覧にはこう記録されます）</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.6, color: instrDate ? '#0f1f4e' : PREVIEW_GHOST }}>
+                <span style={previewHi(focusField === 'instr')}>{instrDate ? fmtMMDD(instrDate) : '07/09'}</span>
+                <span style={{ marginLeft: '1em', ...previewHi(focusField === 'reason'), color: reason ? '#0f1f4e' : PREVIEW_GHOST }}>{reason || '傾眠あり'}</span>
+              </div>
+              <div style={{ fontSize: 12.5, fontWeight: 500, lineHeight: 1.6 }}>
+                <span style={{ ...previewHi(focusField === 'start'), color: startDate ? '#1e293b' : PREVIEW_GHOST }}>{startDate ? fmtMMDD(startDate) : '07/10'}〜</span>
+                <span style={{ ...previewHi(focusField === 'content'), color: content ? '#1e293b' : PREVIEW_GHOST }}>{content || 'クエチアピン中止'}</span>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
               <button className="btn btn-outline btn-sm" onClick={closeAddForm}>キャンセル</button>
               <button className="btn btn-primary btn-sm" onClick={add} disabled={adding || !instrDate}>
@@ -930,7 +1138,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch }) {
               <button className="btn btn-outline btn-sm" onClick={closeAddForm}>キャンセル</button>
               <button
                 className="btn btn-primary btn-sm" onClick={addTemporary}
-                disabled={adding || !tempForm.drug_name.trim() || !tempForm.end_date || !tempForm.end_timing}
+                disabled={adding || !tempForm.drug_name.trim() || !tempForm.end_date}
               >
                 {adding ? '…' : '追加'}
               </button>
