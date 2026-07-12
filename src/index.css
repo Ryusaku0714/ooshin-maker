@@ -25,6 +25,14 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* html/body 自体を非スクロールにして、iOSのラバーバンド（ページ全体のバウンス）で
+   内部の横スクロール要素（タブ等）が縦にズレて見える現象を防ぐ */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: var(--font-base);
   background: var(--sky-50);
@@ -582,11 +590,15 @@ body.printing .regular-med-highlight {
     appearance: none;
   }
 
-  /* タブ：横スクロール */
+  /* タブ：横スクロールのみに固定（縦方向のスクロール/バウンスを他要素に渡さない） */
   .tabs {
     width: 100% !important;
     overflow-x: auto !important;
+    overflow-y: hidden !important;
     flex-wrap: nowrap !important;
+    touch-action: pan-x !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 3点メニューボタン（スマホ版）*/
