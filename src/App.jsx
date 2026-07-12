@@ -338,7 +338,6 @@ export default function App() {
             min-height: 0 !important;
           }
           .main-scroll {
-            overflow-y: auto !important;
             flex: 1 !important;
             min-height: 0 !important;
           }

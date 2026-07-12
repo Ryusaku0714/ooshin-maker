@@ -18,11 +18,105 @@ function fmtWithDay(dateStr) {
   return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}（${DAY_LABELS[d.getDay()]}）`
 }
 
+const TIMING_OPTIONS = [['なし', ''], ['朝', '朝'], ['昼', '昼'], ['夕', '夕'], ['眠前', '眠前']]
+
+// タイミング選択：常時5ボタンではなく、タップで開く1個のチップ＋ドロップダウン
+function CalcTimingChip({ value, onChange, mobile }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <button type="button" onClick={() => setOpen(o => !o)} style={{
+        width: '100%', height: mobile ? 34 : 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: mobile ? 6 : 8, padding: mobile ? '0 6px' : '0 10px',
+        fontSize: mobile ? 10.5 : 13, fontFamily: 'inherit', color: '#e2e8f0', cursor: 'pointer',
+      }}>
+        <span>{value || 'なし'}</span><span style={{ fontSize: mobile ? 7 : 9, color: '#93c5fd' }}>▾</span>
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 90 }} />
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: mobile ? 90 : 100,
+            background: 'white', border: '1px solid #dce4f0', borderRadius: 8,
+            boxShadow: '0 6px 20px rgba(15,31,78,0.25)', zIndex: 100, overflow: 'hidden',
+          }}>
+            {TIMING_OPTIONS.map(([label, val], i, arr) => (
+              <button key={label} type="button" onClick={() => { onChange(val); setOpen(false) }} style={{
+                display: 'block', width: '100%', textAlign: 'left', background: 'white', border: 'none',
+                borderBottom: i < arr.length - 1 ? '1px solid #f1f5fb' : 'none',
+                padding: mobile ? '7px 10px' : '8px 12px', fontSize: mobile ? 11 : 12, fontWeight: 600,
+                color: '#1e293b', cursor: 'pointer', fontFamily: 'inherit',
+              }}>{label}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// スマホの日付欄：見た目は年省略の短い自前表示、実体は透明化した<input type="date">を重ねる
+// （font-size 16px以上にしてiOS Safariの自動ズームを防止）
+function CompactDateField({ value, onChange, fmt }) {
+  return (
+    <div style={{
+      position: 'relative', height: 34, background: 'rgba(255,255,255,0.08)',
+      border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, display: 'flex',
+      alignItems: 'center', padding: '0 8px', fontSize: 12, color: '#e2e8f0',
+      whiteSpace: 'nowrap', overflow: 'hidden',
+    }}>
+      {value ? fmt(value) : '選択'}
+      <input type="date" value={value} onChange={e => onChange(e.target.value)} style={{
+        position: 'absolute', inset: 0, width: '100%', height: '100%',
+        opacity: 0, fontSize: 16, border: 'none', padding: 0, margin: 0,
+      }} />
+    </div>
+  )
+}
+
+function calcFieldLabelStyle(mobile) {
+  return {
+    fontSize: mobile ? 8.5 : 10, color: '#93c5fd', fontWeight: 600,
+    display: 'block', marginBottom: mobile ? 3 : 5, whiteSpace: 'nowrap',
+    overflow: mobile ? 'hidden' : 'visible', textOverflow: mobile ? 'ellipsis' : 'clip',
+  }
+}
+
+function calcFieldInputStyle(mobile) {
+  return {
+    width: '100%', background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.2)', borderRadius: mobile ? 6 : 8,
+    padding: mobile ? '0 8px' : '9px 8px', fontSize: mobile ? 12 : 13, color: '#e2e8f0',
+    fontFamily: 'inherit', outline: 'none', height: mobile ? 34 : 40,
+  }
+}
+
+function calcStepperBtnStyle(mobile) {
+  return {
+    width: mobile ? 24 : 38, height: '100%', border: 'none',
+    background: 'rgba(255,255,255,0.06)', color: '#e2e8f0',
+    fontSize: mobile ? 13 : 17, fontWeight: 700, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit',
+  }
+}
+
+function calcPillBtnStyle(mobile, bg, color = 'white') {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 4, background: bg, border: 'none',
+    borderRadius: 20, color, padding: mobile ? '4px 9px' : '5px 11px',
+    fontSize: mobile ? 9.5 : 10.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+  }
+}
+
+function calcResultLabelStyle(mobile) {
+  return { fontSize: mobile ? 9 : 10, color: '#93c5fd', fontWeight: 700, letterSpacing: '0.04em' }
+}
+
 function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit }) {
   const [addStart,    setAddStart]    = useState(visitCalc?.visitDate ?? '')
   const [startTiming, setStartTiming] = useState('') // '' = なし（デフォルト）
   const [manualDays,  setManualDays]  = useState('')
-  const [targetDate,  setTargetDate]  = useState('')
+  const [targetDate,  setTargetDate]  = useState(visitCalc?.nextVisitDate ?? '') // デフォルトは次回往診日（編集前提）
   const [calcMode,    setCalcMode]    = useState('A') // 'A' | 'B' | 'C'
   const [open,        setOpen]        = useState(() => loadCollapse('calctool'))
 
@@ -31,6 +125,7 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
     setCalcMode(mode)
     if (mode !== 'B') setManualDays('')
     if (mode !== 'C') setTargetDate('')
+    else if (!targetDate) setTargetDate(visitCalc?.nextVisitDate ?? '')
   }
   const [copiedPeriod, setCopiedPeriod] = useState(false)
   const [copiedTarget, setCopiedTarget] = useState(false)
@@ -51,17 +146,27 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
     if (visitCalc?.visitDate) setAddStart(visitCalc.visitDate)
   }, [visitCalc?.visitDate])
 
-  const calc50MobileStyle = { width: '45%' }
-
   // タイミング未選択（なし）は「朝」相当（同日換算）で日数計算し、表記には何も付けない
   const endTiming = startTiming ? PREV_TIMING[startTiming] : ''
   const isManual  = manualDays.trim() !== '' && !isNaN(parseInt(manualDays)) && parseInt(manualDays) > 0
+
+  // モードB：±ステッパー（1〜90日）。文字列のまま保持し既存の計算ロジック（manualDays.trim()等）と互換を保つ
+  const stepManualDays = (delta) => {
+    setManualDays(d => String(Math.min(90, Math.max(1, (parseInt(d, 10) || 0) + delta))))
+  }
+  // 数字部分は直接タップ入力も可能（90日分など±連打が非現実的なケースに対応）。入力中は数字のみ許容し、確定時（blur）に1〜90へ丸める
+  const handleManualDaysInput = (raw) => setManualDays(raw.replace(/[^0-9]/g, ''))
+  const handleManualDaysBlur = () => {
+    setManualDays(d => d.trim() === '' ? '' : String(Math.min(90, Math.max(1, parseInt(d, 10) || 0))))
+  }
+  const modeBLabel = isManual ? `処方期間（${manualDays}日分）` : '処方期間（定期末日まで自動）'
 
   let periodText = ''
   let daysText   = ''
   let periodCopyDays = ''
   let periodEndDate   = ''
   let periodEndTiming = ''
+  let daysUntilEnd = 0 // モードA：ヒーロー表示用（開始日〜定期処方末日、両端含む）
 
   if (addStart) {
     if (isManual) {
@@ -78,6 +183,7 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
       const start = new Date(addStart + 'T00:00:00')
       const end   = new Date(rxEnd    + 'T00:00:00')
       const diff  = Math.ceil((end - start) / (1000*60*60*24)) + 1
+      daysUntilEnd = Math.max(0, diff)
       if (diff > 0) {
         // 朝開始（またはなし）以外は定期処方末日の翌日までまたがるため、末尾のタイミングは省き「+α」と表記する
         periodText     = (startTiming === '朝' || startTiming === '')
@@ -94,11 +200,13 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   let targetDaysText   = ''
   let targetEndDate    = ''
   let targetEndTiming  = ''
+  let neededDays = 0 // モードC：ヒーロー表示用
   if (addStart && targetDate) {
     const start    = new Date(addStart   + 'T00:00:00')
     const end      = new Date(targetDate + 'T00:00:00')
     const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24))
     const tDays = daysDiff + 1
+    neededDays = Math.max(0, tDays)
     if (tDays > 0) {
       // 朝開始（またはなし）は指定末日当日の眠前で完結（+tDays-1日）、昼以降は翌日へまたぐ（+tDays日）
       const daysOffset = (startTiming === '朝' || startTiming === '') ? tDays - 1 : tDays
@@ -182,8 +290,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
       {/* 入力行＋結果を横並びでラップ */}
       {open && (
         <div className="calc-tool-fields" style={isMobile
-          ? { display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: 6 }
-          : { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }
+          ? { display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', width: '100%', gap: 5 }
+          : { display: 'flex', gap: 14, alignItems: 'stretch', flexWrap: 'wrap' }
         }>
           {/* 3モードタブ */}
           <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: 3, marginBottom: 8, flex: '1 1 100%' }}>
@@ -197,141 +305,245 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
             ))}
           </div>
 
-          {/* 開始日は50%固定（flex伸縮禁止） */}
-          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 110px', minWidth: 100 }}>
-            <label style={calcLabelStyle}>開始日</label>
-            <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcInputStyle} />
+          {/* 開始日：全モード共通 */}
+          <div style={isMobile ? { flex: '0 0 100px', minWidth: 0 } : { flex: '1.3 1 150px', minWidth: 130 }}>
+            <label style={calcFieldLabelStyle(isMobile)}>開始日</label>
+            {isMobile
+              ? <CompactDateField value={addStart} onChange={setAddStart} fmt={fmtWithDay} />
+              : <input type="date" value={addStart} onChange={e => setAddStart(e.target.value)} style={calcFieldInputStyle(false)} />
+            }
           </div>
-          {/* タイミングは「なし/朝/昼/夕/眠前」のチップ選択（なしがデフォルト）。開始日の右にコンパクトに配置 */}
-          <div style={isMobile ? calc50MobileStyle : { flex: '1 1 150px', minWidth: 140 }}>
-            <label style={calcLabelStyle}>タイミング</label>
-            <div style={{ display: 'flex', gap: 2 }}>
-              {[['なし', ''], ['朝', '朝'], ['昼', '昼'], ['夕', '夕'], ['眠前', '眠前']].map(([label, val]) => (
-                <button key={label} type="button" onClick={() => setStartTiming(val)} style={{
-                  flex: '1 1 0', minWidth: 0, padding: '6px 1px', borderRadius: 5, border: 'none',
-                  fontSize: 9, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', whiteSpace: 'nowrap',
-                  background: startTiming === val ? '#2563eb' : 'rgba(255,255,255,0.08)',
-                  color: startTiming === val ? '#ffffff' : 'var(--sky-200)',
-                }}>{label}</button>
-              ))}
-            </div>
+
+          {/* タイミング：タップで開く1個のチップ＋ドロップダウン */}
+          <div style={isMobile ? { flex: '0 0 56px', minWidth: 0 } : { flex: '0.5 1 110px', minWidth: 100 }}>
+            <label style={calcFieldLabelStyle(isMobile)}>タイミング</label>
+            <CalcTimingChip value={startTiming} onChange={setStartTiming} mobile={isMobile} />
           </div>
+
+          {/* モードA：定期処方末日（参考表示のみ） */}
           {calcMode === 'A' && (
-            <div style={isMobile ? { width: '45%' } : { flex: '1 1 80px', minWidth: 70 }}>
-              <label style={calcLabelStyle}>定期処方末日</label>
-              <input type="text" value={rxEnd} readOnly style={{ ...calcInputStyle, opacity: 0.7 }} />
+            <div style={isMobile ? { flex: '0 0 100px', minWidth: 0 } : { flex: '0.8 1 130px', minWidth: 120 }}>
+              <label style={calcFieldLabelStyle(isMobile)}>定期処方末日</label>
+              <div style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: isMobile ? 6 : 8, height: isMobile ? 34 : 40,
+                display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start',
+                padding: isMobile ? '0 4px' : '9px 8px', fontSize: isMobile ? 9.5 : 13, color: '#93c5fd',
+                whiteSpace: 'nowrap',
+              }}>{rxEnd ? fmtWithDay(rxEnd) : '—'}</div>
             </div>
           )}
+
+          {/* モードB：日数を電卓風±ステッパーに */}
+          {calcMode === 'B' && (
+            <div style={isMobile ? { flex: '0 0 100px', minWidth: 0 } : { flex: '1.1 1 170px', minWidth: 160 }}>
+              <label style={calcFieldLabelStyle(isMobile)}>{isMobile ? '日数（任意）' : '日数'}</label>
+              <div style={{
+                display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.2)', borderRadius: isMobile ? 6 : 8,
+                height: isMobile ? 34 : 40, overflow: 'hidden',
+              }}>
+                <button type="button" onClick={() => stepManualDays(-1)} style={calcStepperBtnStyle(isMobile)}>−</button>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', minWidth: 0 }}>
+                  <input
+                    type="text" inputMode="numeric" pattern="[0-9]*" maxLength={2}
+                    value={manualDays}
+                    onChange={e => handleManualDaysInput(e.target.value)}
+                    onBlur={handleManualDaysBlur}
+                    placeholder="—"
+                    style={{
+                      width: isMobile ? 28 : 34, textAlign: 'center', fontWeight: 900, color: 'white',
+                      fontVariantNumeric: 'tabular-nums', fontSize: isMobile ? 16 : 19,
+                      background: 'transparent', border: 'none', outline: 'none', padding: 0,
+                      fontFamily: 'inherit', minWidth: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: isMobile ? 8 : 11, fontWeight: 600, color: '#93c5fd', marginLeft: isMobile ? 1 : 3, flexShrink: 0 }}>日</span>
+                </div>
+                <button type="button" onClick={() => stepManualDays(1)} style={calcStepperBtnStyle(isMobile)}>＋</button>
+              </div>
+            </div>
+          )}
+
+          {/* モードC：指定末日 */}
           {calcMode === 'C' && (
-            <div style={isMobile ? calc50MobileStyle : { flex: '1 1 140px', minWidth: 130 }}>
-              <label style={calcLabelStyle}>指定末日</label>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <input
-                  type="date" value={targetDate}
-                  onChange={e => setTargetDate(e.target.value)}
-                  style={{ ...calcInputStyle, minWidth: 0, flex: 1 }}
-                />
+            <div style={isMobile ? { flex: '1 1 auto', minWidth: 120 } : { flex: '1.1 1 150px', minWidth: 140, maxWidth: 220 }}>
+              <label style={calcFieldLabelStyle(isMobile)}>指定末日</label>
+              <div style={{ display: 'flex', gap: isMobile ? 3 : 4 }}>
+                {isMobile
+                  ? <div style={{ flex: 1, minWidth: 0 }}><CompactDateField value={targetDate} onChange={setTargetDate} fmt={fmtWithDay} /></div>
+                  : <input
+                      type="date" value={targetDate}
+                      onChange={e => setTargetDate(e.target.value)}
+                      style={{ ...calcFieldInputStyle(false), minWidth: 0, flex: 1 }}
+                    />
+                }
                 {targetDate && (
                   <button
                     type="button"
                     onClick={() => setTargetDate('')}
                     aria-label="指定末日を削除"
                     title="指定末日を削除"
-                    style={calcClearBtnStyle}
+                    style={calcClearBtnStyle(isMobile)}
                   >×</button>
                 )}
               </div>
             </div>
           )}
-          {calcMode === 'B' && (
-            <div style={isMobile ? { width: '45%' } : { flex: '1 1 65px', minWidth: 60 }}>
-              <label style={calcLabelStyle}>日数（任意）</label>
-              <input
-                type="number" inputMode="numeric" value={manualDays}
-                onChange={e => setManualDays(e.target.value)}
-                placeholder="自動" min="1"
-                style={calcInputStyle}
-              />
+
+          {/* 定期末日・日数指定の結果：モードAはヒーロー数字、モードBは範囲を強調 */}
+          {calcMode !== 'C' && periodText && (
+            <div style={isMobile
+              ? { width: '100%', marginTop: 8, background: 'rgba(56,189,248,0.1)', borderLeft: '3px dashed #c9a84c', borderRadius: '0 8px 8px 0', padding: '9px 11px' }
+              : { flex: '2 1 320px', minWidth: 300, background: 'rgba(56,189,248,0.1)', borderLeft: '3px dashed #c9a84c', borderRadius: '0 10px 10px 0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }
+            }>
+              {calcMode === 'A' ? (
+                isMobile ? (
+                  <>
+                    <div style={calcResultLabelStyle(true)}>定期処方末日に合わせた場合</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, margin: '4px 0' }}>
+                      <span style={{ fontSize: 34, fontWeight: 900, color: '#ffd97a', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{daysUntilEnd}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#ffd97a' }}>日分</span>
+                    </div>
+                    <div title={daysText} style={{ fontSize: 10, color: '#e2e8f0', marginBottom: 9 }}>{periodText}</div>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      <button type="button" onClick={handleCopyPeriod} style={calcPillBtnStyle(true, '#2563eb')}>
+                        {copiedPeriod ? '✅' : '📋 日付コピー'}
+                      </button>
+                      <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(true, '#334155', '#e2e8f0')}>
+                        📋 定期処方変更へ
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{
+                      display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0,
+                      paddingRight: 14, borderRight: '1px solid rgba(255,255,255,0.15)',
+                      whiteSpace: 'nowrap', minWidth: 78,
+                    }}>
+                      <span style={{ fontSize: 44, fontWeight: 900, color: '#ffd97a', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{daysUntilEnd}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#ffd97a' }}>日分</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={calcResultLabelStyle(false)}>定期処方末日に合わせた場合</div>
+                      <div title={daysText} style={{ fontSize: 11.5, color: '#e2e8f0', marginTop: 2 }}>{periodText}</div>
+                      <div style={{ marginTop: 7 }}>
+                        <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(false, '#334155', '#e2e8f0')}>
+                          📋 定期処方変更へ
+                        </button>
+                      </div>
+                    </div>
+                    <button type="button" onClick={handleCopyPeriod} style={{
+                      background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 8, color: '#e2e8f0', padding: '7px 10px', fontSize: 11,
+                      cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap', alignSelf: 'flex-start',
+                    }}>
+                      {copiedPeriod ? '✅' : '📋 日付コピー'}
+                    </button>
+                  </>
+                )
+              ) : (
+                isMobile ? (
+                  <>
+                    <div style={calcResultLabelStyle(true)}>{modeBLabel}</div>
+                    <div title={daysText} style={{ fontSize: 15, fontWeight: 800, color: 'white', lineHeight: 1.4, marginBottom: 9 }}>{periodText}</div>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      <button type="button" onClick={handleCopyPeriod} style={calcPillBtnStyle(true, '#2563eb')}>
+                        {copiedPeriod ? '✅' : '📋 日付コピー'}
+                      </button>
+                      {isManual && (
+                        <>
+                          <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(true, '#ea580c')}>
+                            📋 臨時処方変更へ
+                          </button>
+                          <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(true, '#0d9488')}>
+                            📋 他科受診へ
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={calcResultLabelStyle(false)}>{modeBLabel}</div>
+                      <div title={daysText} style={{ fontSize: 17, fontWeight: 800, color: 'white', lineHeight: 1.4, marginTop: 2 }}>{periodText}</div>
+                      {isManual && (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                          <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(false, '#ea580c')}>
+                            📋 臨時処方変更へ
+                          </button>
+                          <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(false, '#0d9488')}>
+                            📋 他科受診へ
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <button type="button" onClick={handleCopyPeriod} style={{
+                      background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 8, color: '#e2e8f0', padding: '7px 10px', fontSize: 11,
+                      cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap', alignSelf: 'flex-start',
+                    }}>
+                      {copiedPeriod ? '✅' : '📋 日付コピー'}
+                    </button>
+                  </>
+                )
+              )}
             </div>
           )}
 
-          {/* 定期末日・日数指定の結果：スマホは全幅・上ボーダー、PCは横並び */}
-          {calcMode !== 'C' && periodText && (
-            <div style={{
-              ...(isMobile
-                ? { width: '100%', marginTop: 8 }
-                : { flex: '2 1 160px', minWidth: 140, maxWidth: '100%' }),
-              background: '#1e3a8a',
-              border: '1px solid #2563eb',
-              borderLeft: '2px dashed #c9a84c',
-              borderRadius: 10,
-              padding: '8px 10px',
-              overflowX: 'auto',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
-                    {periodText}
+          {/* モードC：指定末日の結果（ヒーロー数字はグリーン） */}
+          {calcMode === 'C' && targetPeriodText && (
+            <div style={isMobile
+              ? { width: '100%', marginTop: 8, background: 'rgba(56,189,248,0.1)', borderLeft: '3px dashed #c9a84c', borderRadius: '0 8px 8px 0', padding: '9px 11px' }
+              : { flex: '2 1 320px', minWidth: 300, background: 'rgba(56,189,248,0.1)', borderLeft: '3px dashed #c9a84c', borderRadius: '0 10px 10px 0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }
+            }>
+              {isMobile ? (
+                <>
+                  <div style={calcResultLabelStyle(true)}>指定末日までに必要な日数</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, margin: '4px 0' }}>
+                    <span style={{ fontSize: 28, fontWeight: 900, color: '#86efac', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{neededDays}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#86efac' }}>日分</span>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
-                    {daysText}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <button type="button" onClick={handleCopyPeriod} style={calcCopyBtnStyle}>
-                    {copiedPeriod ? '✅' : '日付コピー'}
-                  </button>
-                  {calcMode === 'A' && (
-                    <button type="button" onClick={handleUseForRegular} style={{ ...calcCopyBtnStyle, background: '#334155' }}>
-                      📋 定期処方変更へ
+                  <div style={{ fontSize: 10, color: '#e2e8f0', marginBottom: 9 }}>{targetPeriodText}</div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={handleCopyTarget} style={calcPillBtnStyle(true, '#2563eb')}>
+                      {copiedTarget ? '✅' : '📋 日付コピー'}
                     </button>
-                  )}
-                  {calcMode === 'B' && isManual && (
-                    <>
-                      <button type="button" onClick={handleUseForTempPeriod} style={{ ...calcCopyBtnStyle, background: '#ea580c' }}>
+                    <button type="button" onClick={handleUseForTempTarget} style={calcPillBtnStyle(true, '#ea580c')}>
+                      📋 臨時処方変更へ
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0,
+                    paddingRight: 14, borderRight: '1px solid rgba(255,255,255,0.15)',
+                    whiteSpace: 'nowrap', minWidth: 90,
+                  }}>
+                    <span style={{ fontSize: 36, fontWeight: 900, color: '#86efac', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{neededDays}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#86efac' }}>日分</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={calcResultLabelStyle(false)}>指定末日までに必要な日数</div>
+                    <div style={{ fontSize: 11.5, color: '#e2e8f0', marginTop: 2 }}>{targetPeriodText}</div>
+                    <div style={{ marginTop: 7 }}>
+                      <button type="button" onClick={handleUseForTempTarget} style={calcPillBtnStyle(false, '#ea580c')}>
                         📋 臨時処方変更へ
                       </button>
-                      <button type="button" onClick={handleUseForOtherVisit} style={{ ...calcCopyBtnStyle, background: '#0d9488' }}>
-                        📋 他科受診へ
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 指定末日の結果 */}
-          {calcMode === 'C' && targetPeriodText && (
-            <div style={{
-              ...(isMobile
-                ? { width: '100%', marginTop: 8 }
-                : { flex: '2 1 160px', minWidth: 140, maxWidth: '100%' }),
-              background: '#1e3a8a',
-              border: '1px solid #2563eb',
-              borderLeft: '2px dashed #c9a84c',
-              borderRadius: 10,
-              padding: '8px 10px',
-              overflowX: 'auto',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap' }}>
-                <div style={{ flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'white', lineHeight: 1.5, whiteSpace: 'nowrap' }}>
-                    {targetPeriodText}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--sky-200)', marginTop: 2 }}>
-                    {targetDaysText}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignSelf: 'flex-start', marginTop: 2, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <button type="button" onClick={handleCopyTarget} style={calcCopyBtnStyle}>
-                    {copiedTarget ? '✅' : '日付コピー'}
+                  <button type="button" onClick={handleCopyTarget} style={{
+                    background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: 8, color: '#e2e8f0', padding: '7px 10px', fontSize: 11,
+                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap', alignSelf: 'flex-start',
+                  }}>
+                    {copiedTarget ? '✅' : '📋 日付コピー'}
                   </button>
-                  <button type="button" onClick={handleUseForTempTarget} style={{ ...calcCopyBtnStyle, background: '#ea580c' }}>
-                    📋 臨時処方変更へ
-                  </button>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -340,37 +552,15 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   )
 }
 
-const calcLabelStyle = { fontSize: 9, color: '#64748b', display: 'block', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.5px' }
-
-const calcInputStyle = {
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-  borderRadius: 6, padding: '6px 8px', fontSize: 12, color: '#e2e8f0',
-  fontFamily: 'inherit', width: '100%', outline: 'none',
-}
-
-// 日付コピーボタン
-const calcCopyBtnStyle = {
-  flexShrink: 0,
-  background: '#2563eb',
-  border: 'none',
-  borderRadius: 6,
-  color: 'white',
-  fontSize: 9,
-  fontWeight: 700,
-  padding: '3px 7px',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-  whiteSpace: 'nowrap',
-  lineHeight: 1.4,
-  alignSelf: 'flex-start',
-  marginTop: 2,
-}
-
 // 指定末日クリアボタン（×）
-const calcClearBtnStyle = {
-  flexShrink: 0, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: 6, color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1,
-  padding: '0 9px', cursor: 'pointer', fontFamily: 'inherit',
+function calcClearBtnStyle(mobile) {
+  return {
+    flexShrink: 0, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: mobile ? 6 : 6, color: mobile ? '#93c5fd' : 'white', fontSize: mobile ? 11 : 14,
+    fontWeight: 700, lineHeight: 1, cursor: 'pointer', fontFamily: 'inherit',
+    width: mobile ? 20 : undefined, height: mobile ? 34 : undefined,
+    padding: mobile ? 0 : '0 9px',
+  }
 }
 
 // ── 日付タップ選択フィールド（変更ログ入力フォーム共通） ─────────

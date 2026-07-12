@@ -112,7 +112,7 @@ export default function VisitBanner({ team, patientOverride, onVisitCalcChange }
     setRxPeriod(`${fmtWithDow(start)}〜${fmtWithDow(end)}`)
     setNextVisit(`次回往診：${fmt(next)}`)
     setRxEnd(fmtFull(end))
-    onVisitCalcChange?.({ visitDate: effVisitDate, rxDays: effRxDays, graceDays: effGraceDays, rxEnd: fmtFull(end) })
+    onVisitCalcChange?.({ visitDate: effVisitDate, rxDays: effRxDays, graceDays: effGraceDays, rxEnd: fmtFull(end), nextVisitDate: fmtFull(next) })
   }
 
   // 処方開始日を変更 → 往診日との差分から処方ズレ日数を逆算
