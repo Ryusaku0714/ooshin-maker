@@ -108,7 +108,7 @@ export default function OtherVisitsTab({ patient, onRefetch, prefill, onPrefillC
     if (!prefill) return
     setEditingId(null)
     setDoFromId(null)
-    setVisitForm(f => ({
+    setVisitForm(f => recalcFromEndDate({
       ...f,
       dispensing_from:       prefill.startDate,
       medication_timing:     prefill.startTiming,

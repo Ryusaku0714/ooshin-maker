@@ -719,7 +719,7 @@ export default function Sidebar({
         </div>
 
         {/* スクロールエリア */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0 12px' }}>
+        <div className="sidebar-list-scroll" style={{ flex: 1, overflowY: 'auto', padding: '4px 0 12px' }}>
           {facilities.map(facility => {
             const isHomeCare = !!facility.is_home_care
             const cs = isHomeCare ? HOME_STYLE : FAC_STYLE

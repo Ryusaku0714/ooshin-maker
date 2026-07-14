@@ -426,7 +426,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
       </div>
 
       {/* タブコンテンツ独立スクロールエリア：患者ヘッダー・タブバーを固定してコンテンツのみスクロール */}
-      <div className="tab-scroll-area" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 52 }}>
+      <div className="tab-scroll-area" style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 'calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))' }}>
         {/* タブコンテンツ：常時マウント＋display切替でタブ移動時の入力内容を保持 */}
         {/* key={patient?.id} により患者切り替え時のみリマウントして状態リセット */}
         <div className="tab-content">

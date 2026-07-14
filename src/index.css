@@ -524,6 +524,11 @@ body.printing .regular-med-highlight {
     gap: 8px !important;
   }
 
+  /* 患者一覧：末尾項目・…メニューがブラウザ下部バーに隠れないよう余白確保 */
+  .sidebar-list-scroll {
+    padding-bottom: calc(12px + var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+  }
+
   /* 患者詳細エリア */
   .main-scroll {
     overflow: hidden !important;
@@ -532,7 +537,7 @@ body.printing .regular-med-highlight {
   .tab-scroll-area {
     flex: 1;
     overflow-y: auto !important;
-    padding: 0 0 52px !important;
+    padding: 0 0 calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
     min-height: 0;
   }
   .tab-content {
@@ -690,7 +695,7 @@ body.printing .regular-med-highlight {
 
   /* 患者詳細 */
   .tab-scroll-area {
-    padding: 0 0 52px !important;
+    padding: 0 0 calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
   }
   .tab-content {
     padding: 10px 10px !important;

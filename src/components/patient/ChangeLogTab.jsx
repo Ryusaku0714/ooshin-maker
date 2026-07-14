@@ -191,6 +191,8 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
           : `${fmtWithDay(addStart)}${startTiming}〜${fmtWithDay(rxEnd)}+α`
         daysText       = `定期に合わせた場合${diff}日分`
         periodCopyDays = `${diff}日分`
+        periodEndDate   = rxEnd
+        periodEndTiming = endTiming
       }
     }
   }
@@ -239,12 +241,12 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   }
 
   const handleUseForTempPeriod = () => {
-    if (!periodEndDate || !periodEndTiming) return
+    if (!periodEndDate) return
     onUseForTemp?.({ startDate: addStart, startTiming, endDate: periodEndDate, endTiming: periodEndTiming })
   }
 
   const handleUseForTempTarget = () => {
-    if (!targetEndDate || !targetEndTiming) return
+    if (!targetEndDate) return
     onUseForTemp?.({ startDate: addStart, startTiming, endDate: targetEndDate, endTiming: targetEndTiming })
   }
 
@@ -254,8 +256,13 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   }
 
   const handleUseForOtherVisit = () => {
-    if (!periodEndDate || !periodEndTiming) return
+    if (!periodEndDate) return
     onUseForOtherVisit?.({ startDate: addStart, startTiming, endDate: periodEndDate, endTiming: periodEndTiming })
+  }
+
+  const handleUseForOtherVisitTarget = () => {
+    if (!targetEndDate) return
+    onUseForOtherVisit?.({ startDate: addStart, startTiming, endDate: targetEndDate, endTiming: targetEndTiming })
   }
 
   return (
@@ -413,6 +420,12 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                       <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(true, '#334155', '#e2e8f0')}>
                         📋 定期処方変更へ
                       </button>
+                      <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(true, '#ea580c')}>
+                        📋 臨時処方変更へ
+                      </button>
+                      <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(true, '#0d9488')}>
+                        📋 他科受診へ
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -428,9 +441,15 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={calcResultLabelStyle(false)}>定期処方末日に合わせた場合</div>
                       <div title={daysText} style={{ fontSize: 11.5, color: '#e2e8f0', marginTop: 2 }}>{periodText}</div>
-                      <div style={{ marginTop: 7 }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
                         <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(false, '#334155', '#e2e8f0')}>
                           📋 定期処方変更へ
+                        </button>
+                        <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(false, '#ea580c')}>
+                          📋 臨時処方変更へ
+                        </button>
+                        <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(false, '#0d9488')}>
+                          📋 他科受診へ
                         </button>
                       </div>
                     </div>
@@ -452,16 +471,15 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                       <button type="button" onClick={handleCopyPeriod} style={calcPillBtnStyle(true, '#2563eb')}>
                         {copiedPeriod ? '✅' : '📋 日付コピー'}
                       </button>
-                      {isManual && (
-                        <>
-                          <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(true, '#ea580c')}>
-                            📋 臨時処方変更へ
-                          </button>
-                          <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(true, '#0d9488')}>
-                            📋 他科受診へ
-                          </button>
-                        </>
-                      )}
+                      <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(true, '#334155', '#e2e8f0')}>
+                        📋 定期処方変更へ
+                      </button>
+                      <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(true, '#ea580c')}>
+                        📋 臨時処方変更へ
+                      </button>
+                      <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(true, '#0d9488')}>
+                        📋 他科受診へ
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -469,16 +487,17 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={calcResultLabelStyle(false)}>{modeBLabel}</div>
                       <div title={daysText} style={{ fontSize: 17, fontWeight: 800, color: 'white', lineHeight: 1.4, marginTop: 2 }}>{periodText}</div>
-                      {isManual && (
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                          <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(false, '#ea580c')}>
-                            📋 臨時処方変更へ
-                          </button>
-                          <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(false, '#0d9488')}>
-                            📋 他科受診へ
-                          </button>
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                        <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(false, '#334155', '#e2e8f0')}>
+                          📋 定期処方変更へ
+                        </button>
+                        <button type="button" onClick={handleUseForTempPeriod} style={calcPillBtnStyle(false, '#ea580c')}>
+                          📋 臨時処方変更へ
+                        </button>
+                        <button type="button" onClick={handleUseForOtherVisit} style={calcPillBtnStyle(false, '#0d9488')}>
+                          📋 他科受診へ
+                        </button>
+                      </div>
                     </div>
                     <button type="button" onClick={handleCopyPeriod} style={{
                       background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
@@ -511,8 +530,14 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                     <button type="button" onClick={handleCopyTarget} style={calcPillBtnStyle(true, '#2563eb')}>
                       {copiedTarget ? '✅' : '📋 日付コピー'}
                     </button>
+                    <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(true, '#334155', '#e2e8f0')}>
+                      📋 定期処方変更へ
+                    </button>
                     <button type="button" onClick={handleUseForTempTarget} style={calcPillBtnStyle(true, '#ea580c')}>
                       📋 臨時処方変更へ
+                    </button>
+                    <button type="button" onClick={handleUseForOtherVisitTarget} style={calcPillBtnStyle(true, '#0d9488')}>
+                      📋 他科受診へ
                     </button>
                   </div>
                 </>
@@ -529,9 +554,15 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={calcResultLabelStyle(false)}>指定末日までに必要な日数</div>
                     <div style={{ fontSize: 11.5, color: '#e2e8f0', marginTop: 2 }}>{targetPeriodText}</div>
-                    <div style={{ marginTop: 7 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
+                      <button type="button" onClick={handleUseForRegular} style={calcPillBtnStyle(false, '#334155', '#e2e8f0')}>
+                        📋 定期処方変更へ
+                      </button>
                       <button type="button" onClick={handleUseForTempTarget} style={calcPillBtnStyle(false, '#ea580c')}>
                         📋 臨時処方変更へ
+                      </button>
+                      <button type="button" onClick={handleUseForOtherVisitTarget} style={calcPillBtnStyle(false, '#0d9488')}>
+                        📋 他科受診へ
                       </button>
                     </div>
                   </div>
@@ -874,7 +905,7 @@ export default function ChangeLogTab({ patient, visitCalc, onRefetch, onUseForOt
 
   // 日数計算ツールの結果を臨時薬追加フォームに反映
   const useCalcResultForTemp = ({ startDate, startTiming, endDate, endTiming }) => {
-    const computed = computeTemporaryDays(startDate, startTiming, endDate)
+    const computed = computeTemporaryDays(startDate, startTiming || '朝', endDate)
     setTempForm({
       ...blankTempForm(instrDate),
       start_date:   startDate,

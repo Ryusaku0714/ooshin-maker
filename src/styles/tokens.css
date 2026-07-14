@@ -30,4 +30,7 @@
 
   /* フォント */
   --font-base: 'Noto Sans JP', sans-serif;
+
+  /* レイアウト */
+  --bottom-nav-height: 52px;
 }
