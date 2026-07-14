@@ -160,6 +160,23 @@ body {
   overflow: hidden;
   z-index: 10;
 }
+/* 下部固定バーに隠れる場合、JS側の判定でこのクラスを付与し上向きに開く */
+.row-menu.row-menu--up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+/* 下端の予約領域（固定ナビバー＋セーフエリア）をJSから実測するための不可視プローブ */
+.safe-bottom-probe {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  visibility: hidden;
+  pointer-events: none;
+}
 .row-menu-item {
   background: white;
   border: none;
@@ -527,6 +544,7 @@ body.printing .regular-med-highlight {
   /* 患者一覧：末尾項目・…メニューがブラウザ下部バーに隠れないよう余白確保 */
   .sidebar-list-scroll {
     padding-bottom: calc(12px + var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+    overscroll-behavior-y: contain;
   }
 
   /* 患者詳細エリア */
@@ -539,6 +557,7 @@ body.printing .regular-med-highlight {
     overflow-y: auto !important;
     padding: 0 0 calc(var(--bottom-nav-height) + env(safe-area-inset-bottom)) !important;
     min-height: 0;
+    overscroll-behavior-y: contain;
   }
   .tab-content {
     padding: 10px 12px !important;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
+import { useMenuFlip } from '../../hooks/useMenuFlip'
 import { PREV_TIMING, computeTemporaryEnd, computeTemporaryDays } from '../../lib/changeLogFormat'
 
 const TIMING_OPTIONS = ['朝', '昼', '夕', '眠前']
@@ -466,6 +467,8 @@ export default function OtherVisitsTab({ patient, onRefetch, prefill, onPrefillC
 
 function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete, onDo }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuTriggerRect, setMenuTriggerRect] = useState(null)
+  const { menuRef, openUpward } = useMenuFlip(menuOpen, menuTriggerRect)
   const from   = v.dispensing_from ?? v.dispensing_date ?? ''
   const to     = v.dispensing_to ?? ''
   const period = fmtPeriod(from, to)
@@ -584,14 +587,17 @@ function VisitRow({ v, archived, onEdit, onArchive, onRestore, onDelete, onDo })
               title="メニュー"
               aria-label="メニュー"
               aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(o => !o)}
+              onClick={e => {
+                if (!menuOpen) setMenuTriggerRect(e.currentTarget.getBoundingClientRect())
+                setMenuOpen(o => !o)
+              }}
             >
               <span aria-hidden="true">⋯</span>
             </button>
             {menuOpen && (
               <>
                 <div className="row-menu-overlay" onClick={() => setMenuOpen(false)} />
-                <div className="row-menu">
+                <div ref={menuRef} className={`row-menu${openUpward ? ' row-menu--up' : ''}`}>
                   {mobileMenuActions.map(a => (
                     <button
                       key={a.key}

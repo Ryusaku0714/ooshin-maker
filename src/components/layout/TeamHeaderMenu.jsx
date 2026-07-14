@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useMenuFlip } from '../../hooks/useMenuFlip'
 
 // チームヘッダーの操作メニュー（スマホ版用）
 // PC・タブレット（769px以上）：呼び出し側で横並びボタンをそのまま表示（本コンポーネントは非表示）
@@ -11,6 +12,7 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
   const [pos, setPos] = useState(null)
   const [submenu, setSubmenu] = useState(null)
   const btnRef = useRef(null)
+  const { menuRef, openUpward } = useMenuFlip(open, pos)
 
   const toggle = () => {
     if (!open && btnRef.current) {
@@ -19,8 +21,8 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
       const isLeftSide = r.left + r.width / 2 < window.innerWidth / 2
       setPos(
         isLeftSide
-          ? { top: r.bottom + 4, right, maxWidth: Math.max(160, r.right - 8) }
-          : { top: r.bottom + 4, right }
+          ? { top: r.top, bottom: r.bottom, right, maxWidth: Math.max(160, r.right - 8) }
+          : { top: r.top, bottom: r.bottom, right }
       )
     }
     setOpen(o => !o)
@@ -44,10 +46,13 @@ export default function TeamHeaderMenu({ actions, triggerStyle }) {
         <>
           <div className="row-menu-overlay" onClick={close} />
           <div
+            ref={menuRef}
             className="row-menu"
             style={{
               position: 'fixed',
-              top: pos.top,
+              ...(openUpward
+                ? { top: 'auto', bottom: window.innerHeight - pos.top + 4 }
+                : { top: pos.bottom + 4, bottom: 'auto' }),
               right: pos.right,
               minWidth: 210,
               ...(pos.maxWidth && { maxWidth: pos.maxWidth }),

@@ -15,6 +15,7 @@ import { TEAM_COLORS } from '../../lib/teamColors'
 import TeamHeaderMenu from './TeamHeaderMenu'
 import PrintMenuButton from '../common/PrintMenuButton'
 import { loadCollapse, saveCollapse } from '../../lib/collapseStorage'
+import { useMenuFlip } from '../../hooks/useMenuFlip'
 
 const DOW_SIDEBAR = ['日', '月', '火', '水', '木', '金', '土']
 
@@ -476,6 +477,7 @@ export default function Sidebar({
   const [teamTaskSummaries, setTeamTaskSummaries] = useState({})
   // facGear: { id, pos } | null — ⚙ドロップダウンの対象施設IDと表示位置
   const [facGear, setFacGear] = useState(null)
+  const { menuRef: facGearMenuRef, openUpward: facGearOpenUpward } = useMenuFlip(!!facGear, facGear?.pos)
 
   useEffect(() => {
     db.getFacilityTaskSummaries().then(s => setTaskSummaries(s))
@@ -849,7 +851,7 @@ export default function Sidebar({
                               setFacGear(null)
                             } else {
                               const r = e.currentTarget.getBoundingClientRect()
-                              setFacGear({ id: facility.id, pos: { top: r.bottom + 4, right: Math.max(4, window.innerWidth - r.right) } })
+                              setFacGear({ id: facility.id, pos: { top: r.top, bottom: r.bottom, right: Math.max(4, window.innerWidth - r.right) } })
                             }
                           }}
                           title="施設の設定"
@@ -863,8 +865,16 @@ export default function Sidebar({
                           <>
                             <div className="row-menu-overlay" onClick={() => setFacGear(null)} />
                             <div
+                              ref={facGearMenuRef}
                               className="row-menu"
-                              style={{ position: 'fixed', top: facGear.pos.top, right: facGear.pos.right, minWidth: 140 }}
+                              style={{
+                                position: 'fixed',
+                                ...(facGearOpenUpward
+                                  ? { top: 'auto', bottom: window.innerHeight - facGear.pos.top + 4 }
+                                  : { top: facGear.pos.bottom + 4, bottom: 'auto' }),
+                                right: facGear.pos.right,
+                                minWidth: 140,
+                              }}
                             >
                               {isHomeCare && facility.om_teams?.[0] && (
                                 <button
