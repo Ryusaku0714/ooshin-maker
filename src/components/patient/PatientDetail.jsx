@@ -311,7 +311,7 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
   return (
     <div className="main-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* 患者ヘッダー */}
-      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', borderLeft: '4px solid #0f1f4e', padding: '14px 20px', flexShrink: 0 }}>
+      <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', padding: '14px 20px', flexShrink: 0 }}>
         {/* 患者名（flex:1 で残スペースを占有し … ボタンを右端に押し出す） */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
           {patient.initial ? (
