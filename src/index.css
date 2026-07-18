@@ -962,19 +962,9 @@ body.printing .card {
   page-break-inside: avoid; /* 古いブラウザ向けフォールバック */
 }
 
-/* 2ページ目以降にも患者名ヘッダーを再掲する固定ヘッダー */
+/* patient-headerと重複するため一旦無効化 */
 body.printing .print-repeat-header {
-  display: block !important;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  font-size: 12px !important;
-  font-weight: 700;
-  color: #0f1f4e;
-  border-bottom: 1.5px solid #c9a84c;
-  padding-bottom: 4px;
-  background: white;
+  display: none !important;
 }
 /* 通常表示（画面上）では非表示 */
 .print-repeat-header { display: none; }

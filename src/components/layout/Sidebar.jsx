@@ -198,7 +198,7 @@ async function printTeamAllPatients(team, facilityName) {
   h2{font-size:1.15em;font-weight:700;margin:0 0 6px;padding:3px 7px;background:#e0f2fe;color:#0369a1;border-radius:4px;break-after:avoid;page-break-after:avoid}
   .sec{margin-bottom:6px;break-inside:avoid;page-break-inside:avoid}
   .sec-title{font-size:1em;font-weight:700;color:#0284c7;margin-bottom:2px;break-after:avoid;page-break-after:avoid}
-  .bf{font-size:0.95em;margin-bottom:2px}
+  .bf{font-size:0.95em;margin-bottom:2px;white-space:pre-wrap}
   .reg-med{background:#e8f4fb;border-radius:4px;padding:4px 8px;font-weight:700;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .le{font-size:0.95em;margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid #f1f5f9}
   .ld{font-weight:700;color:#0284c7}
