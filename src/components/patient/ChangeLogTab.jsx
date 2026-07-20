@@ -129,6 +129,7 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
   }
   const [copiedPeriod, setCopiedPeriod] = useState(false)
   const [copiedTarget, setCopiedTarget] = useState(false)
+  const [headerHover,  setHeaderHover]  = useState(false) // PC：ヘッダー行ホバー時のうっすら光る背景用
   const rxEnd = visitCalc?.rxEnd ?? ''
 
   // スマホ判定（768px以下）— JSXインラインstyleで直接レイアウト制御するため
@@ -265,33 +266,60 @@ function CalcTool({ visitCalc, onUseForTemp, onUseForRegular, onUseForOtherVisit
     onUseForOtherVisit?.({ startDate: addStart, startTiming, endDate: targetEndDate, endTiming: targetEndTiming })
   }
 
+  const toggleOpen = () => {
+    setOpen(o => {
+      const next = !o
+      saveCollapse('calctool', next)
+      return next
+    })
+  }
+
   return (
     <div className="calc-tool" style={{
       background: '#0f1f4e',
       borderRadius: 12, padding: '10px 14px', marginBottom: 10,
       boxShadow: '0 4px 16px rgba(15,31,78,0.2)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 8 : 0 }}>
+      <div
+        className="calc-tool-header"
+        onClick={() => { if (!isMobile) toggleOpen() }}
+        onMouseEnter={() => !isMobile && setHeaderHover(true)}
+        onMouseLeave={() => setHeaderHover(false)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: open ? 8 : 0,
+          cursor: isMobile ? 'default' : 'pointer',
+          borderRadius: isMobile ? 0 : 8,
+          padding: isMobile ? 0 : '6px 8px',
+          background: !isMobile && headerHover ? 'rgba(255,255,255,0.08)' : 'transparent',
+          transition: 'background 0.15s',
+        }}
+      >
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sky-200)', letterSpacing: '0.08em' }}>
           ⚡ 日数計算ツール
         </div>
-        {/* スマホのみ折りたたみボタンを表示 */}
-        <button
-          className="calc-tool-toggle"
-          onClick={() => setOpen(o => {
-            const next = !o
-            saveCollapse('calctool', next)
-            return next
-          })}
-          aria-expanded={open}
-          aria-label={open ? '折りたたむ' : '展開する'}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--sky-200)', fontSize: 13, padding: '2px 4px', lineHeight: 1,
-          }}
-        >
-          {open ? '▲' : '▼'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {/* PCのみ常時テキストラベルを表示 */}
+          {!isMobile && (
+            <span style={{ color: '#bae6fd', fontSize: 12 }}>
+              {open ? '折りたたむ' : '表示する'}
+            </span>
+          )}
+          <button
+            className="calc-tool-toggle"
+            onClick={(e) => { e.stopPropagation(); toggleOpen() }}
+            aria-expanded={open}
+            aria-label={open ? '折りたたむ' : '展開する'}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--sky-200)', fontSize: 13, padding: '2px 4px', lineHeight: 1,
+              transform: !isMobile && !open ? 'rotate(-90deg)' : 'none',
+              transition: !isMobile ? 'transform 0.2s' : 'none',
+            }}
+          >
+            {isMobile ? (open ? '▲' : '▼') : '▲'}
+          </button>
+        </div>
       </div>
 
       {/* 入力行＋結果を横並びでラップ */}

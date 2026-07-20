@@ -646,15 +646,14 @@ body.printing .regular-med-highlight {
   /* patient-header は flex-row を維持し … ボタンを常に右端に固定 */
 }
 
-/* ── 追加薬日数計算：折りたたみボタン（PCでは非表示） ── */
+/* ── 追加薬日数計算：折りたたみボタン（PC/スマホ共通で表示、見た目はJSX側で分岐） ── */
 .calc-tool-toggle {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 @media (max-width: 768px) {
   .calc-tool-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     min-width: 28px;
     min-height: 28px;
     border-radius: 6px;
