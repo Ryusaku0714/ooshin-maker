@@ -1214,6 +1214,7 @@ export default function Sidebar({
                               <div
                                 onClick={() => setAddPatientTeamId(team.id)}
                                 className="add-link"
+                                style={!hasPatients ? { background: '#fff7e6', border: '1px solid #c9a84c', fontWeight: 700, color: '#0f1f4e' } : undefined}
                               >
                                 <span className="add-link-plus">＋</span> 患者を追加
                               </div>
@@ -1229,6 +1230,7 @@ export default function Sidebar({
                     <div
                       onClick={() => setAddTeamFacilityId(facility.id)}
                       className="add-link"
+                      style={(facility.om_teams ?? []).length === 0 ? { background: '#fff7e6', border: '1px solid #c9a84c', fontWeight: 700, color: '#0f1f4e' } : undefined}
                     >
                       <span className="add-link-plus">＋</span> チームを追加
                     </div>
