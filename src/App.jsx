@@ -65,6 +65,41 @@ export default function App() {
 
   const { scale, setScale, sbw, setSbw, persistSbw, resetSbw, resetAll } = useDisplayPrefs()
 
+  // 初回利用ガイド：既読から30日以上経過していれば既読フラグを削除し、自動再表示の対象に戻す
+  useEffect(() => {
+    const seen = localStorage.getItem('ooshin_guide_seen')
+    if (!seen) return
+    const seenDate = new Date(seen)
+    if (isNaN(seenDate.getTime())) return
+    const diffDays = (Date.now() - seenDate.getTime()) / (1000 * 60 * 60 * 24)
+    if (diffDays >= 30) localStorage.removeItem('ooshin_guide_seen')
+  }, [])
+
+  // 初回利用ガイド：未読かつ施設が1件も無いログイン済みユーザーには自動表示する
+  useEffect(() => {
+    if (!user) return
+    if (facLoading) return
+    if (facilities.length !== 0) return
+    if (localStorage.getItem('ooshin_guide_seen')) return
+    setShowGuide(true)
+  }, [user, facLoading, facilities])
+
+  // 処方日数リマインド：アプリ全体で患者総数が 0→1以上 になった瞬間に一度だけ表示
+  const prevPatientCountRef = useRef(null)
+  const [showRxHint, setShowRxHint] = useState(false)
+  useEffect(() => {
+    if (facLoading) return
+    const total = facilities.flatMap(f => f.om_teams ?? []).flatMap(t => t.om_patients ?? []).length
+    if (prevPatientCountRef.current === null) {
+      prevPatientCountRef.current = total
+      return
+    }
+    if (prevPatientCountRef.current === 0 && total >= 1 && !localStorage.getItem('ooshin_rxdays_hint_seen')) {
+      setShowRxHint(true)
+    }
+    prevPatientCountRef.current = total
+  }, [facilities, facLoading])
+
   // zoom / 仕切りは PC のみ（≤768px はモバイルタブUIのため既存のまま）
   const [isDesktop, setIsDesktop] = useState(
     () => window.matchMedia('(min-width: 769px)').matches
@@ -119,6 +154,11 @@ export default function App() {
   const patientOverride = (selectedPatient?.custom_days != null && selectedPatient?.custom_offset != null)
     ? { rxDays: selectedPatient.custom_days, graceDays: selectedPatient.custom_offset, visitDate: selectedPatient.individual_visit_date || null }
     : null
+
+  // 選択中患者が所属するチーム（処方日数リマインドの初期値表示用）
+  const patientTeam = facilities
+    .flatMap(f => f.om_teams ?? [])
+    .find(t => (t.om_patients ?? []).some(p => p.id === selectedPatientId)) ?? null
 
   const handleSelectPatient = (id) => {
     if (isDirtyRef.current && id !== selectedPatientId) {
@@ -229,6 +269,12 @@ export default function App() {
             patientId={selectedPatientId}
             visitCalc={visitCalc}
             onDirtyChange={d => { isDirtyRef.current = d }}
+            defaultRxDays={patientTeam?.default_rx_days ?? 14}
+            showRxHint={showRxHint}
+            onCloseRxHint={() => {
+              localStorage.setItem('ooshin_rxdays_hint_seen', '1')
+              setShowRxHint(false)
+            }}
           />
         </div>
       </div>
@@ -252,7 +298,10 @@ export default function App() {
 
       {/* 使い方ガイドモーダル */}
       {showGuide && (
-        <InfoModal title="📘 使い方ガイド" onClose={() => setShowGuide(false)}>
+        <InfoModal title="📘 使い方ガイド" onClose={() => {
+          localStorage.setItem('ooshin_guide_seen', new Date().toISOString())
+          setShowGuide(false)
+        }}>
           {[
             {
               step: 'STEP 1',

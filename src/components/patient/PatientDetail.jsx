@@ -153,7 +153,7 @@ function generatePatientDrugsHTML(patient) {
 </html>`
 }
 
-export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
+export default function PatientDetail({ patientId, visitCalc, onDirtyChange, defaultRxDays = 14, showRxHint = false, onCloseRxHint }) {
   const [activeTab, setActiveTab] = useState('basic')
   const [copied, setCopied]       = useState(false)
   const [showLogMenu, setShowLogMenu] = useState(false)
@@ -310,6 +310,22 @@ export default function PatientDetail({ patientId, visitCalc, onDirtyChange }) {
 
   return (
     <div className="main-scroll" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* 処方日数リマインド（初めて患者を1人追加した直後に一度だけ表示） */}
+      {showRxHint && (
+        <div style={{
+          background: '#f1f5fb', border: '1px solid #dce4f0', borderRadius: 10,
+          padding: '10px 14px', fontSize: 12, color: '#1e3a8a', lineHeight: 1.6,
+          margin: '10px 20px 0', flexShrink: 0,
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10,
+        }}>
+          <span>💡 処方日数は患者ごとに調整できます（現在の初期値：{defaultRxDays}日）。実際の処方に合わせて確認しておきましょう</span>
+          <button
+            onClick={onCloseRxHint}
+            style={{ background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', color: '#1e3a8a', lineHeight: 1, fontFamily: 'inherit', flexShrink: 0, padding: 0 }}
+          >✕</button>
+        </div>
+      )}
+
       {/* 患者ヘッダー */}
       <div className="patient-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, flexWrap: 'wrap', gap: 8, background: '#ffffff', borderBottom: '1px solid #dce4f0', padding: '14px 20px', flexShrink: 0 }}>
         {/* 患者名（flex:1 で残スペースを占有し … ボタンを右端に押し出す） */}

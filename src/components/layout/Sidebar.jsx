@@ -722,6 +722,28 @@ export default function Sidebar({
 
         {/* スクロールエリア */}
         <div className="sidebar-list-scroll" style={{ flex: 1, overflowY: 'auto', padding: '4px 0 12px' }}>
+          {facilities.length === 0 && (
+            <div style={{
+              margin: '10px 12px 14px',
+              border: '1.5px dashed #c9a84c',
+              background: '#eef2fb',
+              borderRadius: 10,
+              padding: '16px 14px',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%',
+                background: '#0f1f4e', color: '#c9a84c',
+                border: '1.5px solid #c9a84c',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 700, margin: '0 auto 8px',
+              }}>1</div>
+              <div style={{ fontSize: 12, color: '#334155', fontWeight: 600, lineHeight: 1.5 }}>
+                まずは施設または個人在宅をひとつ追加してみましょう
+              </div>
+              <div style={{ color: '#c9a84c', fontSize: 16, marginTop: 6, lineHeight: 1 }}>↓</div>
+            </div>
+          )}
           {facilities.map(facility => {
             const isHomeCare = !!facility.is_home_care
             const cs = isHomeCare ? HOME_STYLE : FAC_STYLE
@@ -1220,6 +1242,7 @@ export default function Sidebar({
           <div
             onClick={() => setShowAddFacility(true)}
             className="add-link"
+            style={facilities.length === 0 ? { background: '#fff7e6', border: '1px solid #c9a84c', fontWeight: 700 } : undefined}
           >
             🏠 <span className="add-link-plus">＋</span> 施設 / 個人在宅を追加
           </div>
