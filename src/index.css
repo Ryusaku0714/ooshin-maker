@@ -357,6 +357,11 @@ body.printing .regular-med-highlight {
   background: #f8fafc;
 }
 .field-input:focus { border-color: #1e3a8a; outline: none; }
+.field-input::placeholder,
+.rx-input::placeholder {
+  color: #b4bdc9;
+  opacity: 1;
+}
 
 /* ── 臨時薬・他科受診フォーム：共通レイアウト（rx-*） ── */
 .rx-form-box {

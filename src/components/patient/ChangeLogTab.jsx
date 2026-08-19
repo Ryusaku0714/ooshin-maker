@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { db } from '../../hooks/useData'
 import CopyButton from '../common/CopyButton'
 import RowActionsMenu from '../common/RowActionsMenu'
@@ -626,6 +626,7 @@ function calcClearBtnStyle(mobile) {
 function DateTapField({ label, caption, value, options, onChange }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
+  const dateInputRef = useRef(null)
   return (
     <div style={{ position: 'relative' }}>
       <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, display: 'block', marginBottom: 2 }}>{label}</label>
@@ -653,11 +654,20 @@ function DateTapField({ label, caption, value, options, onChange }) {
             background: 'white', border: '1px solid #dce4f0', borderRadius: 10,
             boxShadow: '0 6px 20px rgba(15,31,78,0.18)', zIndex: 100, overflow: 'hidden',
           }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', fontSize: 12.5, fontWeight: 600, borderBottom: options?.length ? '1px solid #f1f5fb' : 'none', cursor: 'pointer', position: 'relative' }}>
+            <div
+              onClick={() => {
+                const input = dateInputRef.current
+                if (!input) return
+                try { input.showPicker() } catch { /* showPicker unsupported; fall through */ }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', fontSize: 12.5, fontWeight: 600, borderBottom: options?.length ? '1px solid #f1f5fb' : 'none', cursor: 'pointer' }}>
               📅 カレンダーで選ぶ
-              <input type="date" onChange={e => { onChange(e.target.value); setOpen(false) }}
-                style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }} />
-            </label>
+              <input
+                ref={dateInputRef}
+                type="date"
+                onChange={e => { onChange(e.target.value); setOpen(false) }}
+                style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }} />
+            </div>
             {(options ?? []).map((o, i) => (
               <button key={i} type="button" onClick={() => { onChange(o.value); setOpen(false) }} style={{
                 display: 'block', width: '100%', textAlign: 'left', background: 'white', border: 'none',
