@@ -16,13 +16,24 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    })
+  const signInWithGoogle = () => {
+    const forceAccountPicker = localStorage.getItem('ooshin_force_account_picker')
+    if (forceAccountPicker) localStorage.removeItem('ooshin_force_account_picker')
 
-  const signOut = () => supabase.auth.signOut()
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        ...(forceAccountPicker ? { queryParams: { prompt: 'select_account' } } : {}),
+      },
+    })
+  }
+
+  const signOut = () =>
+    supabase.auth.signOut().then(result => {
+      localStorage.setItem('ooshin_force_account_picker', '1')
+      return result
+    })
 
   return { user, loading, signInWithGoogle, signOut }
 }
