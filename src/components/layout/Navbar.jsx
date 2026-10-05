@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { printWithAutoFit } from '../../lib/printFit'
 import AboutModal from '../modals/AboutModal'
+import { FUNSAI_KENDAKU_CHECKER } from '../../lib/externalLinks'
 
 const NOTE_URL = 'https://note.com/gentle_pansy1797'
 
@@ -131,6 +132,19 @@ export default function Navbar({ user, onSignOut, onOpenZanyaku, scale, onSetSca
                 <button type="button" className="row-menu-item" onClick={runAndClose(() => onOpenZanyaku?.())}>
                   💊 加算確認
                 </button>
+                <a
+                  href={FUNSAI_KENDAKU_CHECKER.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="row-menu-item"
+                  onClick={close}
+                  style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2, textDecoration: 'none' }}
+                >
+                  <span>🧪 {FUNSAI_KENDAKU_CHECKER.label}</span>
+                  <span style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 400, marginLeft: 22 }}>
+                    {FUNSAI_KENDAKU_CHECKER.credit} ↗ 外部サイトが開きます
+                  </span>
+                </a>
                 <button
                   type="button"
                   className="row-menu-item"
